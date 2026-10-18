@@ -44,3 +44,7 @@ Credenciais, arquivos `.env`, chave/certificado TLS, bancos SQLite, logs, relat�
 - Painel iniciou sem ERP; página HTML e endpoint de estado de autenticação responderam HTTP 200.
 
 Essas verificações não validam as regras comerciais, o acesso ao ERP nem uma implantação em produção.
+
+## Operação no computador local
+
+Consulte [inicialização automática, backup verificado e atualização segura](integracao/painel/OPERACAO_LOCAL.md). O painel é executado localmente; o ambiente em nuvem serve para desenvolvimento e testes.

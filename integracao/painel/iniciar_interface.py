@@ -13,6 +13,7 @@ import hmac
 import ssl
 import shutil
 import zipfile
+import tempfile
 from http.cookies import SimpleCookie
 from datetime import timedelta
 from collections import defaultdict
@@ -73,16 +74,20 @@ def registrar(usuario,atividade,cliente_id='',registro_id='',detalhe='',ip=''):
               (datetime.now().isoformat(timespec='seconds'),str(usuario)[:70],str(atividade)[:90],str(cliente_id)[:40],str(registro_id)[:40],str(detalhe)[:180],str(ip)[:50]))
 
 def backup_local():
-    destino=BASE/'backups';destino.mkdir(exist_ok=True)
-    stamp=datetime.now().strftime('%Y%m%d_%H%M%S')
-    arquivo=destino/('sonifarma_backup_'+stamp+'.zip')
-    with zipfile.ZipFile(arquivo,'w',zipfile.ZIP_DEFLATED) as z:
-        for nome in ('agenda_posvenda.sqlite3','posologias_confirmadas.sqlite3','acesso_auditoria.sqlite3','nomes_comerciais.sqlite3'):
-            src=BASE/nome
-            if src.exists():
-                tmp=BASE/(nome+'.backup_temp')
-                with sqlite3.connect(str(src)) as con, sqlite3.connect(str(tmp)) as copia:con.backup(copia)
-                z.write(tmp,nome);tmp.unlink(missing_ok=True)
+    from manutencao import create_backup
+    arquivo=create_backup(BASE, BASE/'backups')
+    # Uma cópia externa é opcional e só é considerada concluída após verificação.
+    externo=config().get('BACKUP_DESTINATION')
+    if externo:
+        from manutencao import verify_backup
+        destino=Path(externo);destino.mkdir(parents=True,exist_ok=True)
+        with tempfile.NamedTemporaryFile(dir=destino,delete=False) as f:
+            temporario=Path(f.name)
+        try:
+            shutil.copyfile(arquivo,temporario)
+            verify_backup(temporario)
+            temporario.replace(destino/arquivo.name)
+        finally:temporario.unlink(missing_ok=True)
     return arquivo.name
 
 def criar_certificado():

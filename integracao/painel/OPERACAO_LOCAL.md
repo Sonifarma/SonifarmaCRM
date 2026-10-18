@@ -1,0 +1,65 @@
+# Operação local no Windows
+
+Estas mudanças não instalam nada no computador da farmácia por acesso remoto.
+Antes de substituir arquivos, guarde uma cópia da instalação atual. Use Python 3.12 e instale `psycopg2-binary` conforme `../requirements.txt`; HTTPS também requer `python -m pip install cryptography`. Use o mesmo Python indicado pelo controle.
+
+## Inicialização e recuperação
+
+1. Execute `START_SONIFARMA.bat` com o usuário Windows que operará o painel. A credencial `.sonifarma_pg.cred` existente continua sendo usada. O controle agora prefere um `.venv` local antes dos caminhos antigos de Python, aceita caminhos com espaços e valida `/api/auth/status` por HTTPS, com o certificado local e sem desativar a verificação TLS.
+2. Depois de confirmar o funcionamento, abra PowerShell na pasta do painel e execute:
+
+```powershell
+.\SONIFARMA_AUTOMATICO.ps1 instalar
+```
+
+A tarefa `SonifarmaPainel` inicia **no login desse usuário**, com privilégio normal. Ela verifica o processo a cada 30 segundos e tenta iniciá-lo novamente se encerrar. Falhas têm espera progressiva de até cinco minutos. Não inicia antes do login e não detecta todos os tipos de travamento. Ao reiniciar, as sessões dos atendentes terminam.
+
+A credencial protegida depende do mesmo usuário Windows e da mesma máquina. Não altere a tarefa para SYSTEM ou outro usuário. Não altere a política de execução global; se a política corporativa bloquear scripts, solicite a assinatura/liberação dos arquivos ao administrador.
+
+Para manutenção, remova a supervisão **antes** de parar o painel, para impedir que ele seja reiniciado automaticamente:
+
+```powershell
+.\SONIFARMA_AUTOMATICO.ps1 remover
+.\SONIFARMA_CONTROLE.ps1 stop
+```
+
+## Backup e verificação
+
+Os backups novos possuem manifesto SHA-256. Cada banco é copiado com a API do SQLite (incluindo dados confirmados no WAL), restaurado em diretório temporário e validado com `PRAGMA integrity_check`. A cópia é consistente por banco; não é uma transação única entre os quatro bancos. O ZIP só é publicado ao concluir a validação. Os backups automáticos locais mantêm a retenção original de 30 arquivos.
+
+Para copiar automaticamente cada backup também a outro disco ou compartilhamento, acrescente ao `.env` local do painel ou da pasta `integracao`:
+
+```dotenv
+BACKUP_DESTINATION=D:\BackupsSonifarma
+```
+
+O usuário Windows do painel precisa ter permissão nesse destino. A cópia externa não tem exclusão automática; acompanhe o espaço disponível. Se ela falhar, o backup local continua disponível e o erro é reportado. Uma pasta no mesmo disco não protege contra perda desse disco. Os ZIPs contêm dados e hashes de senhas: restrinja o acesso ao destino e use um volume protegido.
+
+Backup manual e ensaio de restauração, sem substituir a instalação:
+
+```powershell
+.\SONIFARMA_CONTROLE.ps1 backup -Destino 'D:\BackupsSonifarma'
+.\SONIFARMA_CONTROLE.ps1 verify -Arquivo 'D:\BackupsSonifarma\sonifarma_backup_DATA.zip'
+```
+
+O comando `verify` aceita o formato novo com manifesto. Backups antigos permanecem intactos. Para recuperar dados após um incidente, pare a supervisão e o painel, preserve o estado atual e restaure os bancos verificados com orientação técnica; não copie bancos sobre um processo ativo. Credenciais e certificados devem ter backup separado e protegido, pois não estão nesses ZIPs.
+
+## Atualização de código
+
+Na primeira adoção dessas ferramentas, copie `manutencao.py`, os dois scripts PowerShell e o `iniciar_interface.py` atualizado para a instalação com o painel parado, preservando todos os dados. Nas atualizações seguintes:
+
+1. Baixe o código do repositório e extraia-o em outra pasta. Confira a procedência e a versão.
+2. Remova a tarefa de supervisão, como descrito acima.
+3. Execute com a origem apontando para o **painel** do pacote novo:
+
+```powershell
+.\SONIFARMA_CONTROLE.ps1 update -Origem 'C:\Atualizacoes\SonifarmaCRM\integracao\painel' -Destino 'D:\BackupsSonifarma'
+.\SONIFARMA_CONTROLE.ps1 start
+```
+
+O controle para apenas o processo identificado pelo PID e caminho; cancela se a porta continuar ocupada. O atualizador valida os Python do pacote e cria backup verificado dos bancos e cópia do código anterior antes de substituir uma lista explícita de arquivos de código. Não copia `.env`, credenciais, certificados, bancos, logs nem backups do pacote. Dependências novas precisam ser instaladas separadamente conforme as notas da versão. Se ocorrer erro de cópia, tenta restaurar os arquivos de código anteriores e informa a falha. Não é uma atualização transacional contra queda de energia.
+
+4. Valide login, consulta ao ERP, agenda e preferências comerciais. Se houver regressão, mantenha o painel parado e recoloque os arquivos de código da pasta `codigo_DATA` criada no destino, sem reverter os bancos inadvertidamente.
+5. Reinstale a supervisão após a validação.
+
+O IP de rede e a porta continuam os originais nesta etapa. Uma alteração de IP também exige atualizar o certificado e a configuração de rede; não foi aplicada automaticamente.

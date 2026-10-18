@@ -1,0 +1,8 @@
+SONIFARMA - Diagnostico de relacionamentos (sem dados pessoais)
+1. Copie diagnostico_posvenda.py para C:\Sonifarma\integracao
+2. Mantenha o arquivo .env local, sem enviar sua senha.
+3. Execute no PowerShell:
+   cd C:\Sonifarma\integracao
+   .\.venv\Scripts\python.exe diagnostico_posvenda.py
+4. Anexe apenas diagnostico_posvenda.json nesta conversa.
+O programa utiliza transacao somente leitura, timeout de 8 segundos e consulta somente metadados. Nao modifica o ERP.

@@ -1,0 +1,29 @@
+# Configuração local e credenciais
+.env
+.env.*
+!.env.example
+*.cred
+*.key
+*.pem
+*.crt
+# Dependências e caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+# Dados locais, relatórios e backups
+*.sqlite3*
+*.db
+*.db-*
+*.backup_temp
+backups/
+*.zip
+relatorio_estrutura.json
+mapeamento_relacionamentos.json
+diagnostico_posvenda.json
+modulo1_resultado_agregado.json
+# Execução local
+*.log
+*.pid
+.DS_Store
+Thumbs.db

@@ -1,0 +1,21 @@
+SONIFARMA - MODULO 1 - HISTORICO DE COMPRAS (DIAGNOSTICO AGREGADO)
+
+1) Extraia modulo1_historico.py para C:\Sonifarma\integracao
+2) Mantenha o .env existente na mesma pasta.
+3) No PowerShell:
+   cd C:\Sonifarma\integracao
+   .\.venv\Scripts\python.exe .\modulo1_historico.py
+4) Digite a senha do PostgreSQL (nao aparece na tela).
+5) Envie somente modulo1_resultado_agregado.json para analise.
+
+SEGURANCA
+- Conexao read-only, sem INSERT/UPDATE/DELETE e sem exportar dados individuais.
+- Executa 4 consultas agregadas, cada uma pode levar tempo em banco legado.
+- Timeout por consulta de 120 segundos e bloqueios de 2 segundos.
+- Nao execute durante pico de atendimento sem aprovacao da equipe de TI.
+- O relatorio nao contem nomes, CPFs, telefones ou nomes de medicamentos.
+- As regras de valor liquido sao estimativas proporcionais e nao substituem o financeiro.
+- Clientes sem pessoaid sao excluidos das metricas de clientes identificados.
+- A associacao de venda/item e o ajuste de devolucao devem ser validados
+  antes de uso operacional ou disparo de mensagens.
+- A consulta de recorrencia nao autoriza contato com clientes.

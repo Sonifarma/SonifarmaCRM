@@ -1,0 +1,12 @@
+SONIFARMA V20.5.6 - ORDENACAO DA REATIVACAO
+
+Substituir SOMENTE index.html e iniciar_interface.py, apos backup.
+Nao substituir bancos SQLite, certificados, tokens, credenciais ou scripts.
+Reiniciar Python e atualizar navegador com Ctrl+F5.
+
+Ordenacao padrao GLOBAL: ultima compra DESC (mais proxima de hoje primeiro), desempate por ID de cliente.
+A API pagina em lotes de 40, usando OFFSET; a ordem padrao e consistente entre lotes se o ERP nao sofrer mudancas durante a consulta.
+Clique nos titulos Cliente, Ultima compra, Dias inativo, Compras ou Contato para ordenar os registros JA CARREGADOS no navegador.
+A ordenacao manual nao reordena os clientes ainda nao carregados. Para retornar ao padrao, clique Consultar clientes.
+
+Nao houve mudancas na Meta, no envio de WhatsApp ou nos bancos de dados.

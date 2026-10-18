@@ -1,0 +1,3 @@
+Sonifarma V20.5.7 — Reativação com botão WhatsApp manual.
+Backup obrigatório. Substituir somente index.html e iniciar_interface.py. Reiniciar Python e Ctrl+F5. Não substituir bancos, certificados, credenciais ou scripts.
+O botão abre mensagem editável, consulta celular do cadastro, registra WhatsApp aberto e permite confirmar envio. Bloqueia envios confirmados nos últimos 3 dias. A verificação de consentimento é manual; não envia automaticamente.

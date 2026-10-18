@@ -1,0 +1,9 @@
+SONIFARMA V20.5.13 — PREFERÊNCIAS COMERCIAIS
+
+Base: V20.5.12.
+Alterações: descrição mais clara do status não informado; aviso contextual para status autorizado, recusado ou não informado.
+Nenhum cadastro é marcado como autorizado sem confirmação de consentimento.
+Não altera APIs, banco de dados, servidor Python nem os controles de envio.
+
+INSTALAÇÃO: faça backup e substitua somente index.html; recarregue com Ctrl+F5.
+TESTES: validar modal nos três estados no servidor antes de produção.

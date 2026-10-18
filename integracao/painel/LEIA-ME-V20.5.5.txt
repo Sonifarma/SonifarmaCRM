@@ -1,0 +1,24 @@
+SONIFARMA V20.5.5 — REATIVAÇÃO MANUAL (PILOTO)
+
+Instalação:
+1. Fazer cópia de segurança de index.html e iniciar_interface.py.
+2. Substituir SOMENTE esses dois arquivos em C:\Sonifarma\integracao\painel.
+3. NÃO substituir bancos .sqlite3, certificados, arquivos de credenciais ou scripts de START/STOP.
+4. Reiniciar o serviço Python pelo procedimento já utilizado e atualizar navegador Ctrl+F5.
+5. Abrir menu Reativação e testar consulta 40 dias / Recorrentes.
+
+Funcionalidades:
+- Nova tela de Reativação com filtros 40/60/90/180 dias e recorrentes/primeira compra/todos.
+- Consulta read-only ao ERP, ordenada por ID e paginada em lotes de até 40 clientes.
+- Última venda candidata válida (F/D sem estorno integral), contagem de vendas, dias de inatividade.
+- Sinalização de contato recente no histórico local dos últimos 3 dias.
+- Botão de preparação COPIA texto genérico, sem nome de medicamento, somente quando ERP sinaliza notificação S e não há registro recente.
+- Abertura da ficha para conferência do telefone e do consentimento antes de contato.
+
+ATENÇÃO / LIMITAÇÕES:
+- O botão Preparar texto apenas copia a mensagem; NÃO envia WhatsApp e NÃO registra confirmação.
+- Consentimento S no ERP não substitui validação de autorização específica para campanhas.
+- Histórico de contato recente abrange registros existentes na base local; outros CRMs não são consultados.
+- Contagem de vendas não desconta devoluções parciais; avaliar conciliação antes de usar em campanhas.
+- O endpoint pode atingir timeout de 15 segundos em bases grandes. Validar desempenho no ERP real.
+- NÃO automatizar disparos; Meta permanece pausada.

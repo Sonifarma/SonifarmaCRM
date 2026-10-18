@@ -1,0 +1,12 @@
+SONIFARMA V20.5.10 — CONSULTA E VERIFICACAO DE AUTORIZACAO
+
+Alteracao pontual sobre a V20.5.9:
+- O botao Enviar WhatsApp fica clicavel para clientes com autorizacao nao informada (sem contato recente).
+- Ao clicar, abre a tela de Preferencia para registrar autorizacao JA CONCEDIDA, em vez de liberar disparo promocional sem consentimento.
+- Recusa expressa continua bloqueando ofertas; contato recente continua protegido.
+- Mantidas as validacoes do servidor, auditoria e dados existentes.
+- Integracao Meta continua pausada; WhatsApp manual.
+
+INSTALACAO: Fazer backup da pasta do painel; substituir apenas index.html.
+Nao substituir SQLite, certificados ou credenciais. Atualizar navegador com Ctrl+F5.
+Testar com cadastro autorizado, sem autorizacao e com recusa registrada.

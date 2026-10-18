@@ -1,0 +1,876 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sonifarma | Inteligência de Clientes</title><style>
+:root{--navy:#11283b;--navy2:#1a3c54;--teal:#0e9b90;--blue:#3a79ae;--bg:#f4f7fa;--line:#e1e8ed;--text:#172b3b;--muted:#64798a}*{box-sizing:border-box}body{margin:0;font:15px 'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text)}header{background:var(--navy);color:white;padding:19px max(24px,calc((100vw - 1320px)/2));display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}.brand{font-size:24px;font-weight:800;letter-spacing:-.5px}.brand span{color:#5ed4c7}.sub{font-size:12px;color:#c3d4df;margin-top:3px}.tag{font-size:12px;border:1px solid #648398;border-radius:20px;padding:7px 12px}main{max-width:1320px;margin:0 auto;padding:26px 24px 50px}.toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:24px}h1{font-size:25px;margin:0 0 6px}h2{font-size:17px;margin:0 0 18px}.muted{color:var(--muted);font-size:13px}.actions{display:flex;gap:9px;flex-wrap:wrap}button,select{border:1px solid #cddbe5;background:white;border-radius:9px;padding:10px 14px;font:inherit;cursor:pointer;color:var(--navy)}button.primary{background:var(--teal);border-color:var(--teal);color:white;font-weight:600}button:hover{filter:brightness(.97)}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.card,.panel{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 12px #18374c09}.card{padding:22px}.card .label{font-size:13px;color:var(--muted)}.card .value{font-size:30px;font-weight:800;margin:13px 0 7px;letter-spacing:-.8px}.card .detail{font-size:12px;color:var(--muted)}.layout{display:grid;grid-template-columns:1.05fr .95fr;gap:17px;margin-top:17px}.panel{padding:23px;min-width:0}.row{display:flex;justify-content:space-between;gap:10px;align-items:center}.baritem{margin:15px 0}.barlabel{display:flex;justify-content:space-between;gap:8px;font-size:13px;margin-bottom:7px}.track{background:#ecf2f5;height:13px;border-radius:8px;overflow:hidden}.fill{height:100%;background:var(--blue);border-radius:8px}.fill.teal{background:var(--teal)}.fill.orange{background:#e2a14d}.stat{background:#f1f8f7;border-radius:10px;padding:13px;margin-top:16px;font-size:13px}.wide{margin-top:17px}.plot{display:flex;align-items:end;gap:8px;height:225px;padding:20px 0 0;border-bottom:1px solid var(--line)}.plot .col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:6px}.plot .bar{width:75%;max-width:54px;background:linear-gradient(180deg,#35a99f,#127f8c);border-radius:6px 6px 0 0;min-height:2px}.plot .bar.partial{background:linear-gradient(180deg,#d2e0e8,#92a7b5)}.plot .lbl{font-size:11px;color:var(--muted);white-space:nowrap}.plot .count{font-size:11px;font-weight:600}.scroll{overflow:auto}table{width:100%;border-collapse:collapse;margin-top:15px;font-size:13px}th{text-align:left;color:var(--muted);font-weight:600;background:#f7fafc}td,th{padding:12px 10px;border-bottom:1px solid var(--line)}td.num,th.num{text-align:right}tr:last-child td{border-bottom:none}.note{border-left:3px solid #d6a249;padding:13px 17px;background:#fffaf0;margin-top:20px;font-size:13px;line-height:1.6}.error{background:#fff0f0;color:#8a2020;padding:14px;border-radius:8px;margin-bottom:20px;display:none}.empty{color:var(--muted);padding:25px}.footer{margin-top:24px;font-size:12px;color:var(--muted)}@media(max-width:950px){.cards{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}}@media(max-width:560px){main{padding:18px 12px}.cards{gap:9px}.card{padding:15px}.card .value{font-size:23px}.panel{padding:15px}.plot{gap:2px}.plot .lbl{font-size:9px}header{padding:15px}}
+
+.shell{display:flex;min-height:100vh}.sidebar{width:236px;flex:none;background:#11283b;color:white;padding:25px 14px;position:sticky;top:0;height:100vh}.sidebar h2{font-size:22px;margin:0 10px 5px;color:white}.sidebar p{font-size:12px;color:#a9c1ce;margin:0 10px 30px}.nav{display:block;width:100%;border:0;background:transparent;color:#d7e6ee;text-align:left;margin:6px 0;padding:13px;border-radius:9px}.nav.active,.nav:hover{background:#1c5065;color:white}.workspace{flex:1;min-width:0}.tab{display:none}.tab.active{display:block}.filterbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.filterbar input{min-width:270px;flex:1;padding:12px;border:1px solid #ccdce5;border-radius:9px;font:inherit}.filterbar button{background:#0e9b90;color:white;border-color:#0e9b90}.clickrow{cursor:pointer}.clickrow:hover{background:#f1f8f7}.status{padding:9px 13px;background:#e8f3f1;border-radius:8px;display:inline-block;font-size:13px}.warning{background:#fff6e5;padding:14px;border-radius:9px;color:#694b18;font-size:13px;line-height:1.6}.subnav{margin-bottom:20px}.subnav button{margin-right:8px}.hidden{display:none!important}@media(max-width:850px){.shell{display:block}.sidebar{position:static;height:auto;width:100%;padding:12px}.sidebar h2{display:inline-block;margin:4px 10px}.sidebar p{display:none}.sidebar nav{display:flex;gap:5px;overflow:auto}.nav{width:auto;white-space:nowrap;padding:9px 12px}}
+.central-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.central-grid label{display:flex;flex-direction:column;gap:7px;font-size:13px;color:var(--muted)}.central-grid input,.central-grid select{width:100%;padding:11px;border:1px solid #ccdce5;border-radius:8px;font:inherit;background:white;color:var(--text)}.central-results details{border:1px solid var(--line);border-radius:12px;margin:12px 0;background:white;overflow:hidden}.central-results summary{cursor:pointer;padding:17px;display:flex;justify-content:space-between;align-items:center;gap:12px}.central-results summary:hover{background:#f5fbfa}.central-results .items{padding:0 17px 15px}.central-results .item{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding:12px 0}.priority{font-size:12px;padding:5px 9px;border-radius:20px;background:#eaf4f2;white-space:nowrap}.priority.media{background:#fff2d8}.priority.baixa{background:#edf1f5}@media(max-width:1000px){.central-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.central-grid{grid-template-columns:1fr}.central-results .item{flex-direction:column}}
+
+.central-filters .central-grid{grid-template-columns:repeat(4,minmax(0,1fr));align-items:end}
+.central-filters .central-grid label{min-width:0}
+.central-filters .central-grid button,.central-filters .central-grid select{width:100%;min-height:42px}
+.central-filters .central-default-action{display:flex;justify-content:flex-end;margin-top:10px}
+.central-filters .central-default-action button{width:auto;min-height:38px}
+@media(max-width:900px){.central-filters .central-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:550px){.central-filters .central-grid{grid-template-columns:1fr}}
+.v173-primary{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important;align-items:stretch}.v173-primary label{min-width:0}.v173-primary button,.v173-primary select{width:100%;height:46px!important;min-height:46px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}.v173-primary label{display:flex;flex-direction:column;justify-content:flex-end;gap:7px;min-width:0}.v173-primary label button{display:block}.central-default-action{margin-top:16px!important}@media(max-width:1050px){.v173-primary{grid-template-columns:repeat(2,minmax(0,1fr))!important}}@media(max-width:650px){.v173-primary{grid-template-columns:1fr!important}} .whats-mini{background:#167347!important;color:white!important;border:0!important;border-radius:7px!important;padding:5px 9px!important;font-size:15px!important;min-width:33px!important}.whats-mini:hover{background:#0e5433!important}#whats-confirmar:disabled{opacity:.45;cursor:not-allowed}.whats-produto.whats-enviado{background:#e4f3ea!important;color:#176c45!important;border:1px solid #a5d5ba!important}.whats-resultado{min-width:165px;padding:6px}#whats-indicadores{padding:8px 0;font-weight:600}#whats-ciclo-aviso{font-weight:700;color:#7b4b13}button:disabled{opacity:.5;cursor:not-allowed}</style><style>
+.client-link{border:0;background:transparent;color:#087b86;text-decoration:underline;cursor:pointer;font:inherit;font-weight:700;padding:0;text-align:left}.client-modal{position:fixed;inset:0;background:rgba(8,23,36,.7);z-index:1000;display:none;align-items:center;justify-content:center;padding:18px}.client-modal.open{display:flex}.client-dialog{background:white;border-radius:14px;width:min(1120px,100%);max-height:92vh;overflow:auto;box-shadow:0 16px 55px #0005;padding:22px}.client-dialog .modal-head{display:flex;justify-content:space-between;align-items:start;gap:14px;border-bottom:1px solid #dbe5ea;padding-bottom:14px}.client-dialog .modal-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:15px 0}.client-dialog .modal-tabs button.selected{background:#12455b;color:white}.client-dialog .modal-scroll{max-height:55vh;overflow:auto}.client-dialog table{width:100%;min-width:740px}.client-dialog th,.client-dialog td{padding:10px;border-bottom:1px solid #e5edf2;text-align:left}.client-dialog .modal-note{margin:12px 0;color:#50677a}.client-dialog .modal-close{font-size:22px;cursor:pointer}
+.ficha-pos{display:flex;align-items:center;gap:4px;flex-wrap:wrap}.ficha-pos input{width:96px;padding:7px;border:1px solid #cbd5df;border-radius:6px}.ficha-pos button{padding:7px 9px;font-size:12px}.client-dialog .modal-scroll{max-height:58vh}.client-dialog .modal-scroll table{min-width:800px}</style><style>.ficha-cadastro{position:relative;margin:12px 0 5px;padding:14px;background:#f7fafc;border:1px solid #dbe5ea;border-radius:10px}.ficha-cadastro-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 16px}.ficha-campo{min-width:0}.ficha-campo small{display:block;color:#64798a;font-size:11px;margin-bottom:3px}.ficha-campo strong{display:block;font-size:13px;overflow-wrap:anywhere}.client-dialog{display:flex;flex-direction:column;overflow:hidden}.client-dialog .modal-scroll{min-height:0;flex:1;max-height:none;overflow:auto}.client-dialog .modal-head,.client-dialog .ficha-cadastro,.client-dialog .modal-tabs,.client-dialog .modal-note{flex:none}@media(max-width:850px){.ficha-cadastro-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.ficha-cadastro-grid{grid-template-columns:1fr 1fr}.ficha-cadastro{padding:10px}}</style><style>.v16-picker-open{width:100%;text-align:left}.v16-item{display:flex;gap:8px;align-items:center;padding:7px 10px;border-bottom:1px solid #e8edf0}.v16-item label{cursor:pointer;flex:1}.v16-tree-toggle{padding:3px 8px;min-width:30px}.v16-tree-indent{display:inline-block;width:var(--indent)}.v16-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.v16-tools input{flex:1;min-width:170px;padding:10px;border:1px solid #ccdce5;border-radius:8px}.v16-picker-layer{z-index:1300}.v16-picker-layer .client-dialog{width:min(850px,100%)}.v16-list{min-height:140px;max-height:53vh;overflow:auto;border:1px solid #e1e8ed;border-radius:8px;margin:12px 0}.ficha-sort-btn{border:0;background:transparent;padding:2px 0;color:inherit;font:inherit;font-weight:700;cursor:pointer;text-align:left;white-space:nowrap}.ficha-sort-btn:hover{text-decoration:underline}.ficha-sort-btn:focus-visible{outline:2px solid #087b86;outline-offset:3px}</style><style>
+.ajuste-linha{display:flex;align-items:flex-end;flex-wrap:wrap;gap:6px;margin:4px 0;font-size:12px;color:#263c4b}.ajuste-campo{display:flex;flex-direction:column;gap:3px;white-space:nowrap;font-size:11px;color:#607889}.ajuste-campo input{box-sizing:border-box;width:77px;min-height:31px;padding:4px 6px;border:1px solid #cbd5df;border-radius:6px;background:#fff;color:#1b3445;font-size:13px}.ajuste-linha button{min-height:31px;padding:4px 8px;font-size:11px;white-space:nowrap}.ajuste-status{align-self:flex-end;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:#5b7180;padding-bottom:8px}.ajuste-alerta{font-size:11px;color:#926522;margin-top:3px}.ficha-pos .ajuste-linha{flex-wrap:wrap}
+.auth-overlay{position:fixed;inset:0;background:#11283b;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}.auth-box{background:white;padding:30px;border-radius:14px;width:min(440px,100%);box-shadow:0 20px 50px #0004}.auth-box input{display:block;width:100%;padding:13px;margin:10px 0;border:1px solid #cbd5df;border-radius:8px;font:inherit}.auth-box button{width:100%;margin-top:10px}.auth-erro{color:#a12222;font-size:13px;min-height:20px}#auth-overlay[hidden]{display:none!important}</style><style id="sonifarma-v2051-whatsapp-responsive">
+/* V20.5.1: modal acessivel sem reduzir zoom do navegador */
+#whats-modal{padding:12px;overscroll-behavior:contain}
+#whats-modal>.client-dialog{display:flex;flex-direction:column;box-sizing:border-box;width:min(620px,100%)!important;max-width:100%;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow:hidden;padding:16px!important;gap:0!important}
+#whats-modal .whats-modal-header{flex:0 0 auto;padding-bottom:10px;border-bottom:1px solid #dbe5ea;align-items:center}
+#whats-modal .whats-modal-header h2{font-size:16px;margin:0;line-height:1.3}
+#whats-modal .whats-form-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 4px 12px 0;display:flex;flex-direction:column;gap:9px}
+#whats-modal .whats-form-scroll label{display:block;margin:0}
+#whats-modal .whats-form-scroll label input,#whats-modal .whats-form-scroll label select{max-width:100%;box-sizing:border-box}
+#whats-modal #whats-resumo{margin:0;overflow-wrap:anywhere}
+#whats-modal #whats-mensagem{box-sizing:border-box;min-height:112px;resize:vertical}
+#whats-modal .whats-form-scroll p{margin:0;line-height:1.45}
+#whats-modal .whats-actions{flex:0 0 auto;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px;padding-top:12px;border-top:1px solid #dbe5ea;background:white}
+#whats-modal .whats-actions button{flex:1 1 125px;min-height:38px;white-space:normal;font-size:12px;padding:8px 10px}
+@media(max-width:520px){#whats-modal{padding:6px}#whats-modal>.client-dialog{max-height:calc(100dvh - 12px);padding:12px!important}#whats-modal .whats-actions button{flex-basis:calc(50% - 7px)}#whats-modal .whats-modal-header h2{font-size:14px}}
+</style><style id="sonifarma-v2052-modais">
+/* V20.5.2 — todos os seletores e fichas acessíveis a 100% de zoom */
+.client-modal{padding:clamp(6px,1.4vh,14px);overflow-y:auto;overscroll-behavior:contain;align-items:center}
+.client-modal>.client-dialog{box-sizing:border-box;max-width:100%;max-height:calc(100vh - 16px)!important;max-height:calc(100dvh - 16px)!important;min-height:0;display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;padding:clamp(12px,1.6vw,20px)}
+.client-modal>.client-dialog>.modal-head{position:sticky;top:0;z-index:3;flex:0 0 auto;background:#fff;padding-top:3px;padding-bottom:10px}
+.client-modal>.client-dialog>.modal-head h2{margin:0;font-size:clamp(15px,1.5vw,18px)}
+.client-modal>.client-dialog>.actions:last-child{position:sticky;bottom:0;z-index:3;flex:0 0 auto;background:#fff;border-top:1px solid #dbe5ea;padding:10px 0 2px;justify-content:flex-end;flex-wrap:wrap;gap:7px}
+.client-modal>.client-dialog>.actions:last-child button{min-height:38px}
+/* Tabelas e árvores rolam dentro da janela, sem esconder ações */
+#emb-modal .modal-scroll,#emb-pesquisa-modal .modal-scroll,
+#v16-modal .v16-list,#v16-search-modal .v16-list,
+#pbm-modal .modal-scroll,#pessoa-modal .modal-scroll{
+ flex:1 1 auto;min-height:72px!important;max-height:none!important;overflow:auto;overscroll-behavior:contain;
+}
+#emb-modal .modal-scroll,#emb-pesquisa-modal .modal-scroll{min-height:95px!important}
+#pbm-modal #pbm-selected,#pessoa-modal #pessoa-selected{flex:0 1 100px;min-height:36px;overflow:auto}
+#ficha-modal>.client-dialog{overflow:hidden}
+#ficha-modal .modal-scroll{min-height:0;flex:1 1 auto;overflow:auto}
+#ficha-modal .modal-tabs{flex:0 0 auto}
+#ficha-modal .ficha-cadastro{flex:0 0 auto}
+#whats-modal>.client-dialog{overflow:hidden}
+#whats-modal .whats-actions{position:relative;bottom:auto}
+@media(max-height:700px){
+ .client-modal>.client-dialog{padding:10px}
+ .client-modal>.client-dialog>.modal-head{padding-bottom:6px}
+ .client-modal>.client-dialog>.central-grid{gap:7px}
+ .client-modal>.client-dialog>p.muted{margin:5px 0}
+ .client-modal>.client-dialog>h3{margin:7px 0}
+ #ficha-modal .ficha-cadastro{padding:8px;margin:6px 0}
+}
+@media(max-width:650px){
+ .client-modal{padding:5px}
+ .client-modal>.client-dialog{max-height:calc(100dvh - 10px)!important;padding:10px}
+ .client-modal>.client-dialog>.actions:last-child button{flex:1 1 115px}
+ #emb-pesquisa-modal .central-grid,#pessoa-modal .central-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:440px){#emb-pesquisa-modal .central-grid,#pessoa-modal .central-grid{grid-template-columns:1fr!important}}
+</style><style id="sonifarma-v2053-whatsapp-compacto">
+/* V20.5.3: editor WhatsApp compacto, legível e com ações fixas */
+#whats-modal>.client-dialog{width:min(660px,calc(100vw - 20px))!important;border-radius:15px;padding:0!important;max-height:calc(100dvh - 16px)!important;box-shadow:0 24px 65px #001c3066}
+#whats-modal .whats-modal-header{padding:13px 17px 11px;background:#f8fbfc;gap:12px}
+#whats-modal .whats-modal-header h2{font-size:16px;font-weight:750}
+#whats-modal #whats-fechar{padding:7px 11px;font-size:12px;flex:none}
+#whats-modal .whats-form-scroll{padding:13px 17px 12px;gap:9px;overflow-x:hidden}
+#whats-modal .whats-form-scroll>label{font-size:12px;font-weight:650;color:#344f61}
+#whats-modal .whats-form-scroll label input,#whats-modal .whats-form-scroll label select,#whats-modal #whats-mensagem{display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid #cbdce6;border-radius:8px;font-size:13px;color:#142f40;background:white;min-height:36px}
+#whats-modal #whats-resumo{padding:9px 11px;background:#f0f7f7;border-left:3px solid #0e9b90;border-radius:7px;font-size:12px;line-height:1.45}
+#whats-modal #whats-nome-wrap{display:grid;gap:5px}
+#whats-modal #whats-nome-wrap label{font-size:12px;font-weight:650;color:#344f61}
+#whats-modal #whats-nome-wrap .row{justify-content:flex-start;flex-wrap:wrap}
+#whats-modal #whats-nome-salvar{padding:6px 11px;font-size:12px;min-height:30px}
+#whats-modal #whats-mensagem{min-height:125px;max-height:32vh;line-height:1.45;font-family:Consolas,'Segoe UI',monospace;resize:vertical}
+#whats-modal .whats-form-scroll p.muted{font-size:11px;line-height:1.45}
+#whats-modal #whats-ciclo-aviso{padding:6px 9px;border-radius:7px;background:#fff8e8;font-size:12px}
+#whats-modal .whats-actions{padding:11px 17px 13px;gap:7px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));box-shadow:0 -3px 12px #16394c0d}
+#whats-modal .whats-actions button{width:100%;min-width:0;min-height:40px;padding:7px 6px;font-size:12px;font-weight:650;line-height:1.25;border-radius:8px}
+#whats-modal #whats-abrir{background:#167347!important;border-color:#167347!important;color:white}
+#whats-modal #whats-confirmar:not(:disabled){background:#0e9b90!important;border-color:#0e9b90!important;color:white}
+@media(max-width:610px){#whats-modal .whats-actions{grid-template-columns:repeat(2,minmax(0,1fr))}#whats-modal .whats-form-scroll{padding:10px 12px}#whats-modal .whats-modal-header{padding:10px 12px}#whats-modal .whats-actions{padding:9px 12px}}
+@media(max-height:690px){#whats-modal #whats-mensagem{min-height:90px}#whats-modal .whats-form-scroll{gap:6px}#whats-modal .whats-modal-header{padding-top:8px;padding-bottom:8px}}
+</style><style id="sonifarma-v2054">
+#emb-pesquisa-modal .client-dialog{gap:6px!important}
+#emb-pesquisa-modal .modal-head{padding-bottom:6px!important}
+#emb-pesquisa-modal .modal-head p{margin:2px 0!important;font-size:12px}
+#emb-pesquisa-modal .central-grid{padding:5px 0!important;gap:7px 10px!important}
+#emb-pesquisa-modal .central-grid label{font-size:11px!important;gap:3px!important}
+#emb-pesquisa-modal .central-grid input,#emb-pesquisa-modal .central-grid select,#emb-pesquisa-modal .central-grid button{height:33px!important;min-height:33px!important;padding:5px 9px!important;font-size:12px!important}
+#emb-filtros-avancados{border:1px solid #d9e4e9;border-radius:8px;padding:5px 10px;margin:3px 0}
+#emb-filtros-avancados summary{cursor:pointer;font-weight:650;color:#36556a;font-size:12px}
+#emb-filtros-avancados .emb-advanced-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+#emb-pesquisa-modal .modal-scroll{min-height:220px!important;flex:1 1 auto!important;overflow:auto!important}
+#whats-link-wrap{display:grid;gap:4px}
+#whats-link-wrap .row{justify-content:flex-start;flex-wrap:wrap}
+#whats-link-wrap label{font-size:12px;font-weight:650}
+@media(max-width:800px){#emb-filtros-avancados .emb-advanced-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+</style><style id="sonifarma-v2056-reat-sort">
+#reativacao-tab .reat-table th{white-space:nowrap}
+#reativacao-tab .reat-sort{border:0;background:transparent;box-shadow:none;color:inherit;padding:6px 2px;font:inherit;font-weight:700;cursor:pointer;text-align:left}
+#reativacao-tab .reat-sort:hover{color:#0e9387;text-decoration:underline}
+#reativacao-tab .reat-sort:focus-visible{outline:2px solid #0e9387;outline-offset:2px}
+#reativacao-tab .reat-sort-icon{display:inline-block;margin-left:5px;color:#168f83;font-weight:800}
+#reativacao-tab .reat-table td:nth-child(3),#reativacao-tab .reat-table td:nth-child(4){font-variant-numeric:tabular-nums}
+</style></head><body><div class="auth-overlay" id="auth-overlay"><div class="auth-box"><h2 id="auth-titulo">Sonifarma · Acesso</h2><p class="muted" id="auth-descricao">Informe suas credenciais para acessar o painel.</p><input id="auth-login" placeholder="Usuário" autocomplete="username"><input id="auth-senha" type="password" placeholder="Senha" autocomplete="current-password"><button class="primary" type="button" id="auth-entrar">Entrar</button><p id="auth-erro" class="auth-erro"></p></div></div><div class="shell"><aside class="sidebar"><h2>SONIFARMA</h2><p>Inteligência de clientes</p><nav><button class="nav" data-tab="dashboard">▦ Dashboard</button><button class="nav active" data-tab="central-tab">⌕ Central de Consultas</button><button class="nav" data-tab="reativacao-tab">↺ Reativação</button><button class="nav" data-tab="auditoria-tab" id="nav-auditoria" style="display:none">☷ Auditoria</button><button class="nav" data-tab="usuarios-tab" id="nav-usuarios" style="display:none">♙ Usuários</button></nav><p style="margin-top:30px" id="sessao-usuario">Aguardando login</p><button id="btn-sair" type="button" style="width:100%;display:none">Sair</button></aside><div class="workspace"><header><div><div class="brand">SONI<span>FARMA</span> <span style="font-size:13px;font-weight:500;color:#c3d4df">| Inteligência de Clientes</span></div><div class="sub">Histórico de compras · Indicadores agregados</div></div><div class="tag">Painel local · Somente leitura</div></header><main><section class="tab" id="auditoria-tab"><h1>Auditoria e histórico de contatos</h1><p class="muted">Acesso exclusivo MASTER · Últimos 500 registros por consulta · Registros não podem ser alterados pela interface.</p>
+<div class="panel"><div class="filterbar" style="align-items:end">
+<label>Data inicial<input type="date" id="audit-data-inicio" style="min-width:145px"></label>
+<label>Data final<input type="date" id="audit-data-fim" style="min-width:145px"></label>
+<label>Hora inicial<input type="time" id="audit-hora-inicio" style="min-width:110px"></label>
+<label>Hora final<input type="time" id="audit-hora-fim" style="min-width:110px"></label>
+<label>Usuário<select id="audit-usuario"><option value="">Todos</option></select></label>
+<label>Atividade<select id="audit-atividade"><option value="">Todas</option></select></label>
+<label>Cliente ID<input id="audit-cliente" type="text" placeholder="ID do ERP" style="min-width:110px;width:125px"></label>
+<button type="button" id="audit-buscar">Filtrar</button><button type="button" id="audit-limpar">Limpar</button></div>
+<div class="muted" id="audit-resumo">Selecione os filtros e consulte.</div>
+<div class="scroll"><table><thead><tr><th>Data / hora</th><th>Usuário</th><th>Atividade</th><th>Cliente (ID)</th><th>Registro</th><th>Detalhe</th><th>IP</th></tr></thead><tbody id="audit-linhas"></tbody></table></div>
+<p class="muted">O destinatário é identificado pelo ID do cliente no ERP. Para WhatsApp, o registro é vinculado ao produto/ciclo e ao telefone final. “WhatsApp aberto” não comprova envio.</p></div></section>
+<section class="tab" id="usuarios-tab"><h1>Usuários e permissões</h1><p class="muted">Somente o MASTER pode criar, bloquear ou redefinir credenciais.</p>
+<div class="panel"><h2>Cadastrar funcionário</h2><div class="filterbar"><input id="novo-login" placeholder="Login (ex.: atendente01)" autocomplete="off"><input id="nova-senha" type="password" placeholder="Senha inicial (12+ caracteres)" autocomplete="new-password"><select id="novo-perfil"><option value="atendente">Atendente</option><option value="supervisor">Supervisor</option></select><button type="button" id="usuario-criar">Criar usuário</button></div><div id="usuarios-aviso" class="muted"></div><div class="scroll"><table><thead><tr><th>Login</th><th>Perfil</th><th>Ativo</th><th>Cadastro</th><th>Ações</th></tr></thead><tbody id="usuarios-linhas"></tbody></table></div></div>
+<div class="panel wide"><h2>Backup dos dados locais</h2><p class="muted">Gera um ZIP dos bancos SQLite no diretório backups do servidor. Mantenha também cópias externas protegidas.</p><button id="backup-criar" type="button">Gerar backup agora</button><span id="backup-aviso" class="muted"></span></div></section>
+<section class="tab" id="dashboard"><div class="toolbar"><div><h1>Visão geral do pós-venda</h1><div class="muted" id="updated">Carregando relatório...</div></div><div class="actions"><button id="refresh">↻ Atualizar dados</button><button id="csv">↓ Exportar resumo CSV</button></div></div><div class="error" id="error"></div><div class="cards"><div class="card"><div class="label">Compras válidas</div><div class="value" id="compras">—</div><div class="detail">No histórico analisado</div></div><div class="card"><div class="label">Clientes identificados</div><div class="value" id="clientes">—</div><div class="detail">Com compras válidas</div></div><div class="card"><div class="label">Unidades líquidas</div><div class="value" id="unidades">—</div><div class="detail">Após devoluções registradas</div></div><div class="card"><div class="label">Valor líquido estimado</div><div class="value" id="valor">—</div><div class="detail">Não equivale ao faturamento contábil</div></div></div><div class="layout"><section class="panel"><h2>Tempo desde a última compra</h2><div class="muted">Clientes agrupados por inatividade</div><div id="inactive"></div><div class="stat" id="inactiveInsight"></div></section><section class="panel"><h2>Frequência de compra</h2><div class="muted">Quantidade de compras por cliente nos últimos 365 dias</div><div id="frequency"></div><div class="stat" id="frequencyInsight"></div></section></div><section class="panel wide"><div class="row" style="flex-wrap:wrap"><div><h2>Compras mensais</h2><div class="muted">Últimos 12 meses do relatório</div></div><label class="muted">Indicador <select id="metric"><option value="compras">Compras</option><option value="clientes">Clientes</option><option value="valor_estimado">Valor estimado</option></select></label></div><div id="plot" class="plot" role="img" aria-label="Gráfico mensal"></div><div class="muted" style="margin-top:14px">* O mês mais recente pode estar incompleto.</div><div class="scroll"><table><thead><tr><th>Mês</th><th class="num">Compras</th><th class="num">Clientes</th><th class="num">Valor estimado</th></tr></thead><tbody id="monthly"></tbody></table></div></section><div class="note"><b>Critérios e cuidados:</b> os dados são agregados e exploratórios. Vendas F/D com saldo de itens válido; cancelamentos e estornos excluídos conforme o Módulo 1. O valor é estimado. Antes de uso operacional, concilie os indicadores com o ERP e valide a regra de devoluções. Esta interface não mostra clientes individuais, não consulta o PostgreSQL e não envia mensagens.</div><div class="footer" id="footer">Sonifarma · Painel de diagnóstico</div></section>
+<section class="tab active" id="central-tab"><h1>Central de Consultas</h1><p class="muted">Filtre clientes e consulte cada produto agrupado pelo cadastro do produto, com quantidade líquida somada na última data de compra e previsão pela quantidade adquirida e posologia confirmada. Sem posologia confirmada, ciclo comercial provisório de 30 dias. O campo vem pré-preenchido com a equivalência comercial para 30 dias, sem representar dose prescrita. Clique Salvar somente após confirmar a posologia real.</p>
+<div class="panel central-filters"><div class="row" style="align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Filtros avançados</h2><span class="muted" style="font-size:12px">Padrão: hoje, atrasados recentes e próximos dias</span></div><div class="central-grid v173-primary" style="margin-top:16px"><label>Próxima compra<select id="central-janela"><option value="misto3">Hoje ± 3 dias (padrão)</option><option value="7">Próximos 7 dias</option><option value="15">Próximos 15 dias</option><option value="30">Próximos 30 dias</option><option value="anteriores7">Anteriores 7 dias</option><option value="anteriores15">Anteriores 15 dias</option><option value="anteriores30">Anteriores 30 dias</option><option value="atrasadas">Todas as previsões atrasadas</option></select></label><label>Pessoa<button type="button" id="pessoa-open" style="text-align:left">Selecionar pessoas (<span id="pessoa-count">0</span>) ▸</button></label><input type="hidden" id="central-nome" value=""><label style="display:none">Uso contínuo<select id="central-uso"><option value="todos">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></label><label class="central-order" style="display:none">Ordenar por<select id="central-ordem"><option value="data_misto">Hoje → atrasados → próximos</option><option value="data_desc">Próxima compra ↓</option><option value="data">Próxima compra ↑</option><option value="escore">Maior prioridade estimada</option><option value="frequencia">Maior frequência</option></select></label><input type="hidden" id="central-produto" value=""><label>Embalagens selecionadas<button type="button" id="emb-abrir" style="text-align:left">Selecionar embalagens (<span id="emb-count">0</span>) ▸</button></label><label>Classificação<button type="button" id="central-classificacao-open" style="text-align:left">Classificações (<span id="central-classificacao-count">0</span>) ▸</button></label><label>PBM<button type="button" id="pbm-open" style="text-align:left">Selecionar PBMs (<span id="pbm-count">0</span>) ▸</button></label></div><div class="central-default-action"><button type="button" id="central-classificacao-restaurar">Restaurar classificações padrão</button></div><details id="central-mais-filtros" style="margin-top:14px"><summary style="cursor:pointer;font-weight:700;padding:10px 0">Mais filtros ▾</summary><div class="central-grid" style="margin-top:14px"><label>Mês de aniversário<select id="central-mes"><option value="0">Todos</option><option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option><option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option><option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select></label><label>Dia do aniversário<input id="central-dia" type="number" min="1" max="31" placeholder="Qualquer dia"></label><label>Notificação (código ERP)<select id="central-notificacao"><option value="todos">Todos</option><option value="S">S</option><option value="N">N</option><option value="desconhecido">Sem informação</option></select></label><input type="hidden" id="central-tipo" value=""><input type="hidden" id="central-status" value=""></div></details><p class="muted">O código de notificação deve ser conferido no ERP; não equivale automaticamente a consentimento para marketing.</p><div class="filterbar"><button id="central-buscar">Consultar clientes</button><button id="central-limpar" type="button">Limpar</button></div><p class="muted">Filtros de crediário e agendamento permanecem pendentes. Por padrão, itens da Farmácia Popular não participam das previsões da Central; selecione essa PBM para incluí-los.</p></div>
+<div class="panel wide"><div class="row"><h2>Clientes e produtos previstos</h2><span id="central-total" class="status">Aguardando consulta</span></div><p id="central-aviso" class="warning">Carregamento progressivo de até 60 candidatos por lote. Previsão por produto: posologia confirmada ou ciclo comercial provisório de 30 dias; sem usar previsão do ERP. A posologia automática não é uma confirmação clínica. Na V18, a classificação global é preparada antes da exibição. Consultas amplas podem levar alguns minutos; refine os filtros se exceder os limites de segurança.</p><div id="central-resultados" class="central-results"><div class="empty">Selecione os filtros e clique em Consultar clientes.</div></div><div style="text-align:center;margin-top:12px"><button id="central-proxima" type="button" disabled style="display:none">Carregar mais resultados</button></div></div>
+</section>
+<section class="tab" id="clientes-tab"><h1>Consulta de clientes</h1><p class="muted">Pesquise por nome. Até 50 resultados por busca, com dados acessados em tempo real, sem exportação local.</p><div class="status" id="erp-status">Verificando conexão com ERP...</div><div class="filterbar"><input id="busca" type="search" placeholder="Digite pelo menos 3 letras do nome" maxlength="70"><button id="buscar">Pesquisar</button></div><div class="panel scroll"><table><thead><tr><th>Cliente</th><th>Última venda candidata</th><th class="num">Vendas candidatas</th><th></th></tr></thead><tbody id="lista-clientes"><tr><td colspan="4" class="muted">Faça uma pesquisa para consultar clientes.</td></tr></tbody></table></div><p class="warning">A lista mostra vendas candidatas por status. A validação líquida de cada item ocorre no Histórico. Dados individuais são confidenciais; não compartilhe capturas ou resultados fora da equipe autorizada.</p></section>
+<section class="tab" id="reativacao-tab"><h1>Reativação de clientes</h1><p class="muted">Clientes sem compras há mais de 40 dias. Ordenação padrão: última compra mais próxima de hoje (inativos mais recentes primeiro). Clique nos títulos para reorganizar os resultados carregados. Envio somente manual e após confirmar autorização de contato.</p>
+<div class="panel"><div class="filterbar" style="align-items:end"><label>Inatividade mínima<select id="reat-dias"><option value="40">Mais de 40 dias</option><option value="60">Mais de 60 dias</option><option value="90">Mais de 90 dias</option><option value="180">Mais de 180 dias</option></select></label><label>Perfil<select id="reat-perfil"><option value="recorrentes">Priorizar recorrentes (2+ compras)</option><option value="unicos">Primeira compra apenas</option><option value="todos">Todos</option></select></label><button class="primary" id="reat-buscar">Consultar clientes</button></div><p id="reat-status" class="muted">Clique em Consultar clientes para começar.</p><div class="scroll"><table class="reat-table"><thead><tr><th><button type="button" class="reat-sort" data-reat-sort="nome">Cliente <span class="reat-sort-icon">↕</span></button></th><th><button type="button" class="reat-sort" data-reat-sort="ultima_compra">Última compra <span class="reat-sort-icon">↓</span></button></th><th><button type="button" class="reat-sort" data-reat-sort="dias_sem_compra">Dias inativo <span class="reat-sort-icon">↕</span></button></th><th><button type="button" class="reat-sort" data-reat-sort="total_compras">Compras <span class="reat-sort-icon">↕</span></button></th><th><button type="button" class="reat-sort" data-reat-sort="contato">Contato <span class="reat-sort-icon">↕</span></button></th><th>Ação</th></tr></thead><tbody id="reat-lista"><tr><td colspan="6">Nenhuma consulta realizada.</td></tr></tbody></table></div><div class="actions" style="margin-top:14px"><button id="reat-mais" type="button" style="display:none">Carregar mais clientes</button></div></div>
+<p class="warning">Não enviar mensagens para quem não autorizou comunicações comerciais, solicitou exclusão ou recebeu contato recentemente. A consulta considera vendas candidatas válidas e pode exigir conciliação com devoluções e vendas externas. Não são realizados disparos automáticos. Nunca use informações de medicamentos para personalizar reativação promocional.</p></section>
+<section class="tab" id="historico-tab"><h1>Histórico de compras</h1><p class="muted" id="cliente-atual">Selecione um cliente na aba Clientes para consultar seus produtos.</p><div class="panel scroll"><table><thead><tr><th>Data</th><th>Venda</th><th>Produto</th><th class="num">Comprado</th><th class="num">Devolvido</th><th class="num">Saldo</th><th class="num">Valor estimado</th></tr></thead><tbody id="lista-historico"><tr><td colspan="7" class="muted">Nenhum cliente selecionado.</td></tr></tbody></table></div><p class="warning">Mostra até 100 grupos de venda e produto mais recentes, somando linhas repetidas da mesma venda. O valor líquido é estimado e as regras de devolução ainda devem ser conciliadas com o ERP antes de qualquer ação operacional.</p></section>
+<section class="tab" id="recompra-tab"><h1>Previsão de recompra por produto</h1>
+<p class="muted" id="recompra-cliente">Selecione um cliente na aba Clientes para analisar seu histórico.</p>
+<div class="panel"><div class="filterbar"><select id="recompra-janela"><option value="todos">Todos os produtos</option><option value="atrasadas">Previsão ultrapassada</option><option value="misto3">Hoje ± 3 dias</option><option value="anteriores7">Anteriores 7 dias</option><option value="anteriores15">Anteriores 15 dias</option><option value="anteriores30">Anteriores 30 dias</option><option value="7">Próximos 7 dias</option><option value="15">Próximos 15 dias</option><option value="30">Próximos 30 dias</option><option value="sem_previsao">Sem posologia confirmada</option></select><button id="recompra-atualizar">Consultar previsões</button></div>
+<div class="scroll"><table><thead><tr><th>Produto</th><th>Última compra</th><th>Compras em dias distintos</th><th>Qtd. Apres. / Tomar/dia</th><th>Duração / Próxima estimativa</th><th>Guia / apresentação</th></tr></thead><tbody id="recompra-lista"><tr><td colspan="6">Selecione um cliente para iniciar.</td></tr></tbody></table></div><p id="recompra-aviso" class="muted"></p></div>
+<p class="warning">Estimativa estatística por embalagem, baseada na mediana dos intervalos entre pelo menos três datas de compra distintas nos últimos 730 dias. Não é orientação de tratamento nem prova de que o cliente precisa comprar novamente. O guia pode conter duplicidades. Nenhuma mensagem é enviada automaticamente.</p></section>
+<section class="tab" id="posvenda-tab"><h1>Agenda de pós-venda</h1><div class="panel" id="whats-posvenda-painel"><h2>WhatsApp · produto selecionado</h2><p class="muted" id="whats-produto-aviso">Selecione o botão WhatsApp em um produto da Central de Recompras.</p><div id="whats-produto-resumo" style="font-weight:700;margin:10px 0"></div><div class="actions"><button type="button" id="whats-posvenda-preparar" disabled style="background:#167347;color:white">Preparar mensagem para revisão</button></div><p class="muted">O nome do medicamento é exibido apenas para o atendente. A mensagem externa não inclui medicamentos automaticamente.</p></div><p class="muted">Acompanhamentos internos. Sem envio de mensagens. Registros armazenados apenas no servidor local, fora do ERP.</p><div class="panel"><h2>Novo acompanhamento</h2><div class="filterbar"><input id="agenda-cliente" type="number" min="1" placeholder="Código do cliente no ERP"><input id="agenda-data" type="date"><select id="agenda-motivo"><option>Acompanhamento</option><option>Retorno solicitado</option><option>Conferir cadastro</option></select><button id="agenda-criar">Adicionar à agenda</button></div><p class="muted" id="agenda-aviso">Selecione um cliente na consulta para preencher automaticamente o código. Não registre medicamentos, diagnósticos ou informações de saúde nesta agenda.</p></div><div class="panel wide"><div class="row"><h2>Histórico WhatsApp</h2><button type="button" id="whats-historico-atualizar">Atualizar</button></div><div id="whats-indicadores" class="muted">Carregando indicadores...</div><div id="whats-historico">Nenhum envio confirmado nesta sessão.</div></div><div class="panel wide scroll"><div class="row"><h2>Atendimentos agendados</h2><button id="agenda-atualizar">↻ Atualizar</button></div><table><thead><tr><th>Data</th><th>Cliente (ID)</th><th>Motivo</th><th>Status</th><th>Ação</th></tr></thead><tbody id="agenda-lista"><tr><td colspan="5">Carregando...</td></tr></tbody></table></div><p class="warning">Agenda local em SQLite. Não há autenticação de usuários nem autorização individual; use apenas no próprio servidor, com acesso restrito. Para utilização em rede, será necessário implementar login, permissões, auditoria e política de retenção.</p></section></main></div></div><div class="client-modal" id="ficha-modal" role="dialog" aria-modal="true" aria-labelledby="ficha-titulo"><div class="client-dialog"><div class="modal-head"><div><h2 id="ficha-titulo">Ficha do cliente</h2><p class="muted" id="ficha-subtitulo">Carregando...</p></div><button type="button" class="modal-close" id="ficha-fechar" aria-label="Fechar ficha">×</button></div><div style="padding:0 14px"><button type="button" id="whats-ficha-btn" style="background:#167347;color:white">WhatsApp · preparar mensagem</button></div><div id="ficha-cadastro" class="ficha-cadastro" aria-live="polite">Carregando resumo cadastral...</div><div class="modal-tabs"><button type="button" data-ficha-tab="previsoes" class="selected">Próximas compras</button><button type="button" data-ficha-tab="historico">Histórico de compras</button><button type="button" data-ficha-tab="resumo">Resumo</button><button type="button" data-ficha-tab="posvenda">Pós-venda</button></div><p class="modal-note" id="ficha-aviso">Carregando dados...</p><div class="modal-scroll" id="ficha-conteudo"></div><p class="muted">Dados confidenciais. Acompanhamentos são internos; estimativas de recompra não são orientação de uso. ERP somente leitura; ajustes de posologia são armazenados localmente.</p></div></div><div class="client-modal" id="emb-modal" role="dialog" aria-modal="true" aria-label="Selecionar embalagens"><div class="client-dialog" style="width:min(920px,100%);max-height:90vh">
+<div class="modal-head"><div><h2>Filtro de embalagens</h2><p class="muted">Selecione uma ou várias embalagens. O filtro considera qualquer uma das selecionadas.</p></div><button type="button" id="emb-fechar" aria-label="Fechar">×</button></div>
+<div class="row" style="padding:12px 0;flex-wrap:wrap"><span id="emb-total" class="muted">Nenhuma embalagem selecionada</span><div class="actions"><button type="button" id="emb-limpar">Limpar</button><button type="button" id="emb-adicionar" title="Pesquisar e adicionar">＋</button><button type="button" id="emb-remover" title="Remover marcadas">−</button></div></div>
+<div id="emb-selecionadas" class="modal-scroll" style="min-height:140px"></div>
+<div class="actions" style="justify-content:end;padding-top:12px"><button type="button" id="emb-cancelar">Cancelar</button><button type="button" class="primary" id="emb-confirmar">OK</button></div>
+</div></div>
+<div class="client-modal" id="emb-pesquisa-modal" role="dialog" aria-modal="true" aria-label="Pesquisa avançada de embalagens" style="z-index:1010"><div class="client-dialog" style="width:min(1100px,100%);max-height:92vh">
+<div class="modal-head"><div><h2>Pesquisa avançada de embalagens</h2><p class="muted">Marque as apresentações e clique em OK para adicioná-las à seleção.</p></div><button type="button" id="emb-pesquisa-fechar" aria-label="Fechar pesquisa">×</button></div>
+<div class="central-grid" style="padding:12px 0;grid-template-columns:repeat(3,minmax(0,1fr))">
+<label>Descrição / EAN / apresentação<input id="emb-busca" placeholder="Digite para pesquisar"></label>
+<label>Fabricante<button type="button" id="v16-open-fabricante" class="v16-picker-open">＋ Selecionar</button><span id="v16-count-fabricante" class="muted">Nenhum selecionado</span></label>
+<label>Classificação<button type="button" id="v16-open-classificacao" class="v16-picker-open">＋ Selecionar</button><span id="v16-count-classificacao" class="muted">Nenhum selecionado</span></label>
+</div><details id="emb-filtros-avancados"><summary>Mais filtros (opcional)</summary><div class="central-grid emb-advanced-grid"><label>Etiqueta<input id="emb-etiqueta" placeholder="Se disponível"></label>
+<label>Produto (cadastro)<input id="emb-produto" placeholder="Descrição"></label>
+<label>Status do produto<select id="emb-status_produto"><option value="">Todos</option><option value="A">Ativo (A)</option><option value="I">Inativo (I)</option></select></label>
+<label>Controle SNGPC<select id="emb-controle_sngpc"><option value="">Todos</option><option value="controlado">Controlados</option><option value="nao_controlado">Não controlados</option></select></label>
+<label>Grupo remarcação<button type="button" id="v16-open-grupo_remarcacao" class="v16-picker-open">＋ Selecionar</button><span id="v16-count-grupo_remarcacao" class="muted">Nenhum selecionado</span></label>
+<label>Unidade de preço<input id="emb-unidade_preco" placeholder="Se disponível"></label>
+<label>Preço por unidade<input id="emb-preco_unidade" placeholder="Se disponível"></label>
+</div></details><div class="actions"><button type="button" class="primary" id="emb-pesquisar">Pesquisar</button><button type="button" id="emb-mais" style="display:none">Carregar mais</button><span class="muted" id="emb-pesquisa-aviso"></span></div>
+<div class="modal-scroll" style="min-height:180px"><table><thead><tr><th>Selecionar</th><th>Produto</th><th>Apresentação</th><th>Código de barras</th></tr></thead><tbody id="emb-resultados"></tbody></table></div>
+<div class="actions" style="justify-content:end;padding-top:12px"><button type="button" id="emb-pesquisa-cancelar">Cancelar</button><button type="button" class="primary" id="emb-pesquisa-ok">OK — Adicionar selecionadas</button></div>
+</div></div>
+<div class="client-modal v16-picker-layer" id="v16-modal" role="dialog" aria-modal="true" aria-label="Seleção múltipla"><div class="client-dialog"><div class="modal-head"><h2 id="v16-title">Selecionar</h2><button type="button" id="v16-close" aria-label="Fechar">×</button></div><p class="muted">Selecione vários registros. Na classificação, marcar uma pasta inclui suas subcategorias.</p><div class="v16-tools"><button type="button" id="v16-add">＋</button><button type="button" id="v16-remove">−</button><button type="button" id="v16-clear">Limpar</button><span id="v16-total" class="muted"></span></div><div id="v16-selected" class="v16-list"></div><div class="actions" style="justify-content:end"><button type="button" id="v16-cancel">Cancelar</button><button type="button" class="primary" id="v16-ok">OK — Aplicar</button></div></div></div><div class="client-modal v16-picker-layer" id="v16-search-modal" role="dialog" aria-modal="true" aria-label="Pesquisar registros" style="z-index:1400"><div class="client-dialog"><div class="modal-head"><h2 id="v16-search-title">Pesquisar</h2><button type="button" id="v16-search-close" aria-label="Fechar pesquisa">×</button></div><div class="v16-tools"><input id="v16-query" placeholder="Pesquisar pelo nome"><button type="button" id="v16-all">Marcar resultados</button><button type="button" id="v16-none">Desmarcar resultados</button></div><p id="v16-msg" class="muted"></p><div id="v16-results" class="v16-list"></div><div class="actions" style="justify-content:end"><button type="button" id="v16-search-cancel">Cancelar</button><button type="button" class="primary" id="v16-search-ok">OK — Adicionar selecionados</button></div></div></div><div class="client-modal" id="pbm-modal" role="dialog" aria-modal="true" aria-label="Selecionar PBMs" style="z-index:1005"><div class="client-dialog" style="width:min(850px,100%);max-height:90vh"><div class="modal-head"><h2>Selecionar PBMs</h2><button type="button" id="pbm-close" aria-label="Fechar">×</button></div><p class="muted">Farmácia Popular (ID 349) fica excluída por padrão. Selecione-a explicitamente para consultar seus itens.</p><label>Pesquisa rápida<input id="pbm-query" placeholder="Nome da PBM" style="width:100%;padding:10px"></label><div class="actions"><button type="button" id="pbm-minus">− Remover marcadas</button><button type="button" id="pbm-clear">Limpar</button><span id="pbm-aviso" class="muted"></span></div><div class="modal-scroll" style="max-height:320px"><table><thead><tr><th>+</th><th>Nome</th></tr></thead><tbody id="pbm-results"></tbody></table></div><h3>Selecionadas</h3><div id="pbm-selected" style="max-height:110px;overflow:auto"></div><div class="actions" style="justify-content:flex-end"><button type="button" id="pbm-cancel">Cancelar</button><button type="button" class="primary" id="pbm-ok">OK</button></div></div></div><div class="client-modal v16-picker-layer" id="pessoa-modal" role="dialog" aria-modal="true" aria-label="Selecionar pessoas"><div class="client-dialog" style="width:min(1050px,96vw);max-height:94vh"><div class="modal-head"><h2>Pessoa — Seleção múltipla</h2><button type="button" id="pessoa-close" aria-label="Fechar">×</button></div><div class="central-grid" style="margin:12px 0"><label>Nome (contendo)<input id="pessoa-query" placeholder="Digite pelo menos 3 letras" maxlength="70"></label><label>Status pessoa (ERP)<input id="pessoa-status" placeholder="Código exato (opcional)" maxlength="15"></label><label>Tipo pessoa (ERP)<input id="pessoa-tipo" placeholder="Código exato (opcional)" maxlength="15"></label><label>Filtro rápido<input id="pessoa-rapido" placeholder="Filtrar resultados exibidos"></label></div><div class="actions"><button type="button" id="pessoa-search" class="primary">Pesquisar / Atualizar</button><button type="button" id="pessoa-all">Marcar resultados exibidos</button><button type="button" id="pessoa-none">Desmarcar resultados exibidos</button><button type="button" id="pessoa-clear">Limpar seleção</button></div><p class="muted">Filtros Nome, Status e Tipo seguem o cadastro do ERP. Documentos, Contatos e Cidade dependem de validação dos campos e vínculos do banco.</p><div class="modal-scroll" style="max-height:37vh;min-height:190px"><table><thead><tr><th><input type="checkbox" id="pessoa-toggle-visible" title="Marcar ou desmarcar resultados visíveis"></th><th>Nome</th><th>Status</th><th>Tipo pessoa</th></tr></thead><tbody id="pessoa-results"></tbody></table></div><div class="row"><span id="pessoa-info" class="muted">Digite ao menos 3 caracteres e pesquise.</span><button type="button" id="pessoa-more">Mais resultados</button></div><h3>Selecionadas (<span id="pessoa-draft-count">0</span>)</h3><div id="pessoa-selected" style="max-height:115px;overflow:auto"></div><div class="actions" style="justify-content:flex-end"><button type="button" id="pessoa-cancel">Cancelar</button><button type="button" class="primary" id="pessoa-ok">OK — Aplicar</button></div></div></div><div class="client-modal" id="reat-consent-modal" role="dialog" aria-modal="true" aria-label="Preferência de contato comercial"><div class="client-dialog" style="width:min(540px,96vw);padding:18px"><div class="modal-head"><h2>Preferência comercial</h2><button type="button" id="reat-consent-fechar">✕ Fechar</button></div><p id="reat-consent-cliente" class="muted"></p><label>Situação<select id="reat-consent-status" style="width:100%"><option value="nao_informado">Não informado — verificar autorização</option><option value="autorizado">Autorizado — consentimento já concedido</option><option value="recusado">Não deseja receber ofertas</option></select></label><label>Origem / registro da preferência<input id="reat-consent-origem" maxlength="180" style="width:100%" placeholder="Ex.: autorização no balcão, em 10/10/2026"></label><label>Data da autorização<input type="date" id="reat-consent-data" style="width:100%"></label><p class="muted">Registrar autorização apenas quando ela já foi concedida. Uma recusa bloqueia contatos comerciais também nos módulos de Recompra e Farmácia Popular. A ausência de autorização não equivale a consentimento.</p><p id="reat-consent-aviso" class="muted"></p><div class="actions"><button type="button" id="reat-consent-cancelar">Cancelar</button><button type="button" class="primary" id="reat-consent-salvar">Salvar preferência</button></div></div></div><div class="client-modal" id="reat-whats-modal" role="dialog" aria-modal="true" aria-labelledby="reat-whats-title"><div class="client-dialog" style="width:min(620px,96vw);padding:18px;gap:12px"><div class="modal-head"><h2 id="reat-whats-title">Reativação · WhatsApp manual</h2><button type="button" id="reat-whats-fechar">✕ Fechar</button></div><div class="whats-form-scroll"><p id="reat-whats-resumo" class="muted"></p><label>Celular com DDD<input id="reat-whats-numero" type="tel" placeholder="(19) 99999-9999" style="width:100%"></label><label>Mensagem (editável)<textarea id="reat-whats-texto" rows="9" style="width:100%"></textarea></label><p class="muted">Confirme autorização para mensagens promocionais. O sistema registra a abertura, não presume envio.</p><p id="reat-whats-aviso" class="muted"></p><p id="reat-whats-historico" class="muted" aria-live="polite"></p></div><div class="row whats-actions"><button type="button" id="reat-whats-copiar">Copiar texto</button><button type="button" class="primary" id="reat-whats-abrir">Abrir WhatsApp ↗</button><button type="button" id="reat-whats-confirmar" disabled>✓ Confirmar envio</button></div></div></div><div class="client-modal" id="whats-modal" role="dialog" aria-modal="true" aria-labelledby="whats-titulo"><div class="client-dialog" style="width:min(570px,96vw);padding:18px;gap:12px"><div class="row whats-modal-header"><h2 id="whats-titulo">WhatsApp · atendimento manual</h2><button type="button" id="whats-fechar">✕ Fechar</button></div><div class="whats-form-scroll"><p class="muted" id="whats-resumo"></p><label>Celular com DDD <input id="whats-numero" type="tel" placeholder="(19) 99999-9999" style="width:100%"></label><label>Contexto <select id="whats-categoria"><option value="produtos">Produtos</option><option value="vitaminas">Vitaminas</option><option value="suplementos">Suplementos</option><option value="uso contínuo">Produtos de uso contínuo</option></select></label><div id="whats-nome-wrap"><label>Nome comercial do produto (editável e salvo na base interna)<input id="whats-nome-comercial" style="width:100%" maxlength="150" placeholder="Ex.: ARTICOL 30 DOSES com 60CPS"></label><div class="row"><button type="button" id="whats-nome-salvar">Salvar nome</button><span class="muted" id="whats-nome-status"></span></div></div><div id="whats-link-wrap"><label>Link do produto no site (opcional)<input type="url" id="whats-link" placeholder="https://www.sonifarma.com.br/..." style="width:100%" maxlength="500"></label><div class="row"><button type="button" id="whats-link-salvar">Salvar link</button><span class="muted" id="whats-link-status">Use a URL real do produto.</span></div></div><label>Tipo de contato<select id="whats-tipo-aviso"><option value="recompra">Recompra de produto</option><option value="popular_amanha">Farmácia Popular — previsão para amanhã</option><option value="popular_hoje">Farmácia Popular — previsão para hoje</option></select></label><p class="muted">Farmácia Popular: uma mensagem por cliente e data prevista, sem listar os medicamentos. Se houver datas diferentes, prepare contatos separados para cada data.</p><label>Mensagem (editável)<textarea id="whats-mensagem" rows="6" style="width:100%;padding:10px"></textarea></label><p class="muted">Antes do envio, confira a preferência de contato do cliente. O nome do produto pode revelar informações de saúde; revise o texto e confirme que o cliente aceita receber esse tipo de detalhe.</p><p id="whats-ciclo-aviso" class="muted"></p><p id="whats-aviso" class="muted">Revise o telefone e o texto. Nenhuma mensagem será enviada automaticamente.</p></div><div class="row whats-actions"><button type="button" id="whats-gerar">↻ Gerar mensagem</button><button type="button" id="whats-copiar" title="Copie o texto para colar no WhatsApp caso o navegador altere os emojis">Copiar texto</button><button type="button" id="whats-abrir" style="background:#167347;color:white">Abrir WhatsApp ↗</button><button type="button" id="whats-confirmar" disabled style="background:#167347;color:#fff">✓ Confirmar envio</button></div></div></div><script>
+'use strict';let data=null;const $=id=>document.getElementById(id);const num=v=>new Intl.NumberFormat('pt-BR',{maximumFractionDigits:0}).format(Number(v)||0);const money=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v)||0);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function bars(target,rows,key,colors){const max=Math.max(1,...rows.map(x=>Number(x[key])||0));$(target).innerHTML=rows.map((r,i)=>`<div class="baritem"><div class="barlabel"><span>${esc(r.faixa)}</span><strong>${num(r[key])}</strong></div><div class="track"><div class="fill ${colors&&colors[i]||''}" style="width:${Math.max(0,Math.min(100,Number(r[key])*100/max))}%"></div></div></div>`).join('')||'<div class="empty">Sem dados</div>'}function draw(){if(!data)return;const r=data.resultados||{},s=(r.resumo||[])[0]||{},ina=r.faixas_inatividade||[],freq=r.frequencia_365_dias||[],months=r.compras_mensais_12_meses||[];$('compras').textContent=num(s.compras_validas);$('clientes').textContent=num(s.clientes_identificados);$('unidades').textContent=num(s.unidades_liquidas);$('valor').textContent=money(s.valor_liquido_estimado);const dt=data.gerado_em||'';$('updated').textContent='Dados atualizados em '+(dt?new Date(dt).toLocaleString('pt-BR'):'data desconhecida')+' · Período: '+(s.primeira_compra?new Date(s.primeira_compra).toLocaleDateString('pt-BR'):'—')+' a '+(s.ultima_compra?new Date(s.ultima_compra).toLocaleDateString('pt-BR'):'—');bars('inactive',ina,'clientes',['teal','','orange','']);bars('frequency',freq,'clientes',['teal','','','']);const totalIna=ina.reduce((a,x)=>a+Number(x.clientes||0),0),long=ina.find(x=>String(x.faixa).includes('90 dias'))?.clientes||0;$('inactiveInsight').textContent=totalIna?`${num(long)} clientes (${(100*long/totalIna).toFixed(1).replace('.',',')}%) estão na faixa de 90 dias ou mais sem compra.`:'Sem dados de inatividade';const totalFreq=freq.reduce((a,x)=>a+Number(x.clientes||0),0),one=freq.find(x=>x.faixa==='1 compra')?.clientes||0;$('frequencyInsight').textContent=totalFreq?`${num(one)} clientes (${(100*one/totalFreq).toFixed(1).replace('.',',')}%) fizeram uma compra nos últimos 365 dias.`:'Sem dados de frequência';$('monthly').innerHTML=months.map(x=>`<tr><td>${esc(x.mes)}</td><td class="num">${num(x.compras)}</td><td class="num">${num(x.clientes)}</td><td class="num">${money(x.valor_estimado)}</td></tr>`).join('');const metric=$('metric').value,max=Math.max(1,...months.map(x=>Number(x[metric])||0));$('plot').innerHTML=months.map((x,i)=>{let value=Number(x[metric])||0,label=metric==='valor_estimado'?num(Math.round(value/1000))+' mil':num(value);return `<div class="col" title="${esc(x.mes)}: ${esc(label)}"><div class="count">${esc(label)}</div><div class="bar ${i===months.length-1?'partial':''}" style="height:${Math.max(1,value/max*170)}px"></div><div class="lbl">${esc(String(x.mes).slice(5))}/${esc(String(x.mes).slice(2,4))}</div></div>`}).join('');$('footer').textContent='Sonifarma · '+(data.modulo||'Histórico agregado')+' · '+(Object.keys(data.erros||{}).length?'Relatório com avisos':'Relatório sem erros registrados');if(Object.keys(data.erros||{}).length){$('error').style.display='block';$('error').textContent='O relatório registra erros: '+Object.keys(data.erros).join(', ')}else{$('error').style.display='none'}}async function load(){try{const res=await fetch('modulo1_resultado_agregado.json?ts='+Date.now(),{cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);const parsed=await res.json();if(!parsed.resultados)throw Error('Formato do relatório inválido');data=parsed;draw()}catch(e){$('error').style.display='block';$('error').textContent='Não foi possível abrir modulo1_resultado_agregado.json. Confira se o arquivo está na mesma pasta e inicie pelo script Python. Detalhe: '+e.message}}$('refresh').addEventListener('click',load);$('metric').addEventListener('change',draw);$('csv').addEventListener('click',()=>{if(!data)return;const r=data.resultados||{},rows=[['secao','categoria','quantidade','clientes','valor_estimado'],...(r.faixas_inatividade||[]).map(x=>['inatividade',x.faixa,'',x.clientes,'']),...(r.frequencia_365_dias||[]).map(x=>['frequencia',x.faixa,'',x.clientes,'']),...(r.compras_mensais_12_meses||[]).map(x=>['mes',x.mes,x.compras,x.clientes,x.valor_estimado])];const csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='sonifarma_indicadores_agregados.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)});load();
+
+const tabs=[...document.querySelectorAll('.nav')];function showTab(id){tabs.forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.id===id));}tabs.forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+let erp=false;let chosen=null;async function api(url){let response=await fetch(url,{cache:'no-store'});let payload=await response.json();if(!response.ok)throw Error(payload.erro||'Falha na consulta');return payload;}
+async function statusERP(){try{const s=await api('/api/status');erp=s.erp;$('erp-status').textContent=erp?'ERP conectado • Consulta somente leitura':'ERP desconectado • Reinicie com --erp para pesquisar clientes';$('buscar').disabled=!erp;}catch(e){$('erp-status').textContent='Serviço de consulta indisponível';$('buscar').disabled=true;}}statusERP();
+async function buscarClientes(){const q=$('busca').value.trim();if(q.length<3){$('lista-clientes').innerHTML='<tr><td colspan="4">Digite ao menos 3 letras.</td></tr>';return;}$('lista-clientes').innerHTML='<tr><td colspan="4">Consultando...</td></tr>';try{let r=await api('/api/clientes?q='+encodeURIComponent(q));$('lista-clientes').innerHTML=r.clientes.map((c,i)=>`<tr class="clickrow" data-idx="${i}"><td>${esc(c.nome)}</td><td>${c.ultima_compra?new Date(c.ultima_compra).toLocaleDateString('pt-BR'):'—'}</td><td class="num">${num(c.vendas_candidatas)}</td><td>Ver histórico →</td></tr>`).join('')||'<tr><td colspan="4">Nenhum cliente encontrado.</td></tr>';$('lista-clientes').querySelectorAll('[data-idx]').forEach(tr=>tr.addEventListener('click',()=>abrirHistorico(r.clientes[Number(tr.dataset.idx)])));}catch(e){$('lista-clientes').innerHTML='<tr><td colspan="4">'+esc(e.message)+'</td></tr>';}}
+$('buscar').addEventListener('click',buscarClientes);$('busca').addEventListener('keydown',e=>{if(e.key==='Enter')buscarClientes()});
+async function abrirHistorico(c){chosen=c;$('agenda-cliente').value=c.pessoaid;$('recompra-cliente').textContent=c.nome+' • ID '+c.pessoaid;showTab('historico-tab');$('cliente-atual').textContent=c.nome+' • ID '+c.pessoaid;$('lista-historico').innerHTML='<tr><td colspan="7">Carregando...</td></tr>';try{const r=await api('/api/historico?id='+encodeURIComponent(c.pessoaid));$('lista-historico').innerHTML=r.itens.map(x=>`<tr><td>${x.data_compra?new Date(x.data_compra).toLocaleDateString('pt-BR'):'—'}</td><td>${esc(x.vendaid)}</td><td>${esc(x.produto)}</td><td class="num">${num(x.quantidade_original)}</td><td class="num">${num(x.quantidade_devolvida)}</td><td class="num">${num(x.quantidade_liquida)}</td><td class="num">${money(x.valor_estimado)}</td></tr>`).join('')||'<tr><td colspan="7">Nenhum item válido encontrado.</td></tr>';}catch(e){$('lista-historico').innerHTML='<tr><td colspan="7">'+esc(e.message)+'</td></tr>';}}
+
+async function agendaRequest(body){const r=await fetch('/api/agenda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const p=await r.json();if(!r.ok)throw Error(p.erro||'Falha');return p;}
+async function carregarAgenda(){try{const r=await api('/api/agenda');$('agenda-lista').innerHTML=r.tarefas.map(t=>`<tr><td>${esc(t.data_prevista.split('-').reverse().join('/'))}</td><td>${esc(t.cliente_id)}</td><td>${esc(t.motivo)}</td><td>${esc(t.status)}</td><td>${t.status==='Pendente'?`<button data-tarefa="${t.id}">Concluir</button>`:'—'}</td></tr>`).join('')||'<tr><td colspan="5">Nenhum atendimento agendado.</td></tr>';$('agenda-lista').querySelectorAll('[data-tarefa]').forEach(b=>b.addEventListener('click',async()=>{try{await agendaRequest({acao:'concluir',id:Number(b.dataset.tarefa)});await carregarAgenda();}catch(e){$('agenda-aviso').textContent=e.message}}));}catch(e){$('agenda-lista').innerHTML='<tr><td colspan="5">'+esc(e.message)+'</td></tr>';}}
+$('agenda-criar').addEventListener('click',async()=>{try{await agendaRequest({acao:'criar',cliente_id:Number($('agenda-cliente').value),data_prevista:$('agenda-data').value,motivo:$('agenda-motivo').value});$('agenda-aviso').textContent='Acompanhamento registrado na agenda local.';await carregarAgenda();}catch(e){$('agenda-aviso').textContent='Não foi possível registrar: '+e.message;}});
+$('agenda-atualizar').addEventListener('click',carregarAgenda);
+const agendaToday=new Date();$('agenda-data').value=[agendaToday.getFullYear(),String(agendaToday.getMonth()+1).padStart(2,'0'),String(agendaToday.getDate()).padStart(2,'0')].join('-');
+carregarAgenda();
+
+function dataBR(v){return v?String(v).split('-').reverse().join('/'):'—';}
+function resumoPrevisao(p){
+ const unidades=p.unidades_totais===null?'não identificadas':num(p.unidades_totais)+' unidades';
+ const pos=p.posologia_exibida===null?'indisponível':num(p.posologia_exibida)+' un./dia ('+p.posologia_origem+')';
+ return `Última compra: ${dataBR(p.ultima_compra)} · ${num(p.quantidade_ultima_compra)} caixa(s) · ${unidades} · Posologia: ${pos} · ${num(p.duracao_dias)} dias · ${esc(p.metodo)}`;
+}
+async function salvarPosologia(clienteId,produtoId,valor,remover=false){
+ const payload={acao:remover?'remover':'salvar',cliente_id:Number(clienteId),produto_id:Number(produtoId)};
+ if(!remover){const n=Number(valor);if(!Number.isFinite(n)||n<=0||n>100)throw Error('Informe unidades por dia entre 0,01 e 100.');payload.unidades_dia=n;}
+ const r=await fetch('/api/posologia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+ const d=await r.json();if(!r.ok)throw Error(d.erro||'Não foi possível salvar.');return d;
+}
+async function salvarAjustePrevisao(clienteId,produtoId,embalagemId,dose,unidades){
+ const n=String(dose??'').trim(),q=String(unidades??'').trim();
+ if(!embalagemId)throw Error('Embalagem sem identificador. Não é possível confirmar a apresentação.');
+ if(!n&&!q)throw Error('Informe a posologia e/ou a quantidade da apresentação.');
+ const payload={cliente_id:Number(clienteId),produto_id:Number(produtoId),embalagem_id:Number(embalagemId)};
+ if(n){const v=Number(n);if(!Number.isFinite(v)||v<=0||v>100)throw Error('Posologia inválida.');payload.unidades_dia=v;}
+ if(q){const v=Number(q);if(!Number.isFinite(v)||v<=0||v>10000)throw Error('Quantidade da apresentação inválida.');payload.unidades_apresentacao=v;}
+ const r=await fetch('/api/ajuste_previsao',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+ const d=await r.json();if(!r.ok)throw Error(d.erro||'Não foi possível salvar os ajustes.');return d;
+}
+function editorApresentacao(clienteId,p){
+ const d=p.detalhes_embalagem||[],unico=d.length===1?d[0]:null;
+ const emb=unico?.embalagemid||p.embalagemid;
+ const sugerido=unico?.unidades_caixa??'';
+ const manual=unico?.situacao==='Confirmada manualmente';
+ const status=d.length!==1?'Revisar embalagens':manual?'Confirmado':sugerido!==''?'Sugestão · conferir':'Pendente';
+ return `<label class="ajuste-campo" title="Quantidade de unidades na apresentação"><span>Qtd. Apres.</span><input aria-label="Quantidade de unidades por embalagem" type="number" min="0.01" max="10000" step="1" data-apres-input="${clienteId}-${p.produtoid}" value="${sugerido}" placeholder="—" ${d.length!==1?'disabled':''}></label><span class="ajuste-status" title="${esc(unico?.situacao||'')}" >${status}</span><input type="hidden" data-apres-emb="${clienteId}-${p.produtoid}" value="${emb||''}">`;
+}
+function instalarEdicaoPosologia(container,aoSalvar){
+ container.querySelectorAll('[data-pos-save]').forEach(b=>b.addEventListener('click',async()=>{
+   const pid=b.dataset.produto, cid=b.dataset.cliente;
+   const input=container.querySelector('[data-pos-input="'+cid+'-'+pid+'"]');
+   try{b.disabled=true;
+   const q=container.querySelector('[data-apres-input="'+cid+'-'+pid+'"]');
+   const emb=container.querySelector('[data-apres-emb="'+cid+'-'+pid+'"]');
+   if(q&&emb&&emb.value){await salvarAjustePrevisao(cid,pid,emb.value,input.value,q.value);}
+   else await salvarPosologia(cid,pid,input.value);
+   await aoSalvar();}
+   catch(e){alert(e.message);b.disabled=false;}
+ }));
+ container.querySelectorAll('[data-pos-remove]').forEach(b=>b.addEventListener('click',async()=>{
+   try{b.disabled=true;await salvarPosologia(b.dataset.cliente,b.dataset.produto,null,true);await aoSalvar();}
+   catch(e){alert(e.message);b.disabled=false;}
+ }));
+}
+function editorPosologia(clienteId,p){
+ return `<div class="ajuste-linha">${editorApresentacao(clienteId,p)}<label class="ajuste-campo"><span>Tomar/dia</span><input aria-label="Unidades por dia confirmadas" data-pos-input="${clienteId}-${p.produtoid}" type="number" min="0.01" max="100" step="0.25" value="${p.posologia??''}" placeholder="—"></label><button type="button" data-pos-save data-cliente="${clienteId}" data-produto="${p.produtoid}">Salvar</button><button type="button" data-pos-remove data-cliente="${clienteId}" data-produto="${p.produtoid}">Limpar</button></div>${p.aviso_calculo?'<div class="ajuste-alerta" title="'+esc(p.aviso_calculo)+'">Revisar quantidade para recalcular</div>':''}`;
+}
+async function carregarRecompra(){
+ if(!chosen){$('recompra-lista').innerHTML='<tr><td colspan="6">Selecione um cliente em Clientes.</td></tr>';return;}
+ $('recompra-lista').innerHTML='<tr><td colspan="6">Consultando histórico...</td></tr>';
+ try{const janela=$('recompra-janela').value;
+ const r=await api('/api/recompra?id='+encodeURIComponent(chosen.pessoaid)+'&janela='+encodeURIComponent(janela));
+ $('recompra-lista').innerHTML=r.previsoes.map(x=>`<tr><td><strong>${esc(x.produto)}</strong><div><button type="button" class="whats-produto" data-wcid="${chosen.pessoaid}" data-wcnome="${esc(chosen.nome)}" data-wproduto="${esc(x.produto)}" data-wean="${esc(x.ean||'')}" data-wdata="${esc(x.proxima_compra||'')}" style="background:#167347;color:white;margin-top:5px">Preparar WhatsApp</button></div><div class="muted">EAN: ${esc(x.ean||'—')} · ${num(x.quantidade_ultima_compra)} caixa(s) · ${x.unidades_totais===null?'unidades não identificadas':num(x.unidades_totais)+' unidades'}</div></td><td>${dataBR(x.ultima_compra)}</td><td>${num(x.compras_distintas)}</td><td>${editorPosologia(chosen.pessoaid,x)}</td><td><strong>${dataBR(x.proxima_compra)}</strong><div class="muted">${num(x.duracao_dias)} dias · ${esc(x.metodo)}${x.aviso_calculo?' · '+esc(x.aviso_calculo):''}</div></td><td>${esc(x.situacao_guia)}<div class="muted">${esc(x.apresentacao_guia||x.apresentacao_cadastro||'Apresentação não confirmada')}</div></td></tr>`).join('')||'<tr><td colspan="6">Nenhum produto encontrado para este filtro.</td></tr>';
+ instalarEdicaoPosologia($('recompra-lista'),carregarRecompra);
+ $('recompra-aviso').textContent=r.historico_limitado?'Atenção: histórico limitado aos 500 itens mais recentes; previsões podem estar incompletas.':'Exibindo até 100 apresentações. Previsões são estimativas.';
+ }catch(e){$('recompra-lista').innerHTML='<tr><td colspan="6">'+esc(e.message)+'</td></tr>';}
+}
+$('recompra-atualizar').addEventListener('click',carregarRecompra);
+
+
+// V17: seleção múltipla de pessoas, pesquisada em lotes no ERP.
+let pessoaApplied=new Map();let pessoaDraft=new Map(),pessoaRows=[],pessoaOffset=0,pessoaMore=false,pessoaBusy=false;
+function pessoaUpdate(){$('pessoa-count').textContent=pessoaApplied.size;}
+function pessoaRender(){
+ $('pessoa-draft-count').textContent=pessoaDraft.size;
+ const quick=$('pessoa-rapido').value.trim().toLocaleLowerCase('pt-BR');
+ const visible=pessoaRows.filter(c=>!quick||c.nome.toLocaleLowerCase('pt-BR').includes(quick));
+ $('pessoa-results').innerHTML=visible.map(c=>`<tr><td><input type="checkbox" data-pessoa-id="${c.pessoaid}" ${pessoaDraft.has(c.pessoaid)?'checked':''}></td><td>${esc(c.nome)}</td><td>${esc(c.status||'')}</td><td>${esc(c.tipo||'')}</td></tr>`).join('')||'<tr><td colspan="4">Nenhum resultado nesta pesquisa.</td></tr>';
+ $('pessoa-results').querySelectorAll('[data-pessoa-id]').forEach(el=>el.addEventListener('change',()=>{const id=Number(el.dataset.pessoaId),c=pessoaRows.find(x=>x.pessoaid===id);if(el.checked&&c)pessoaDraft.set(id,c);else pessoaDraft.delete(id);pessoaRender();}));
+ $('pessoa-selected').innerHTML=[...pessoaDraft.values()].map(c=>`<label style="display:inline-flex;align-items:center;gap:5px;margin:5px"><input type="checkbox" data-pessoa-remove="${c.pessoaid}" checked>${esc(c.nome)}</label>`).join('')||'<span class="muted">Nenhuma pessoa selecionada.</span>';
+ $('pessoa-selected').querySelectorAll('[data-pessoa-remove]').forEach(el=>el.addEventListener('change',()=>{pessoaDraft.delete(Number(el.dataset.pessoaRemove));pessoaRender();}));
+ $('pessoa-more').disabled=!pessoaMore||pessoaBusy;
+ $('pessoa-toggle-visible').checked=visible.length>0&&visible.every(c=>pessoaDraft.has(c.pessoaid));
+}
+function pessoaClose(){$('pessoa-modal').classList.remove('open');document.body.style.overflow='';}
+async function pessoaSearch(more=false){const q=$('pessoa-query').value.trim();if(q.length<3){$('pessoa-info').textContent='Digite ao menos 3 caracteres.';return;}if(pessoaBusy)return;pessoaBusy=true;$('pessoa-info').textContent='Consultando...';if(!more){pessoaOffset=0;pessoaRows=[];}
+ try{const d=await api('/api/pessoas-filtro?q='+encodeURIComponent(q)+'&offset='+pessoaOffset+'&status='+encodeURIComponent($('pessoa-status').value.trim())+'&tipo='+encodeURIComponent($('pessoa-tipo').value.trim()));pessoaRows.push(...d.pessoas);pessoaOffset+=d.pessoas.length;pessoaMore=d.tem_proxima;$('pessoa-info').textContent=pessoaRows.length+' resultado(s) exibido(s)';}catch(e){$('pessoa-info').textContent='Erro: '+e.message;}finally{pessoaBusy=false;pessoaRender();}}
+$('pessoa-open').addEventListener('click',()=>{pessoaDraft=new Map(pessoaApplied);pessoaRows=[];pessoaOffset=0;pessoaMore=false;$('pessoa-query').value='';$('pessoa-status').value='';$('pessoa-tipo').value='';$('pessoa-rapido').value='';$('pessoa-modal').classList.add('open');document.body.style.overflow='hidden';pessoaRender();$('pessoa-query').focus();});
+$('pessoa-close').addEventListener('click',pessoaClose);$('pessoa-cancel').addEventListener('click',pessoaClose);
+$('pessoa-search').addEventListener('click',()=>pessoaSearch());$('pessoa-query').addEventListener('keydown',e=>{if(e.key==='Enter')pessoaSearch();});$('pessoa-more').addEventListener('click',()=>pessoaSearch(true));$('pessoa-rapido').addEventListener('input',pessoaRender);$('pessoa-none').addEventListener('click',()=>{for(const c of pessoaRows)pessoaDraft.delete(c.pessoaid);pessoaRender();});$('pessoa-toggle-visible').addEventListener('change',e=>{const quick=$('pessoa-rapido').value.trim().toLocaleLowerCase('pt-BR');for(const c of pessoaRows.filter(c=>!quick||c.nome.toLocaleLowerCase('pt-BR').includes(quick))){if(e.target.checked)pessoaDraft.set(c.pessoaid,c);else pessoaDraft.delete(c.pessoaid);}pessoaRender();});
+$('pessoa-all').addEventListener('click',()=>{for(const c of pessoaRows)pessoaDraft.set(c.pessoaid,c);pessoaRender();});$('pessoa-clear').addEventListener('click',()=>{pessoaDraft.clear();pessoaRender();});
+$('pessoa-ok').addEventListener('click',()=>{if(pessoaDraft.size>100){$('pessoa-info').textContent='Selecione no máximo 100 pessoas.';return;}pessoaApplied=new Map(pessoaDraft);pessoaUpdate();centralSignature='';centralJob='';pessoaClose();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('pessoa-modal').classList.contains('open'))pessoaClose();},true);
+
+let centralCursor=0, centralNext=null, centralSignature='', centralLoading=false, centralLoaded=0, centralRequestToken=0, centralJob='';
+function centralFiltros(){return {pessoas:[...pessoaApplied.keys()].join(','),classificacoes:[...v16Applied.classificacao.keys()].join(','),pbms:[...pbmApplied.keys()].join(','),embalagens:embAplicadas.map(x=>x.embalagemid).join(','),janela:$('central-janela').value,nome:$('central-nome').value.trim(),uso:$('central-uso').value,ordem:$('central-ordem').value,produto:$('central-produto').value.trim(),mes:$('central-mes').value,dia:$('central-dia').value||'0',notificacao:$('central-notificacao').value,tipo:$('central-tipo').value.trim().toUpperCase(),status:$('central-status').value.trim().toUpperCase()};}
+async function carregarCentral(proxima=false, manterPagina=false){
+ if(centralLoading)return;
+ const area=$('central-resultados');const f=centralFiltros();const signature=JSON.stringify(f);
+ if(!proxima){centralLoaded=0;centralNext=null;centralJob='';}
+ centralLoading=true;const requestToken=++centralRequestToken;
+ if((!proxima && !manterPagina) || signature!==centralSignature){centralCursor=0;centralSignature=signature;}
+ else if(centralNext!==null){centralCursor=centralNext;}
+ const params=new URLSearchParams({...f,cursor:String(centralCursor),job:centralJob});
+ if(!proxima)area.innerHTML='<div class="empty">Consultando ERP (até 15 segundos)...</div>';
+ else $('central-aviso').textContent='Carregando mais resultados...';
+ $('central-buscar').disabled=true;$('central-proxima').disabled=true;
+ try{
+ let r=await api('/api/central?'+params.toString());
+ if(r.job)centralJob=r.job;
+ let tentativas=0;
+ while(r.preparando){
+   if(++tentativas>360)throw new Error('A análise global demorou mais de 12 minutos. Refine os filtros.');
+   $('central-aviso').textContent='Calculando ordenação global: '+(r.avaliados||0)+' candidatos avaliados. Aguarde...';
+   area.innerHTML='<div class="empty">Preparando classificação global da base. Nenhum resultado parcial será apresentado.</div>';
+   await new Promise(resolve=>setTimeout(resolve,2000));
+   if(requestToken!==centralRequestToken)return;
+   params.set('job',centralJob);
+   r=await api('/api/central?'+params.toString());
+ }
+ if(requestToken!==centralRequestToken)return;
+ centralLoaded+=r.clientes.length;
+ $('central-total').textContent=centralLoaded+' de '+r.total+' cliente(s) · ordenação global';
+ $('central-aviso').textContent='Ordenação global aplicada antes do carregamento: '+r.observacao;
+ centralNext=r.proximo_cursor;$('central-proxima').disabled=centralNext===null;
+ const novoHtml=r.clientes.map(c=>`<details data-next-date="${esc(c.proxima_compra)}" data-score="${c.escore}"><summary><span><button type="button" class="client-link" data-ficha-id="${c.pessoaid}" data-ficha-nome="${esc(c.nome)}">${esc(c.nome)}</button><div class="muted">${c.produtos.length} produto(s) previstos • previsão prioritária: ${dataBR(c.proxima_compra)}</div></span><span class="priority ${c.escore<50?'baixa':c.escore<75?'media':''}">${c.escore} pts · ${c.escore>=75?'Alta':c.escore>=50?'Média':'Baixa'}</span></summary><div class="items">${c.produtos.map(p=>`<div class="item"><div><strong>${esc(p.produto)}</strong><div class="muted">${resumoPrevisao(p)} · ${num(p.compras_distintas)} datas de compra</div>${editorPosologia(c.pessoaid,p)}<button type="button" class="whats-produto" data-wcid="${c.pessoaid}" data-wcnome="${esc(c.nome)}" data-wproduto="${esc(p.produto)}" data-wean="${esc(p.ean||'')}" data-wdata="${esc(p.proxima_compra||'')}" style="background:#167347;color:#fff;margin-top:7px">Preparar WhatsApp</button></div><div><strong>${dataBR(p.proxima_compra)}</strong><div class="muted">${p.escore} pontos · ${esc(p.prioridade)}</div></div></div>`).join('')}<button class="abrir-cliente" data-pid="${c.pessoaid}">Ver histórico completo →</button></div></details>`).join('');
+ if(proxima){if(novoHtml)area.insertAdjacentHTML('beforeend',novoHtml);}
+ else area.innerHTML=novoHtml||'<div class="empty">Nenhum cliente nesta primeira busca. Continue rolando para consultar os demais.</div>';
+ instalarEdicaoPosologia(area,()=>carregarCentral(false,true));
+ area.querySelectorAll('[data-ficha-id]:not([data-central-bound])').forEach(b=>(b.dataset.centralBound='1',b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();abrirFichaCliente(Number(b.dataset.fichaId),b.dataset.fichaNome);})));
+ area.querySelectorAll('[data-pid]:not([data-central-bound])').forEach(b=>(b.dataset.centralBound='1',b.addEventListener('click',()=>{const c=r.clientes.find(x=>x.pessoaid===Number(b.dataset.pid));if(c)abrirHistorico({pessoaid:c.pessoaid,nome:c.nome});})));
+ }catch(e){area.innerHTML='<div class="warning">'+esc(e.message)+'</div>';centralNext=null;}
+ finally{centralLoading=false;$('central-buscar').disabled=false;$('central-proxima').disabled=centralNext===null;}
+}
+$('central-buscar').addEventListener('click',()=>carregarCentral(false));
+$('central-proxima').addEventListener('click',()=>carregarCentral(true));
+const centralObserver=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)&&centralNext!==null&&!centralLoading&&document.getElementById('central-tab').classList.contains('active'))carregarCentral(true);},{rootMargin:'400px'});
+centralObserver.observe($('central-proxima'));
+$('central-proxima').style.display='block';$('central-proxima').style.opacity='0.5';$('central-proxima').textContent='Role para carregar mais resultados';
+$('central-limpar').addEventListener('click',()=>{for(const id of ['central-nome','central-produto','central-dia','central-tipo','central-status'])$(id).value='';for(const [id,v] of Object.entries({'central-janela':'misto3','central-uso':'todos','central-ordem':'data_misto','central-mes':'0','central-notificacao':'todos'}))$(id).value=v;embAplicadas=[];embAtualizarContagem();pbmApplied.clear();$('pbm-count').textContent='0';pessoaApplied.clear();pessoaUpdate();v16Applied.fabricante.clear();v16Applied.classificacao.clear();v164Refresh();centralCursor=0;centralNext=null;centralSignature='';centralJob='';$('central-proxima').disabled=true;$('central-total').textContent='Aguardando consulta';$('central-resultados').innerHTML='<div class="empty">Filtros limpos. Clique em Consultar clientes.</div>';});
+
+
+let fichaAtual=null,fichaDados={},fichaAba='previsoes',fichaAnteriorFoco=null;
+let fichaOrdem={previsoes:{col:'proxima_compra',dir:'asc'},historico:{col:'data_compra',dir:'desc'},posvenda:{col:'data_prevista',dir:'desc'}};
+function fichaComparar(a,b,col){let x=a[col],y=b[col];if(x==null||x==='')return y==null||y===''?0:1;if(y==null||y==='')return -1;if(col==='posologia') {x=Number(x);y=Number(y);}if(typeof x==='number'&&typeof y==='number')return x-y;return String(x).localeCompare(String(y),'pt-BR',{numeric:true,sensitivity:'base'});}
+function fichaOrdenar(itens,aba){const o=fichaOrdem[aba];return [...itens].sort((a,b)=>{const v=fichaComparar(a,b,o.col);return o.dir==='desc'?-v:v;});}
+function fichaCabecalho(aba,col,titulo){const o=fichaOrdem[aba],ativo=o.col===col;return `<th scope="col" aria-sort="${ativo?(o.dir==='desc'?'descending':'ascending'):'none'}"><button type="button" class="ficha-sort-btn" data-ficha-sort-aba="${aba}" data-ficha-sort-col="${col}" title="Ordenar por ${titulo}">${titulo} ${ativo?(o.dir==='desc'?'↓':'↑'):'↕'}</button></th>`;}
+function instalarOrdenacaoFicha(){document.querySelectorAll('#ficha-conteudo [data-ficha-sort-col]').forEach(b=>b.addEventListener('click',()=>{const aba=b.dataset.fichaSortAba,col=b.dataset.fichaSortCol,o=fichaOrdem[aba];fichaOrdem[aba]={col,dir:o.col===col?(o.dir==='desc'?'asc':'desc'):(col==='proxima_compra'||col==='data_compra'||col==='data_prevista'?'desc':'asc')};if(aba==='posvenda'&&typeof atualizarAgendaFicha==='function')atualizarAgendaFicha();else renderFicha();}));}
+function fecharFicha(){
+ $('ficha-modal').classList.remove('open');document.body.style.overflow='';
+ fichaAtual=null;if(fichaAnteriorFoco&&fichaAnteriorFoco.isConnected)fichaAnteriorFoco.focus();
+}
+$('ficha-fechar').addEventListener('click',fecharFicha);
+$('ficha-modal').addEventListener('click',e=>{if(e.target===$('ficha-modal'))fecharFicha();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('ficha-modal').classList.contains('open'))fecharFicha();});
+$('ficha-modal').addEventListener('keydown',e=>{if(e.key!=='Tab')return;const items=[...$('ficha-modal').querySelectorAll('button:not([disabled]),input:not([disabled])')].filter(x=>x.offsetParent!==null);if(!items.length)return;const first=items[0],last=items[items.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}});
+function formatarMoedaFicha(v){return v==null?'—':Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function formatarDataFicha(v){if(!v)return '—';const t=String(v).trim();let m=t.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return m[3]+'/'+m[2]+'/'+m[1];m=t.match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)return m[1]+'/'+m[2]+'/'+m[3];m=t.match(/^(?:\d{2}T)?\d{2}:\d{2}:\d{2}\/(\d{2})\/(\d{2})\/(\d{4})/);if(m)return m[1]+'/'+m[2]+'/'+m[3];return '—';}
+function renderCadastroFicha(d){
+ const campos=[['Data nasc.',formatarDataFicha(d.datanascimento)],['Sexo',d.sexo||'—'],['E-mail',d.email||'—'],['Telefone',d.telefone||'—'],['Celular',d.celular||'—'],['Valor médio',formatarMoedaFicha(d.valor_medio)],['Valor total',formatarMoedaFicha(d.valor_total)],['Compras totais',d.compras_total??'—'],['1ª compra',formatarDataFicha(d.primeira_compra)],['Última compra',formatarDataFicha(d.ultima_compra)]];
+ $('ficha-cadastro').innerHTML='<div class="ficha-cadastro-grid">'+campos.map(([k,v])=>'<div class="ficha-campo"><small>'+esc(k)+'</small><strong>'+esc(v)+'</strong></div>').join('')+'</div>';
+}
+function janelaFicha(){return $('central-janela').value;}
+function pbmsFicha(){return fichaAtual&&Array.isArray(fichaAtual.pbms)?fichaAtual.pbms:[];}
+function urlRecompraFicha(id,janela){const q=new URLSearchParams({id:String(id),janela:String(janela)});const pbms=pbmsFicha();if(pbms.length)q.set('pbms',pbms.join(','));const classificacoes=fichaAtual?.classificacoes||[];if(classificacoes.length)q.set('classificacoes',classificacoes.join(','));return '/api/recompra?'+q.toString();}
+async function abrirFichaCliente(id,nome){
+ if(!Number.isSafeInteger(id)||id<=0)return;
+ fichaAnteriorFoco=document.activeElement;fichaAtual={id,nome,pbms:[...pbmApplied.keys()],classificacoes:[...v16Applied.classificacao.keys()]};fichaDados={historico:null,previsoes:null,erros:[]};fichaAba='previsoes';fichaOrdem={previsoes:{col:'proxima_compra',dir:'asc'},historico:{col:'data_compra',dir:'desc'},posvenda:{col:'data_prevista',dir:'desc'}};
+ $('ficha-titulo').textContent=nome;$('ficha-subtitulo').textContent='Código ERP: '+id;
+ whatsCadastro=null; $('ficha-cadastro').textContent='Carregando resumo cadastral...';
+ api('/api/ficha-cadastro?id='+id).then(r=>{if(fichaAtual&&fichaAtual.id===id){if(r.cadastro){whatsCadastro=r.cadastro;renderCadastroFicha(r.cadastro);}else $('ficha-cadastro').textContent='Cadastro não encontrado.';}}).catch(()=>{if(fichaAtual&&fichaAtual.id===id)$('ficha-cadastro').textContent='Resumo cadastral indisponível; as demais abas continuam disponíveis.';});
+ $('ficha-modal').classList.add('open');document.body.style.overflow='hidden';$('ficha-fechar').focus();
+ $('ficha-aviso').textContent='Consultando dados...';$('ficha-conteudo').innerHTML='';
+ const janela=janelaFicha();
+ const results=await Promise.allSettled([api('/api/historico?id='+id),api(urlRecompraFicha(id,janela))]);
+ if(!fichaAtual||fichaAtual.id!==id)return;
+ const [h,r]=results;
+ fichaDados={historico:h.status==='fulfilled'?h.value.itens:null,previsoes:r.status==='fulfilled'?r.value.previsoes:null,
+  erros:[h.status==='rejected'?'Histórico indisponível.':'',r.status==='rejected'?'Previsões indisponíveis.':''].filter(Boolean),
+  limitado:r.status==='fulfilled'&&r.value.historico_limitado};
+ try{renderFicha();}catch(e){$('ficha-aviso').textContent='Falha ao exibir esta aba. Selecione outra aba ou tente novamente.';}
+}
+function renderFicha(){
+ if(!fichaAtual)return;
+ const d=fichaDados;document.querySelectorAll('[data-ficha-tab]').forEach(b=>b.classList.toggle('selected',b.dataset.fichaTab===fichaAba));
+ const hist=d.historico,prev=d.previsoes;
+ const j=janelaFicha();const periodo=j==='misto3'?'hoje ± 3 dias':j.startsWith('anteriores')?'anteriores '+j.slice(10)+' dias':j==='atrasadas'?'previsões atrasadas':'próximos '+j+' dias';
+ $('ficha-aviso').textContent=d.erros.length?d.erros.join(' '):(d.limitado?'Resultados possivelmente incompletos. ':'')+'Previsões do filtro: '+periodo+'.';
+ let html='';
+ if(fichaAba==='previsoes'){
+  if(!prev)html='<p>Não foi possível carregar as previsões. Tente abrir a ficha novamente.</p>';
+  else if(!prev.length)html='<p>Nenhum produto previsto para '+esc(periodo)+'.</p>';
+  else html='<table><thead><tr>'+fichaCabecalho('previsoes','produto','Produto')+''+fichaCabecalho('previsoes','ultima_compra','Última compra')+''+fichaCabecalho('previsoes','quantidade_ultima_compra','Caixas')+''+fichaCabecalho('previsoes','posologia','Qtd. Apres. / Tomar/dia')+''+'<th>Envio msg</th>'+fichaCabecalho('previsoes','duracao_dias','Duração')+''+fichaCabecalho('previsoes','proxima_compra','Próxima compra')+'</tr></thead><tbody>'+fichaOrdenar(prev,'previsoes').map(p=>`<tr><td>${esc(p.produto)}</td><td>${dataBR(p.ultima_compra)}</td><td>${num(p.quantidade_ultima_compra)}</td><td>${editorPosologia(fichaAtual.id,p)}</td><td><button type="button" class="whats-produto whats-mini" title="Preparar WhatsApp deste produto" aria-label="Preparar WhatsApp deste produto" data-wcid="${fichaAtual.id}" data-wcnome="${esc(fichaAtual.nome)}" data-wproduto="${esc(p.produto)}" data-wean="${esc(p.ean||'')}" data-wdata="${esc(p.proxima_compra||'')}">✉</button></td><td>${num(p.duracao_dias)} dias</td><td><strong>${dataBR(p.proxima_compra)}</strong></td></tr>`).join('')+'</tbody></table>';
+  }else if(fichaAba==='posvenda'){
+   html='<div class="panel"><h2>Acompanhamentos deste cliente</h2><div class="filterbar"><input type="date" id="ficha-agenda-data" aria-label="Data do acompanhamento"><select id="ficha-agenda-motivo" aria-label="Motivo"><option>Acompanhamento</option><option>Retorno solicitado</option><option>Conferir cadastro</option></select><button type="button" id="ficha-agenda-criar">Agendar</button></div><p class="muted" id="ficha-agenda-status">Consultando agenda...</p><div id="ficha-agenda-lista"></div><p class="muted">Não registre diagnósticos, medicamentos ou informações de saúde na agenda.</p></div><div class="panel"><div class="row"><h2>Histórico WhatsApp deste cliente</h2><button type="button" id="ficha-whats-atualizar">Atualizar</button></div><p id="ficha-whats-status" class="muted">Consultando contatos...</p><div id="ficha-whats-lista"></div></div>';
+ }else if(fichaAba==='historico'){
+  if(!hist)html='<p>Não foi possível carregar o histórico.</p>';
+  else html='<table><thead><tr>'+fichaCabecalho('historico','data_compra','Data')+''+fichaCabecalho('historico','vendaid','Venda')+''+fichaCabecalho('historico','produto','Produto')+''+fichaCabecalho('historico','quantidade_original','Comprado')+''+fichaCabecalho('historico','quantidade_devolvida','Devolvido')+''+fichaCabecalho('historico','quantidade_liquida','Saldo')+''+fichaCabecalho('historico','valor_estimado','Valor estimado')+'</tr></thead><tbody>'+fichaOrdenar(hist,'historico').map(x=>`<tr><td>${dataBR(String(x.data_compra||'').slice(0,10))}</td><td>${esc(x.vendaid)}</td><td>${esc(x.produto)}</td><td>${num(x.quantidade_original)}</td><td>${num(x.quantidade_devolvida)}</td><td>${num(x.quantidade_liquida)}</td><td>${money(x.valor_estimado)}</td></tr>`).join('')+'</tbody></table>';
+ }else{
+  const vendas=new Set((hist||[]).map(x=>x.vendaid));const ultima=(hist||[]).map(x=>String(x.data_compra||'').slice(0,10)).filter(Boolean).sort().reverse()[0];
+  html=`<div class="cards"><div class="card"><div class="label">Vendas exibidas</div><div class="value">${vendas.size}</div></div><div class="card"><div class="label">Produtos no período</div><div class="value">${prev?prev.length:'—'}</div></div><div class="card"><div class="label">Última compra exibida</div><div class="detail">${dataBR(ultima)}</div></div></div><p class="muted">O histórico exibido pode ser limitado a 100 linhas.</p>`;
+ }
+ $('ficha-conteudo').innerHTML=html||'<p>Sem registros para exibir.</p>';instalarOrdenacaoFicha();
+  if(fichaAba==='posvenda'){iniciarAgendaFicha(fichaAtual.id);iniciarWhatsFicha(fichaAtual.id);}
+ if(fichaAba==='previsoes'&&prev){instalarEdicaoPosologia($('ficha-conteudo'),async()=>{
+  if(!fichaAtual)return;const id=fichaAtual.id;
+  try{const r=await api(urlRecompraFicha(id,janelaFicha()));if(!fichaAtual||fichaAtual.id!==id)return;fichaDados.previsoes=r.previsoes;renderFicha();}
+  catch(e){$('ficha-aviso').textContent='Ajuste salvo, mas não foi possível atualizar a lista. Reabra a ficha.';}
+ });}
+}
+
+async function iniciarWhatsFicha(clienteId){
+ const lista=$('ficha-whats-lista'),status=$('ficha-whats-status'),btn=$('ficha-whats-atualizar');
+ if(!lista||!status)return;
+ async function atualizar(){
+  if(!fichaAtual||String(fichaAtual.id)!==String(clienteId)||fichaAba!=='posvenda')return;
+  status.textContent='Atualizando histórico de WhatsApp...';
+  try{
+   const dados=await api('/api/whatsapp-registros?cliente_id='+encodeURIComponent(clienteId));
+   if(!fichaAtual||String(fichaAtual.id)!==String(clienteId)||fichaAba!=='posvenda')return;
+   const registros=dados.registros||[];
+   status.textContent=registros.length+' contato(s) registrado(s) para este cliente.';
+   const opcoes=['Aguardando resposta','Interessado','Não precisa agora','Recompra realizada'];
+   lista.innerHTML=registros.length?'<div class="scroll"><table><thead><tr><th>Data/hora</th><th>Produto</th><th>Previsão</th><th>Envio</th><th>Resultado</th></tr></thead><tbody>'+registros.map(r=>'<tr><td>'+esc(r.criado_em||'')+'</td><td>'+esc(r.produto_descricao||'')+'</td><td>'+esc(r.previsao||'')+'</td><td>'+esc(r.status||'')+'</td><td><select class="ficha-whats-resultado" data-regid="'+Number(r.id)+'">'+opcoes.map(o=>'<option '+(r.resultado===o?'selected':'')+'>'+esc(o)+'</option>').join('')+'</select></td></tr>').join('')+'</tbody></table></div>':'<p class="muted">Nenhum contato de WhatsApp registrado para este cliente.</p>';
+  }catch(e){status.textContent='Falha ao consultar histórico WhatsApp: '+e.message;}
+ }
+ btn?.addEventListener('click',atualizar);
+ lista.addEventListener('change',async e=>{
+  const el=e.target;if(!el.matches('.ficha-whats-resultado'))return;
+  el.disabled=true;
+  try{
+   const resp=await fetch('/api/whatsapp-resultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:Number(el.dataset.regid),resultado:el.value})});
+   const dados=await resp.json();if(!resp.ok)throw Error(dados.erro||'Erro HTTP '+resp.status);
+   await atualizar();await whatsHistoricoAtualizar();
+  }catch(err){status.textContent='Falha ao salvar resultado: '+err.message;el.disabled=false;}
+ });
+ await atualizar();
+}
+let atualizarAgendaFicha=null;
+async function iniciarAgendaFicha(clienteId){
+ const campo=$('ficha-agenda-data');if(!campo)return;
+ const hoje=new Date();campo.value=[hoje.getFullYear(),String(hoje.getMonth()+1).padStart(2,'0'),String(hoje.getDate()).padStart(2,'0')].join('-');
+ async function atualizar(){
+  if(!fichaAtual||fichaAtual.id!==clienteId||fichaAba!=='posvenda')return;
+  try{const dados=await api('/api/agenda?cliente_id='+encodeURIComponent(clienteId));
+   if(!fichaAtual||fichaAtual.id!==clienteId||fichaAba!=='posvenda')return;
+   $('ficha-agenda-status').textContent=dados.tarefas.length+' acompanhamento(s) encontrado(s).';
+   $('ficha-agenda-lista').innerHTML=dados.tarefas.length?'<div class="scroll"><table><thead><tr>'+fichaCabecalho('posvenda','data_prevista','Data')+''+fichaCabecalho('posvenda','motivo','Motivo')+''+fichaCabecalho('posvenda','status','Status')+'<th>Ação</th></tr></thead><tbody>'+fichaOrdenar(dados.tarefas,'posvenda').map(t=>'<tr><td>'+formatarDataFicha(t.data_prevista)+'</td><td>'+esc(t.motivo)+'</td><td>'+esc(t.status)+'</td><td>'+(t.status==='Pendente'?'<button type="button" data-ficha-concluir="'+Number(t.id)+'">Concluir</button>':'—')+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted">Nenhum acompanhamento registrado.</p>';
+   instalarOrdenacaoFicha();$('ficha-agenda-lista').querySelectorAll('[data-ficha-concluir]').forEach(b=>b.addEventListener('click',async()=>{try{b.disabled=true;await agendaRequest({acao:'concluir',id:Number(b.dataset.fichaConcluir),cliente_id:clienteId});await atualizar();}catch(e){$('ficha-agenda-status').textContent='Erro: '+e.message;b.disabled=false;}}));
+  }catch(e){if($('ficha-agenda-status'))$('ficha-agenda-status').textContent='Não foi possível consultar a agenda: '+e.message;}
+ }
+ atualizarAgendaFicha=atualizar;
+ $('ficha-agenda-criar').addEventListener('click',async()=>{const b=$('ficha-agenda-criar');try{b.disabled=true;await agendaRequest({acao:'criar',cliente_id:clienteId,data_prevista:$('ficha-agenda-data').value,motivo:$('ficha-agenda-motivo').value});await atualizar();}catch(e){$('ficha-agenda-status').textContent='Não foi possível agendar: '+e.message;}finally{if(b.isConnected)b.disabled=false;}});
+ await atualizar();
+}
+document.querySelectorAll('[data-ficha-tab]').forEach(b=>b.addEventListener('click',()=>{fichaAba=b.dataset.fichaTab;try{renderFicha();}catch(e){$('ficha-aviso').textContent='Erro ao exibir dados desta aba.';}}));
+
+// V14: seleção em duas etapas, sem armazenar dados do ERP no navegador.
+let embAplicadas=[],embRascunho=[],embMarcadas=new Set(),embResultados=[],embEscolhas=new Map(),embOffset=0,embTemProxima=false,embCarregando=false;
+const embCampos=['busca','etiqueta','status_produto','controle_sngpc','unidade_preco','preco_unidade'];
+function embAtualizarContagem(){$('emb-count').textContent=embAplicadas.length;}
+function embRenderSelecionadas(){
+ $('emb-total').textContent=embRascunho.length+' embalagem(ns) selecionada(s)';
+ $('emb-selecionadas').innerHTML=embRascunho.length?embRascunho.map(x=>`<label style="display:flex;gap:10px;align-items:center;padding:11px;border-bottom:1px solid #e1e8ed"><input type="checkbox" data-emb-remove="${x.embalagemid}" ${embMarcadas.has(x.embalagemid)?'checked':''}><span><strong>${esc(x.produto)}</strong><br><span class="muted">${esc(x.apresentacao||'')} · EAN: ${esc(x.ean||'—')} · ID: ${x.embalagemid}</span></span></label>`).join(''):'<p class="muted">Nenhuma embalagem selecionada. Clique em + para pesquisar.</p>';
+ $('emb-selecionadas').querySelectorAll('[data-emb-remove]').forEach(x=>x.addEventListener('change',()=>{const id=Number(x.dataset.embRemove);if(x.checked)embMarcadas.add(id);else embMarcadas.delete(id)}));
+}
+function embFechar(){ $('emb-modal').classList.remove('open');$('emb-pesquisa-modal').classList.remove('open');document.body.style.overflow=''; }
+$('emb-abrir').addEventListener('click',()=>{embRascunho=embAplicadas.map(x=>({...x}));embMarcadas.clear();embRenderSelecionadas();$('emb-modal').classList.add('open');document.body.style.overflow='hidden';});
+$('emb-fechar').addEventListener('click',embFechar);$('emb-cancelar').addEventListener('click',embFechar);
+$('emb-limpar').addEventListener('click',()=>{embRascunho=[];embMarcadas.clear();embRenderSelecionadas()});
+$('emb-remover').addEventListener('click',()=>{embRascunho=embRascunho.filter(x=>!embMarcadas.has(x.embalagemid));embMarcadas.clear();embRenderSelecionadas()});
+$('emb-confirmar').addEventListener('click',()=>{embAplicadas=embRascunho.map(x=>({...x}));embAtualizarContagem();embFechar();centralCursor=0;centralNext=null;centralSignature='';centralJob='';$('central-total').textContent='Filtro alterado — clique em Consultar clientes';});
+$('emb-adicionar').addEventListener('click',()=>{embEscolhas=new Map();embOffset=0;embResultados=[];$('emb-resultados').innerHTML='';$('emb-pesquisa-aviso').textContent='Informe os filtros e clique em Pesquisar.';$('emb-pesquisa-modal').classList.add('open');});
+function embFecharPesquisa(){$('emb-pesquisa-modal').classList.remove('open');}
+$('emb-pesquisa-fechar').addEventListener('click',embFecharPesquisa);$('emb-pesquisa-cancelar').addEventListener('click',embFecharPesquisa);
+async function embPesquisar(proxima=false){
+ if(embCarregando)return;embCarregando=true;
+ if(!proxima){embOffset=0;embResultados=[];}
+ const params=new URLSearchParams({offset:String(embOffset)});
+ embCampos.forEach(k=>{const v=$('emb-'+k)?.value.trim();if(v)params.set(k,v)});
+ for(const key of ['fabricante','classificacao','grupo_remarcacao']){const ids=[...v16Applied[key].keys()];if(ids.length)params.set(key+'_ids',ids.join(','));}
+ const produto=$('emb-produto').value.trim();if(produto)params.set('produto',produto);
+ $('emb-pesquisa-aviso').textContent='Pesquisando no ERP...';$('emb-pesquisar').disabled=true;$('emb-mais').disabled=true;
+ try{const r=await api('/api/embalagens?'+params.toString());const lote=r.embalagens||[];embResultados=proxima?embResultados.concat(lote):lote;embTemProxima=!!r.tem_proxima;
+ $('emb-resultados').innerHTML=embResultados.map(x=>`<tr><td><input type="checkbox" data-emb-pick="${x.embalagemid}" ${embEscolhas.has(x.embalagemid)||embRascunho.some(y=>y.embalagemid===x.embalagemid)?'checked':''}></td><td>${esc(x.produto)}</td><td>${esc(x.apresentacao||'—')}</td><td>${esc(x.ean||'—')}</td></tr>`).join('')||'<tr><td colspan="4">Nenhuma embalagem encontrada.</td></tr>';
+ $('emb-resultados').querySelectorAll('[data-emb-pick]').forEach(el=>el.addEventListener('change',()=>{const x=embResultados.find(y=>y.embalagemid===Number(el.dataset.embPick));if(!x)return;if(el.checked)embEscolhas.set(x.embalagemid,x);else embEscolhas.delete(x.embalagemid)}));
+ const indisponiveis=Object.entries(r.campos_disponiveis||{}).filter(([k,v])=>!v).map(([k])=>k);
+ $('emb-pesquisa-aviso').textContent='Exibindo '+embResultados.length+' embalagens.'+(indisponiveis.length?' Campos não disponíveis no ERP: '+indisponiveis.join(', '):'');
+ }catch(e){$('emb-pesquisa-aviso').textContent='Erro: '+e.message;$('emb-resultados').innerHTML='';embTemProxima=false}
+ finally{embCarregando=false;$('emb-pesquisar').disabled=false;$('emb-mais').disabled=!embTemProxima;}
+}
+$('emb-pesquisar').addEventListener('click',()=>embPesquisar(false));$('emb-mais').addEventListener('click',()=>{embOffset=embResultados.length;embPesquisar(true)});
+document.querySelector('#emb-pesquisa-modal .modal-scroll').addEventListener('scroll',e=>{const el=e.currentTarget;if(embTemProxima&&!embCarregando&&el.scrollTop+el.clientHeight>=el.scrollHeight-110){embOffset=embResultados.length;embPesquisar(true);}});
+$('emb-pesquisa-ok').addEventListener('click',()=>{
+ // Captura também marcações da página corrente.
+ $('emb-resultados').querySelectorAll('[data-emb-pick]').forEach(el=>{const x=embResultados.find(y=>y.embalagemid===Number(el.dataset.embPick));if(!x)return;if(el.checked)embEscolhas.set(x.embalagemid,x);else embEscolhas.delete(x.embalagemid)});
+ const mapa=new Map(embRascunho.map(x=>[x.embalagemid,x]));embEscolhas.forEach((x,id)=>mapa.set(id,x));
+ if(mapa.size>100){$('emb-pesquisa-aviso').textContent='Selecione no máximo 100 embalagens.';return;}
+ embRascunho=[...mapa.values()];embMarcadas.clear();embRenderSelecionadas();embFecharPesquisa();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('emb-pesquisa-modal').classList.contains('open')){e.stopImmediatePropagation();embFecharPesquisa();}else if(e.key==='Escape'&&$('emb-modal').classList.contains('open'))embFechar();},true);
+
+// V16: seletores independentes, IDs do ERP e árvore completa de classificações.
+const v16Types={fabricante:'Fabricante',classificacao:'Classificação',grupo_remarcacao:'Grupo de remarcação'};
+const v16Applied={fabricante:new Map(),classificacao:new Map(),grupo_remarcacao:new Map()};
+const v164DefaultNames=['MANIPULACAO','GENERICO','PROPAGADO','SIMILAR','SUPLEMENTO ALIMENTAR','VITAMINAS BONI / CAPSULAS/COMPRIMIDOS'];
+let v164Rows=[],v164Ready=false,v164LoadError='';
+function v164Norm(x){return String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toUpperCase();}
+function v164Refresh(){const m=v16Applied.classificacao;$('central-classificacao-count').textContent=m.size; $('v16-count-classificacao').textContent=m.size+' selecionado(s)';centralCursor=0;centralNext=null;centralSignature='';centralJob='';}
+function v164Restore(){if(!v164Ready)return;const roots=v164Rows.filter(r=>r.paiid===null&&v164Norm(r.nome)==='PRINCIPAL');const root=roots[0];const defaults=v164Rows.filter(r=>r.paiid===root?.id&&v164DefaultNames.includes(v164Norm(r.nome)));const chosen=new Map();for(const r of defaults){for(const id of v16TreeDesc(r.id,v164Rows)){const item=v164Rows.find(x=>x.id===id);if(item)chosen.set(id,item);}}v16Applied.classificacao=chosen;v164Refresh();}
+async function v164Init(){try{const data=await api('/api/filtro-opcoes?tipo=classificacao');v164Rows=v16TreeOrdered(data.opcoes);v164Ready=true;v164Restore();if(!v16Applied.classificacao.size){$('central-total').textContent='Atenção: nenhuma classificação padrão encontrada. Confira os nomes no cadastro do ERP.';}$('central-buscar').disabled=false;}catch(e){v164LoadError=e.message;$('central-total').textContent='Erro ao carregar classificações padrão: '+e.message;}}
+let v16Type='fabricante',v16Draft=new Map(),v16Pick=new Map(),v16Remove=new Set(),v16Rows=[],v16Expanded=new Set(),v16SearchOpen=false;
+function v16TreeDesc(id,rows){const byParent=new Map();for(const r of rows){if(!byParent.has(r.paiid))byParent.set(r.paiid,[]);byParent.get(r.paiid).push(r.id)}const out=[],stack=[id],seen=new Set();while(stack.length){const n=stack.pop();if(seen.has(n))continue;seen.add(n);out.push(n);for(const c of byParent.get(n)||[])stack.push(c)}return out;}
+function v16TreeOrdered(rows){
+ const byParent=new Map(),byId=new Map(rows.map(r=>[r.id,r]));
+ for(const r of rows){const parent=byId.has(r.paiid)?r.paiid:null;if(!byParent.has(parent))byParent.set(parent,[]);byParent.get(parent).push(r)}
+ const sorter=(a,b)=>{if(a.paiid===null&&b.paiid===null){const ap=a.nome.trim().toLocaleUpperCase('pt-BR')==='PRINCIPAL',bp=b.nome.trim().toLocaleUpperCase('pt-BR')==='PRINCIPAL';if(ap!==bp)return ap?-1:1;}return a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'})||a.id-b.id};
+ for(const children of byParent.values())children.sort(sorter);
+ const ordered=[],visited=new Set();function walk(r,depth){if(visited.has(r.id))return;visited.add(r.id);ordered.push({...r,nivel:depth});for(const child of byParent.get(r.id)||[])walk(child,depth+1)}
+ for(const root of byParent.get(null)||[])walk(root,0);
+ for(const r of rows)if(!visited.has(r.id))walk(r,0);
+ return ordered;
+}
+function v16CompactRows(map){if(v16Type!=='classificacao')return [...map.values()];const byId=new Map(v16Rows.map(r=>[r.id,r]));const chosen=new Set(map.keys());return v16Rows.filter(r=>{if(!chosen.has(r.id))return false;let p=r.paiid,seen=new Set();while(p!==null&&byId.has(p)&&!seen.has(p)){if(chosen.has(p)&&v16TreeDesc(p,v16Rows).every(id=>chosen.has(id)))return false;seen.add(p);p=byId.get(p).paiid}return true}).filter(r=>!v16TreeDesc(r.id,v16Rows).some(id=>id!==r.id&&chosen.has(id)&&!chosen.has(r.id)));}
+function v16Open(type){v16Type=type;if(type==='classificacao'&&v164Ready)v16Rows=v164Rows;v16Draft=new Map(v16Applied[type]);v16Remove.clear();$('v16-title').textContent='Selecionar '+v16Types[type];v16RenderDraft();$('v16-modal').classList.add('open');document.body.style.overflow='hidden';}
+function v16RenderDraft(){const rows=v16CompactRows(v16Draft);$('v16-total').textContent=rows.length+' seleção(ões) exibida(s)';$('v16-selected').innerHTML=rows.length?rows.map(r=>`<div class="v16-item"><input type="checkbox" data-v16-remove="${r.id}" ${v16Remove.has(r.id)?'checked':''}><label>${esc(r.nome)}</label></div>`).join(''):'<p class="muted" style="padding:12px">Nenhum registro selecionado. Clique em + para pesquisar.</p>';$('v16-selected').querySelectorAll('[data-v16-remove]').forEach(x=>x.addEventListener('change',()=>{const id=Number(x.dataset.v16Remove);if(x.checked)v16Remove.add(id);else v16Remove.delete(id)}));}
+function v16CloseSearch(){$('v16-search-modal').classList.remove('open');v16SearchOpen=false;}
+function v16Close(){v16CloseSearch();$('v16-modal').classList.remove('open');document.body.style.overflow='';}
+async function v16Load(){const t=v16Type;$('v16-msg').textContent='Carregando cadastro do ERP...';$('v16-results').innerHTML='';try{const result=await api('/api/filtro-opcoes?tipo='+encodeURIComponent(t));v16Rows=t==='classificacao'?v16TreeOrdered(result.opcoes):result.opcoes;v16Expanded=new Set(v16Rows.filter(r=>r.paiid===null).map(r=>r.id));v16RenderResults();}catch(e){$('v16-msg').textContent='Erro: '+e.message;}}
+function v16RenderResults(){const term=$('v16-query').value.trim().toLocaleLowerCase('pt-BR');const byId=new Map(v16Rows.map(r=>[r.id,r]));const parents=new Set(v16Rows.map(r=>r.paiid));const matching=new Set();if(term&&v16Type==='classificacao'){for(const r of v16Rows){if(r.nome.toLocaleLowerCase('pt-BR').includes(term)||String(r.caminho||'').toLocaleLowerCase('pt-BR').includes(term)){matching.add(r.id);let p=r.paiid,seen=new Set();while(p!==null&&byId.has(p)&&!seen.has(p)){matching.add(p);seen.add(p);p=byId.get(p).paiid;}}}}
+let visible=v16Rows.filter(r=>{if(v16Type!=='classificacao')return !term||r.nome.toLocaleLowerCase('pt-BR').includes(term);if(term)return matching.has(r.id);let p=r.paiid,seen=new Set();while(p!==null&&byId.has(p)&&!seen.has(p)){if(!v16Expanded.has(p))return false;seen.add(p);p=byId.get(p).paiid;}return true;});$('v16-msg').textContent=visible.length+' registros exibidos de '+v16Rows.length+'.';$('v16-results').innerHTML=visible.map(r=>{const children=v16Type==='classificacao'&&parents.has(r.id);const indent=v16Type==='classificacao'?Math.min(8,r.nivel||0)*18:0;const descendants=v16Type==='classificacao'?v16TreeDesc(r.id,v16Rows):[r.id];const count=descendants.filter(id=>v16Pick.has(id)||v16Draft.has(id)).length;const checked=count===descendants.length;const partial=count>0&&!checked;return `<div class="v16-item" style="padding-left:${10+indent}px">${children?`<button type="button" class="v16-tree-toggle" data-v16-expand="${r.id}">${v16Expanded.has(r.id)?'▾':'▸'}</button>`:'<span style="width:30px"></span>'}<input type="checkbox" data-v16-pick="${r.id}" ${checked?'checked':''} ${partial?'data-v16-partial="1"':''}><label>${esc(r.nome)}</label></div>`}).join('')||'<p class="muted" style="padding:12px">Nenhum resultado.</p>';$('v16-results').querySelectorAll('[data-v16-partial]').forEach(x=>x.indeterminate=true);$('v16-results').querySelectorAll('[data-v16-expand]').forEach(x=>x.addEventListener('click',()=>{const id=Number(x.dataset.v16Expand);if(v16Expanded.has(id))v16Expanded.delete(id);else v16Expanded.add(id);v16RenderResults()}));$('v16-results').querySelectorAll('[data-v16-pick]').forEach(x=>x.addEventListener('change',()=>{const id=Number(x.dataset.v16Pick);const ids=v16Type==='classificacao'?v16TreeDesc(id,v16Rows):[id];for(const k of ids){if(x.checked)v16Pick.set(k,byId.get(k));else{v16Pick.delete(k);v16Draft.delete(k);}}v16RenderResults()}));}
+for(const type of Object.keys(v16Types))$('v16-open-'+type).addEventListener('click',()=>v16Open(type));
+
+$('central-classificacao-open').addEventListener('click',()=>v16Open('classificacao'));
+$('central-classificacao-restaurar').addEventListener('click',()=>v164Restore());
+$('v16-close').addEventListener('click',v16Close);$('v16-cancel').addEventListener('click',v16Close);
+$('v16-remove').addEventListener('click',()=>{for(const id of v16Remove)for(const k of (v16Type==='classificacao'?v16TreeDesc(id,v16Rows):[id]))v16Draft.delete(k);v16Remove.clear();v16RenderDraft()});$('v16-clear').addEventListener('click',()=>{v16Draft.clear();v16Remove.clear();v16RenderDraft()});
+$('v16-ok').addEventListener('click',()=>{v16Applied[v16Type]=new Map(v16Draft);if(v16Type==='classificacao')v164Refresh();centralSignature='';centralJob='';$('v16-count-'+v16Type).textContent=(v16Type==='classificacao'?v16CompactRows(v16Draft).length:v16Draft.size)+' selecionado(s)';v16Close();$('emb-pesquisa-aviso').textContent='Filtros alterados — clique em Pesquisar.';});
+$('v16-add').addEventListener('click',()=>{v16Pick=new Map();$('v16-query').value='';$('v16-search-title').textContent='Pesquisar '+v16Types[v16Type];$('v16-search-modal').classList.add('open');v16SearchOpen=true;v16Load();});
+$('v16-search-close').addEventListener('click',v16CloseSearch);$('v16-search-cancel').addEventListener('click',v16CloseSearch);
+$('v16-query').addEventListener('input',v16RenderResults);
+$('v16-all').addEventListener('click',()=>{const visible=[...$('v16-results').querySelectorAll('[data-v16-pick]')].map(x=>Number(x.dataset.v16Pick));const byId=new Map(v16Rows.map(r=>[r.id,r]));for(const id of visible)for(const k of (v16Type==='classificacao'?v16TreeDesc(id,v16Rows):[id]))v16Pick.set(k,byId.get(k));v16RenderResults()});
+$('v16-none').addEventListener('click',()=>{const visible=[...$('v16-results').querySelectorAll('[data-v16-pick]')].map(x=>Number(x.dataset.v16Pick));for(const id of visible)for(const k of (v16Type==='classificacao'?v16TreeDesc(id,v16Rows):[id])){v16Pick.delete(k);v16Draft.delete(k);}v16RenderResults()});
+$('v16-search-ok').addEventListener('click',()=>{for(const [id,r] of v16Pick)v16Draft.set(id,r);v16RenderDraft();v16CloseSearch()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&v16SearchOpen){e.stopImmediatePropagation();v16CloseSearch()}else if(e.key==='Escape'&&$('v16-modal').classList.contains('open')){e.stopImmediatePropagation();v16Close()}},true);
+
+// V16.3: PBMs cadastradas (inclusive sem vendas); seleção por ID.
+const pbmApplied=new Map();let pbmDraft=new Map(),pbmRows=[],pbmSelected=new Set();
+function pbmDraw(){
+ const q=$('pbm-query').value.trim().toLocaleLowerCase('pt-BR');
+ const filtered=pbmRows.filter(x=>x.nome.toLocaleLowerCase('pt-BR').includes(q));
+ $('pbm-results').innerHTML=filtered.map(x=>`<tr><td><input type="checkbox" data-pbm-id="${x.id}" ${pbmDraft.has(x.id)?'checked':''}></td><td>${esc(x.nome)}</td></tr>`).join('')||'<tr><td colspan="2">Nenhuma PBM encontrada.</td></tr>';
+ $('pbm-results').querySelectorAll('[data-pbm-id]').forEach(el=>el.addEventListener('change',()=>{
+  const id=Number(el.dataset.pbmId),item=pbmRows.find(x=>x.id===id);
+  if(el.checked&&item)pbmDraft.set(id,item);else pbmDraft.delete(id);pbmDrawSelected();
+ }));pbmDrawSelected();
+}
+function pbmDrawSelected(){
+ $('pbm-selected').innerHTML=[...pbmDraft.values()].map(x=>`<label style="display:inline-flex;gap:5px;align-items:center;margin:4px 10px 4px 0"><input type="checkbox" data-pbm-remove="${x.id}" ${pbmSelected.has(x.id)?'checked':''}>${esc(x.nome)}</label>`).join('')||'<span class="muted">Nenhuma PBM selecionada — Farmácia Popular excluída por padrão.</span>';
+ $('pbm-selected').querySelectorAll('[data-pbm-remove]').forEach(el=>el.addEventListener('change',()=>{const id=Number(el.dataset.pbmRemove);if(el.checked)pbmSelected.add(id);else pbmSelected.delete(id)}));
+}
+function pbmClose(){ $('pbm-modal').classList.remove('open');document.body.style.overflow=''; }
+$('pbm-open').addEventListener('click',async()=>{
+ pbmDraft=new Map(pbmApplied);pbmSelected.clear();$('pbm-query').value='';$('pbm-modal').classList.add('open');document.body.style.overflow='hidden';
+ $('pbm-aviso').textContent='Carregando PBMs...';
+ try{const d=await api('/api/filtro-opcoes?tipo=pbm');pbmRows=d.opcoes;pbmDraw();$('pbm-aviso').textContent=pbmRows.length+' PBMs cadastradas (inclusive sem vendas).';}
+ catch(e){$('pbm-aviso').textContent='Erro: '+e.message;}
+});
+$('pbm-close').addEventListener('click',pbmClose);$('pbm-cancel').addEventListener('click',pbmClose);
+$('pbm-query').addEventListener('input',pbmDraw);
+$('pbm-minus').addEventListener('click',()=>{for(const id of pbmSelected)pbmDraft.delete(id);pbmSelected.clear();pbmDraw()});
+$('pbm-clear').addEventListener('click',()=>{pbmDraft.clear();pbmSelected.clear();pbmDraw()});
+$('pbm-ok').addEventListener('click',()=>{if(pbmDraft.size>100){$('pbm-aviso').textContent='Limite de 100 PBMs.';return;}pbmApplied.clear();for(const [id,x] of pbmDraft)pbmApplied.set(id,x);$('pbm-count').textContent=pbmApplied.size;pbmClose();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('pbm-modal').classList.contains('open')){e.stopImmediatePropagation();pbmClose();}},true);
+$('central-buscar').disabled=true;v164Init();
+
+// V19.2: seleção por produto, encaminhamento ao Pós-venda e Guia por EAN.
+let whatsProdutoSelecionado=null;
+function whatsNomeProduto(nome,apresentacao){
+ const limpar=s=>String(s||'').normalize('NFC').replace(/\s+/g,' ').trim().toLocaleUpperCase('pt-BR');
+ return [limpar(nome),limpar(apresentacao)].filter(Boolean).join(' — ');
+}
+let whatsSelecaoSequencia=0;
+async function whatsSelecionarProduto(b){
+ const id=Number(b.dataset.wcid),ean=String(b.dataset.wean||'').trim();
+ if(!Number.isSafeInteger(id)||id<=0)return;
+ const seq=++whatsSelecaoSequencia;
+ const p={clienteId:id,nome:b.dataset.wcnome||'',produto:b.dataset.wproduto||'',ean,proximaCompra:b.dataset.wdata||'',descricao:'',situacao:'Descrição do ERP'};
+ p.descricao=whatsNomeProduto(p.produto,'');
+ whatsProdutoSelecionado=p;
+ // O clique abre diretamente a mesma janela de mensagem, sem navegar para outra aba.
+ // Contato e guia são consultados antes de apresentar a mensagem editável.
+ try{
+   const [cadastro,guia]=await Promise.all([
+     api('/api/ficha-cadastro?id='+id).catch(()=>null),
+     /^\d{8,14}$/.test(ean)?api('/api/guia-ean?ean='+encodeURIComponent(ean)).catch(()=>null):Promise.resolve(null)
+   ]);
+   if(seq!==whatsSelecaoSequencia)return;
+   whatsCadastro=cadastro?.cadastro||null;
+   if(guia?.confirmado){p.descricao=whatsNomeProduto(guia.nome,guia.apresentacao);p.situacao='Guia confirmado por EAN';}
+   else p.situacao=guia?.situacao||'Descrição do ERP — Guia não confirmado';
+ }catch(err){if(seq!==whatsSelecaoSequencia)return;whatsCadastro=null;}
+ if(seq!==whatsSelecaoSequencia)return;
+ whatsContexto=p;
+ // Mantém a ficha original aberta por trás da janela de WhatsApp.
+ // Evita sobrescrever fichaDados e perder o produto selecionado.
+ const fichaAnterior=fichaAtual;
+ fichaAtual={id:p.clienteId,nome:p.nome};
+ whatsAbrirModal();
+ fichaAtual=fichaAnterior;
+ $('whats-resumo').textContent=p.nome+' · '+p.descricao+' · '+p.situacao+' · Previsão '+dataBR(p.proximaCompra);
+ whatsAtualizarProduto();
+}
+
+function whatsAtualizarProduto(){
+ const p=whatsProdutoSelecionado;if(!p)return;
+ $('whats-produto-resumo').textContent=p.descricao;
+ $('whats-produto-aviso').textContent=p.nome+' · '+p.situacao+' · Previsão '+dataBR(p.proximaCompra)+' · EAN '+(p.ean||'não informado');
+}
+document.addEventListener('click',e=>{const b=e.target.closest('.whats-produto');if(!b)return;e.preventDefault();e.stopPropagation();whatsSelecionarProduto(b);});
+$('whats-posvenda-preparar').addEventListener('click',async()=>{
+ const p=whatsProdutoSelecionado;if(!p)return;
+ // Consulta pontual de contato; não abre ficha nem altera a seleção da Central.
+
+ try{const r=await api('/api/ficha-cadastro?id='+p.clienteId);whatsCadastro=r.cadastro||null;}catch(e){whatsCadastro=null;}
+ fichaAtual={id:p.clienteId,nome:p.nome};fichaDados={previsoes:[{proxima_compra:p.proximaCompra}]};
+ whatsContexto=p;
+ whatsAbrirModal();
+ $('whats-resumo').textContent=p.nome+' · '+p.descricao+' · '+p.situacao+' · Previsão '+dataBR(p.proximaCompra);
+ // A ficha atual é preservada para outros atendimentos.
+});
+
+// V19.3: registro local somente após confirmação humana; não comprova entrega.
+let whatsAbertoParaConfirmar=false;
+let whatsRegistrosCache=[];
+function whatsChave(p){return [String(p?.clienteId||''),String(p?.ean||''),String(p?.proximaCompra||'').slice(0,10),String(p?.descricao||p?.produto||'').trim()].join('|');}
+function whatsChaveRegistro(r){return [String(r.cliente_id),String(r.ean||''),String(r.previsao||'').slice(0,10),String(r.produto_descricao||'').trim()].join('|');}
+function whatsRegistroAtual(){const chave=whatsChave(whatsContexto);return whatsRegistrosCache.find(r=>whatsChaveRegistro(r)===chave);}
+function whatsPintarBotoes(){document.querySelectorAll('.whats-produto').forEach(b=>{const k=[b.dataset.wcid||'',b.dataset.wean||'',(b.dataset.wdata||'').slice(0,10)].join('|');const enviado=whatsRegistrosCache.some(r=>r.status==='Enviado confirmado'&&[String(r.cliente_id),String(r.ean||''),String(r.previsao||'').slice(0,10)].join('|')===k);b.classList.toggle('whats-enviado',enviado);b.title=enviado?'Mensagem já confirmada neste ciclo':'Preparar WhatsApp';if(b.classList.contains('whats-mini'))b.textContent=enviado?'✓':'✉';else b.textContent=enviado?'✓ Contatado':'Preparar WhatsApp';});}
+async function whatsHistoricoAtualizar(){
+ const el=$('whats-historico');if(!el)return;
+ try{const r=await api('/api/whatsapp-registros');whatsRegistrosCache=r.registros||[];
+ const conta=(x)=>whatsRegistrosCache.filter(a=>a.resultado===x).length;
+ $('whats-indicadores').textContent='Atendimentos registrados: '+whatsRegistrosCache.length+' · Interessados: '+conta('Interessado')+' · Não precisa agora: '+conta('Não precisa agora')+' · Recompras realizadas: '+conta('Recompra realizada')+' · Aguardando resposta: '+conta('Aguardando resposta')+' (últimos 200 registros)';
+ const opts=['Aguardando resposta','Interessado','Não precisa agora','Recompra realizada'];
+ el.innerHTML=whatsRegistrosCache.length?'<div class="scroll"><table><thead><tr><th>Data/hora</th><th>Cliente ERP</th><th>Produto (interno)</th><th>Previsão</th><th>Envio</th><th>Resposta / resultado</th></tr></thead><tbody>'+whatsRegistrosCache.map(x=>'<tr><td>'+esc(x.criado_em)+'</td><td>'+esc(x.cliente_id)+'</td><td>'+esc(x.produto_descricao)+'</td><td>'+esc(x.previsao)+'</td><td>'+esc(x.status)+'</td><td><select class="whats-resultado" data-regid="'+x.id+'">'+opts.map(o=>'<option '+(x.resultado===o?'selected':'')+'>'+esc(o)+'</option>').join('')+'</select></td></tr>').join('')+'</tbody></table></div>':'<p class="muted">Nenhum envio confirmado.</p>';
+ whatsPintarBotoes();
+ }catch(e){el.textContent='Histórico indisponível: '+e.message;}
+}
+document.addEventListener('change',async e=>{if(!e.target.matches('.whats-resultado'))return;const b=e.target;b.disabled=true;try{const resp=await fetch('/api/whatsapp-resultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:Number(b.dataset.regid),resultado:b.value})});const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha ao atualizar');await whatsHistoricoAtualizar();}catch(err){alert('Não foi possível registrar a resposta: '+err.message);await whatsHistoricoAtualizar();}finally{b.disabled=false;}});
+$('whats-historico-atualizar').addEventListener('click',whatsHistoricoAtualizar);
+$('whats-confirmar').addEventListener('click',async()=>{
+ if(!whatsRegistroAbertoId){$('whats-aviso').textContent='Abra o WhatsApp e registre o atendimento primeiro.';return;}
+ if(!window.confirm('Confirma que enviou manualmente a mensagem no WhatsApp?'))return;
+ try{const resp=await fetch('/api/whatsapp-confirmar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:whatsRegistroAbertoId})});const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Erro ao confirmar');
+ $('whats-aviso').textContent='Envio confirmado no Pós-venda.';$('whats-confirmar').disabled=true;whatsRegistroAbertoId=null;await whatsHistoricoAtualizar();
+ }catch(e){$('whats-aviso').textContent='Não foi possível confirmar: '+e.message;}
+});
+let whatsRegistroAbertoId=null;
+// V19.1: WhatsApp manual. Não registra envio nem realiza disparo em segundo plano.
+let whatsCadastro=null, whatsContexto=null;
+function whatsPrimeiroNome(nome){return String(nome||'').trim().split(/\s+/)[0]||'cliente';}
+function whatsNumero(valor){let n=String(valor||'').replace(/\D/g,'');if(n.startsWith('00'))n=n.slice(2);if(n.startsWith('55')&&(n.length===12||n.length===13))return n;if(n.length===10||n.length===11)return '55'+n;return '';}
+function whatsDataLocal(d){const v=String(d||'').slice(0,10);return /^\d{4}-\d{2}-\d{2}$/.test(v)?new Date(v+'T12:00:00'):null;}
+function whatsPrevisao(){if(whatsContexto&&whatsContexto.proximaCompra){const d=whatsDataLocal(whatsContexto.proximaCompra);if(d){const hoje=new Date();hoje.setHours(12,0,0,0);const dias=Math.round((d-hoje)/86400000);return Math.abs(dias)<=3?{p:{proxima_compra:whatsContexto.proximaCompra},dias}:null;}}const lista=(fichaDados?.previsoes||[]).filter(p=>whatsDataLocal(p.proxima_compra));const hoje=new Date();hoje.setHours(12,0,0,0);const itens=lista.map(p=>({p,dias:Math.round((whatsDataLocal(p.proxima_compra)-hoje)/86400000)})).filter(x=>Math.abs(x.dias)<=3);itens.sort((a,b)=>Math.abs(a.dias)-Math.abs(b.dias));return itens[0]||null;}
+function whatsTexto(){
+ const nome=whatsPrimeiroNome(whatsContexto?.nome||fichaAtual?.nome);
+ const produto=String(document.getElementById('whats-nome-comercial')?.value||whatsContexto?.descricao||whatsContexto?.produto||'').trim().replace(/\*/g,'');
+ const tipo=$('whats-tipo-aviso')?.value||'recompra';
+ if(tipo==='popular_amanha'||tipo==='popular_hoje'){
+  const lembrete=tipo==='popular_amanha'
+   ?'📅 *Amanhã é a data prevista para sua próxima retirada pelo Farmácia Popular!*'
+   :'📅 *Hoje é a data prevista para sua próxima retirada pelo Farmácia Popular!*';
+  const convite=tipo==='popular_amanha'
+   ?'💚 Programe-se para vir à Sonifarma a partir de amanhã. Será um prazer atender você!'
+   :'💚 Você já pode vir à Sonifarma para conferir sua retirada. Esperamos por você!';
+  return `Olá, ${nome}! Tudo bem? 😊\n\n💚 Aqui é da *Sonifarma!*\n\n${lembrete}\n\n${convite}\n\n📋 Traga sua receita válida, documento oficial com foto e CPF. A retirada depende da confirmação dos requisitos do programa.\n\n*Sonifarma — A farmácia raiz que cuida de você!* 💚`;
+ }
+ const x=whatsPrevisao();
+ const produtoDestacado=produto?`*${produto}*`:'';
+ let abertura='';
+ if(produto){
+  if(x&&x.dias>0)abertura=`Vi que você já comprou conosco o ${produtoDestacado} e, pela nossa estimativa, pode estar chegando a hora de repor.`;
+  else if(x&&x.dias===0)abertura=`Vi que você já comprou conosco o ${produtoDestacado} e estou passando para saber se está precisando repor.`;
+  else if(x&&x.dias<0&&x.dias>=-3)abertura=`Vi que você já comprou conosco o ${produtoDestacado} e queria saber se já conseguiu fazer a reposição.`;
+  else abertura=`Vi que você já comprou conosco o ${produtoDestacado} e estou passando para saber se está precisando repor.`;
+ }else abertura='Estou passando para saber se está precisando repor algum dos produtos que costuma comprar conosco.';
+ const link=String($('whats-link')?.value||'').trim();
+ const linkTexto=/^https:\/\/(?:www\.)?sonifarma\.com\.br\//i.test(link)?'\n'+link+'\n':'';
+ return `Olá, ${nome}! Tudo bem? \u{1F60A}\n\n\u{1F49A} Aqui é da *Sonifarma!*\n\n${abertura}\n\n\u{2728} *Que tal aproveitar uma condição especial na sua próxima compra?*\n${linkTexto}\n\u{1F449} *Responda SIM que consulto o melhor preço disponível para você!* \u{1F609}`;
+}
+async function whatsNomeCarregar(){const p=whatsContexto;const chave=p?.ean?'ean:'+String(p.ean).replace(/[^A-Za-z0-9_-]/g,''):p?.embalagemid?'emb:'+p.embalagemid:'';$('whats-nome-wrap').style.display=chave?'':'none';$('whats-nome-comercial').value=p?.descricao||p?.produto||'';$('whats-nome-status').textContent='';if(chave){try{const r=await api('/api/nome-comercial?chave='+encodeURIComponent(chave));if(r.nome)$('whats-nome-comercial').value=r.nome;$('whats-mensagem').value=whatsTexto();}catch(e){$('whats-nome-status').textContent='Nome salvo indisponível';}}}
+function whatsProdutoChave(){const p=whatsContexto;return p?.ean?'ean:'+String(p.ean).replace(/[^A-Za-z0-9_-]/g,''):p?.embalagemid?'emb:'+p.embalagemid:'';}
+async function whatsLinkCarregar(){
+ const chave=whatsProdutoChave();$('whats-link').value='';$('whats-link-wrap').style.display=chave?'':'none';$('whats-link-status').textContent='Use a URL real do produto.';
+ if(!chave)return;
+ try{const r=await api('/api/link-produto?chave='+encodeURIComponent(chave));if(chave!==whatsProdutoChave())return;$('whats-link').value=r.url||'';$('whats-mensagem').value=whatsTexto();}
+ catch(e){$('whats-link-status').textContent='Link salvo indisponível';}
+}
+$('whats-link-salvar').addEventListener('click',async()=>{
+ const chave=whatsProdutoChave(),url=$('whats-link').value.trim();if(!chave)return;
+ if(url&&!/^https:\/\/(?:www\.)?sonifarma\.com\.br\//i.test(url)){$('whats-link-status').textContent='Informe um link HTTPS da Sonifarma.';return;}
+ try{const resp=await fetch('/api/link-produto',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chave,url})});const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha');$('whats-link-status').textContent='Link salvo na base interna';$('whats-mensagem').value=whatsTexto();}catch(e){$('whats-link-status').textContent='Falha: '+e.message;}
+});
+$('whats-link').addEventListener('change',()=>{$('whats-mensagem').value=whatsTexto();});
+function whatsAbrirModal(){if(!fichaAtual)return;whatsRegistroAbertoId=null;whatsAbertoParaConfirmar=false;$('whats-confirmar').disabled=true;$('whats-abrir').disabled=true;const m=document.getElementById('whats-modal');document.getElementById('whats-numero').value=whatsCadastro?.celular||whatsCadastro?.telefone||'';document.getElementById('whats-categoria').value='produtos';const x=whatsPrevisao();document.getElementById('whats-resumo').textContent=fichaAtual.nome+(whatsContexto?' · '+whatsContexto.descricao:'')+' · '+(x?'Previsão '+(x.dias>0?'em '+x.dias+' dia(s)':x.dias===0?'para hoje':'há '+Math.abs(x.dias)+' dia(s)'):'sem previsão válida na janela ±3 dias');document.getElementById('whats-mensagem').value=whatsTexto();document.getElementById('whats-aviso').textContent='Revise a descrição, o telefone e a preferência de contato do cliente. Abrir o WhatsApp não confirma o envio.';m.classList.add('open');whatsLinkCarregar();whatsNomeCarregar();whatsVerificarCiclo();}
+async function whatsVerificarCiclo(){
+ const aviso=$('whats-ciclo-aviso');aviso.textContent='Conferindo contatos anteriores...';
+ if(!whatsContexto?.clienteId){aviso.textContent='Sem produto selecionado: confira antes de enviar.';return;}
+ try{await whatsHistoricoAtualizar();const tipo=$('whats-tipo-aviso').value;const hoje=new Date().toISOString().slice(0,10);const limite=Date.now()-3*86400000;const registro=whatsRegistrosCache.find(r=>String(r.cliente_id)===String(whatsContexto.clienteId)&&String(r.tipo_aviso||'recompra')===tipo&&(tipo==='recompra'?String(r.ean)===String(whatsContexto.ean||'')&&r.status==='Enviado confirmado'&&new Date(String(r.criado_em).replace(' ','T')).getTime()>=limite:String(r.previsao).slice(0,10)===String(whatsContexto.proximaCompra).slice(0,10)&&String(r.criado_em).slice(0,10)===new Date().toLocaleDateString('en-CA')));if(registro){aviso.textContent=tipo==='recompra'?'ATENÇÃO: recompra enviada nos últimos 3 dias ('+registro.criado_em+'). Novo contato bloqueado.':'ATENÇÃO: aviso já registrado hoje ('+registro.status+'). Novo contato bloqueado.';$('whats-abrir').disabled=true;$('whats-confirmar').disabled=true;}else{aviso.textContent='Nenhum envio confirmado neste ciclo.';$('whats-abrir').disabled=false;}}catch(e){aviso.textContent='Não foi possível verificar duplicidade. Envio bloqueado por segurança.';$('whats-abrir').disabled=true;}
+}
+document.getElementById('whats-ficha-btn').addEventListener('click',()=>{whatsContexto=null;whatsAbrirModal();});
+document.getElementById('whats-fechar').addEventListener('click',()=>document.getElementById('whats-modal').classList.remove('open'));
+$('whats-nome-salvar').addEventListener('click',async()=>{const p=whatsContexto;const chave=p?.ean?'ean:'+String(p.ean).replace(/[^A-Za-z0-9_-]/g,''):p?.embalagemid?'emb:'+p.embalagemid:'';if(!chave)return;try{const r=await fetch('/api/nome-comercial',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chave,nome:$('whats-nome-comercial').value.trim()})});const d=await r.json();if(!r.ok)throw Error(d.erro||'Erro');$('whats-nome-status').textContent='Nome salvo para próximos atendimentos';$('whats-mensagem').value=whatsTexto();}catch(e){$('whats-nome-status').textContent='Falha: '+e.message;}});
+$('whats-tipo-aviso').addEventListener('change',()=>{$('whats-mensagem').value=whatsTexto();whatsVerificarCiclo();});
+document.getElementById('whats-gerar').addEventListener('click',()=>document.getElementById('whats-mensagem').value=whatsTexto());
+document.getElementById('whats-copiar').addEventListener('click',async()=>{const msg=$('whats-mensagem').value;const aviso=$('whats-aviso');if(!msg.trim()){aviso.textContent='Informe uma mensagem antes de copiar.';return;}try{await navigator.clipboard.writeText(msg);aviso.textContent='Mensagem copiada integralmente, incluindo emojis. Cole no WhatsApp com Ctrl+V.';}catch(e){$('whats-mensagem').focus();$('whats-mensagem').select();aviso.textContent='Selecione e copie o texto com Ctrl+C; depois cole no WhatsApp com Ctrl+V.';}});
+document.getElementById('whats-abrir').addEventListener('click',async()=>{
+ const botao=$('whats-abrir'),aviso=$('whats-aviso'),p=whatsContexto;
+ const numero=whatsNumero($('whats-numero').value),msg=$('whats-mensagem').value.trim();
+ if(!p?.clienteId||!p?.descricao){aviso.textContent='Selecione um produto antes de abrir o WhatsApp.';return;}
+ const tipo=$('whats-tipo-aviso').value;const dias=whatsPrevisao()?.dias; if(tipo.startsWith('popular_')&&((tipo==='popular_amanha'&&dias!==1)||(tipo==='popular_hoje'&&dias!==0))){aviso.textContent='A data prevista não corresponde ao aviso selecionado (amanhã/hoje). Revise o filtro e a previsão.';return;}
+ if(!numero){aviso.textContent='Celular inválido: confira DDD e número.';return;}
+ if(!msg||msg.includes('\uFFFD')){aviso.textContent='Revise a mensagem: texto vazio ou caracteres inválidos.';return;}
+ // Abre a aba imediatamente no gesto do usuário para não sofrer bloqueio de pop-up.
+ const janela=window.open('about:blank','_blank');
+ if(!janela){aviso.textContent='Pop-up bloqueado. Autorize pop-ups e tente novamente.';return;}
+ botao.disabled=true;aviso.textContent='Registrando atendimento no Pós-venda...';
+ try{
+   const resp=await fetch('/api/whatsapp-registros',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cliente_id:p.clienteId,ean:p.ean||'',produto_descricao:p.descricao||p.produto||'',tipo_aviso:$('whats-tipo-aviso').value,previsao:p.proximaCompra||'',telefone_final:numero.slice(-4),cliente_nome:fichaAtual?.nome||'',status:'WhatsApp aberto'})});
+   const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha ao gravar no Pós-venda (HTTP '+resp.status+')');
+   // Usa o ID devolvido pelo INSERT; a listagem é apenas visual, não deve impedir a abertura.
+   if(!Number.isInteger(Number(r.id))||Number(r.id)<=0)throw Error('API não devolveu o identificador do registro.');
+   whatsRegistroAbertoId=Number(r.id);$('whats-confirmar').disabled=false;
+   await whatsHistoricoAtualizar();
+   janela.location.replace('https://web.whatsapp.com/send?phone='+numero+'&text='+encodeURIComponent(msg));
+   aviso.textContent='Atendimento registrado no Pós-venda como WhatsApp aberto. Após enviar, clique em Confirmar envio.';
+   $('whats-ciclo-aviso').textContent='Atendimento registrado: #'+r.id;
+ }catch(e){try{janela.close();}catch(_){}aviso.textContent='WhatsApp não aberto: '+e.message;botao.disabled=false;}
+});
+</script><script>
+(function(){
+'use strict';
+let csrf='',perfil='',login='',setup=false;
+const get=id=>document.getElementById(id);
+const oldFetch=window.fetch.bind(window);
+window.fetch=(url,opts={})=>{
+ const method=(opts.method||'GET').toUpperCase();
+ if(method!=='GET'&&method!=='HEAD'&&typeof url==='string'&&url.startsWith('/api/')&&!url.startsWith('/api/auth/login')&&!url.startsWith('/api/auth/setup')){
+  opts={...opts,headers:{...(opts.headers||{}),'X-CSRF-Token':csrf}};
+ }
+ return oldFetch(url,opts);
+};
+const request=async(url,opts)=>{const r=await fetch(url,opts);const d=await r.json();if(!r.ok)throw Error(d.erro||'Erro HTTP '+r.status);return d;};
+const post=(url,data)=>request(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function showAuth(isSetup){setup=isSetup;get('auth-overlay').hidden=false;get('auth-titulo').textContent=isSetup?'Primeiro acesso · Criar MASTER':'Sonifarma · Entrar';get('auth-descricao').textContent=isSetup?'Crie a senha do admin (mínimo de 6 caracteres). Não há senha padrão.':'Entre com seu usuário e senha.';get('auth-login').style.display=isSetup?'none':'block';get('auth-senha').value='';get('auth-erro').textContent='';get('auth-entrar').textContent=isSetup?'Criar admin':'Entrar';}
+function logged(d){csrf=d.csrf;perfil=d.perfil;login=d.login;get('auth-overlay').hidden=true;get('sessao-usuario').textContent=login+' · '+perfil;get('btn-sair').style.display='block';get('nav-auditoria').style.display=perfil==='master'?'block':'none';get('nav-usuarios').style.display=perfil==='master'?'block':'none';if(typeof statusERP==='function')statusERP();}
+async function init(){try{const s=await request('/api/auth/status');if(s.autenticado)logged(s);else showAuth(!s.inicializado);}catch(e){showAuth(false);get('auth-erro').textContent='Servidor indisponível: '+e.message;}}
+get('auth-entrar').addEventListener('click',async()=>{get('auth-erro').textContent='';try{const senha=get('auth-senha').value;if(setup){await post('/api/auth/setup',{senha});showAuth(false);get('auth-login').value='admin';get('auth-erro').textContent='MASTER criado. Entre com sua senha.';}else{const d=await post('/api/auth/login',{login:get('auth-login').value,senha});logged(d);}}catch(e){get('auth-erro').textContent=e.message;}});
+get('auth-senha').addEventListener('keydown',e=>{if(e.key==='Enter')get('auth-entrar').click()});
+get('btn-sair').addEventListener('click',async()=>{try{await post('/api/auth/logout',{});}finally{location.reload();}});
+async function usuariosAtualizar(){if(perfil!=='master')return;try{const d=await request('/api/usuarios');get('usuarios-linhas').innerHTML=d.usuarios.map(u=>`<tr><td>${escapeHtml(u.login)}</td><td>${escapeHtml(u.perfil)}</td><td>${u.ativo?'Sim':'Não'}</td><td>${escapeHtml(u.criado_em)}</td><td>${u.login==='admin'?'MASTER protegido':`<button type="button" class="usr-toggle" data-login="${escapeHtml(u.login)}" data-ativo="${u.ativo}">${u.ativo?'Bloquear':'Ativar'}</button> <button type="button" class="usr-senha" data-login="${escapeHtml(u.login)}">Redefinir senha</button>`}</td></tr>`).join('');const sel=get('audit-usuario');sel.innerHTML='<option value="">Todos</option>'+d.usuarios.map(u=>`<option value="${escapeHtml(u.login)}">${escapeHtml(u.login)}</option>`).join('');}catch(e){get('usuarios-aviso').textContent=e.message;}}
+get('usuario-criar').addEventListener('click',async()=>{try{await post('/api/usuarios',{acao:'criar',login:get('novo-login').value,senha:get('nova-senha').value,perfil:get('novo-perfil').value});get('nova-senha').value='';get('usuarios-aviso').textContent='Usuário criado.';await usuariosAtualizar();}catch(e){get('usuarios-aviso').textContent=e.message;}});
+get('usuarios-linhas').addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;try{if(b.classList.contains('usr-toggle')){await post('/api/usuarios',{acao:b.dataset.ativo==='1'?'bloquear':'desbloquear',login:b.dataset.login});}else if(b.classList.contains('usr-senha')){const senha=prompt('Nova senha de '+b.dataset.login+' (mínimo 6 caracteres):');if(senha===null)return;await post('/api/usuarios',{acao:'senha',login:b.dataset.login,senha});}await usuariosAtualizar();}catch(err){alert(err.message);}});
+get('backup-criar').addEventListener('click',async()=>{try{const d=await post('/api/backup',{});get('backup-aviso').textContent='Backup criado no servidor: '+d.arquivo;}catch(e){get('backup-aviso').textContent=e.message;}});
+async function auditBuscar(){const filtros={data_inicio:get('audit-data-inicio').value,data_fim:get('audit-data-fim').value,hora_inicio:get('audit-hora-inicio').value,hora_fim:get('audit-hora-fim').value,usuario:get('audit-usuario').value,atividade:get('audit-atividade').value,cliente_id:get('audit-cliente').value.trim()};const q=new URLSearchParams(Object.entries(filtros).filter(([k,v])=>v));try{const d=await request('/api/auditoria?'+q);get('audit-resumo').textContent=d.registros.length+' registros encontrados (máximo 500).';get('audit-linhas').innerHTML=d.registros.map(r=>`<tr><td>${escapeHtml(r.momento.replace('T',' '))}</td><td>${escapeHtml(r.usuario)}</td><td>${escapeHtml(r.atividade)}</td><td>${escapeHtml(r.cliente_id)}</td><td>${escapeHtml(r.registro_id)}</td><td>${escapeHtml(r.detalhe)}</td><td>${escapeHtml(r.ip)}</td></tr>`).join('')||'<tr><td colspan="7">Nenhum registro.</td></tr>';const sel=get('audit-atividade'),prev=sel.value;const acts=[...new Set(d.registros.map(x=>x.atividade))].sort();sel.innerHTML='<option value="">Todas</option>'+acts.map(a=>`<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');sel.value=prev;}catch(e){get('audit-resumo').textContent=e.message;}}
+get('audit-buscar').addEventListener('click',auditBuscar);
+get('audit-limpar').addEventListener('click',()=>{['audit-data-inicio','audit-data-fim','audit-hora-inicio','audit-hora-fim','audit-usuario','audit-atividade','audit-cliente'].forEach(x=>get(x).value='');auditBuscar();});
+get('nav-auditoria').addEventListener('click',()=>{usuariosAtualizar();auditBuscar()});get('nav-usuarios').addEventListener('click',usuariosAtualizar);
+// Bloqueia a navegação caso a sessão expire e uma chamada API receba 401.
+window.fetch=(function(base){return async function(url,opts){const r=await base(url,opts);if(r.status===401&&typeof url==='string'&&url.startsWith('/api/')&&!url.startsWith('/api/auth/')){showAuth(false);}return r;};})(window.fetch);
+init();
+})();
+
+// V20.5.6 - reativação: classificação global por última compra na API; títulos ordenam o lote carregado.
+let reatCursor=0,reatBusy=false,reatRows=[],reatSortKey='ultima_compra',reatSortDir='desc';
+function reatContato(c){return c.consentimento==='recusado'?'Não deseja receber':c.contato_recente?'Contato nos últimos 3 dias':c.consentimento==='autorizado'?'Autorizado':'Sem autorização registrada';}
+function reatOrdenados(){
+ const dados=reatRows.map((c,idx)=>({c,idx}));
+ const collator=new Intl.Collator('pt-BR',{sensitivity:'base',numeric:true});
+ dados.sort((a,b)=>{
+  let av,bv;
+  if(reatSortKey==='contato'){av=reatContato(a.c);bv=reatContato(b.c);}
+  else {av=a.c[reatSortKey];bv=b.c[reatSortKey];}
+  let cmp;
+  if(reatSortKey==='dias_sem_compra'||reatSortKey==='total_compras')cmp=Number(av||0)-Number(bv||0);
+  else cmp=collator.compare(String(av||''),String(bv||''));
+  return (reatSortDir==='asc'?cmp:-cmp)||a.idx-b.idx;
+ });
+ return dados;
+}
+function renderReativacao(){
+ $('reat-lista').innerHTML=reatOrdenados().map(({c,idx})=>`<tr><td><button type="button" class="client-link" data-reat-ficha="${idx}">${esc(c.nome)}</button></td><td>${esc(dataBR(c.ultima_compra))}</td><td>${num(c.dias_sem_compra)}</td><td>${num(c.total_compras)}</td><td>${esc(reatContato(c))}</td><td><div class="row" style="gap:5px;flex-wrap:wrap"><button type="button" data-reat-consent="${idx}">Preferência</button><button type="button" data-reat-msg="${idx}" ${c.contato_recente||c.consentimento==='recusado'?'disabled title="Contato recente ou recusa registrada"':''}>✉ Enviar WhatsApp</button></div></td></tr>`).join('')||'<tr><td colspan="6">Nenhum cliente nesta consulta.</td></tr>';
+ $('reat-lista').querySelectorAll('[data-reat-ficha]').forEach(b=>b.addEventListener('click',()=>{const c=reatRows[+b.dataset.reatFicha];abrirFichaCliente(c.pessoaid,c.nome);}));
+ $('reat-lista').querySelectorAll('[data-reat-consent]').forEach(b=>b.addEventListener('click',()=>abrirPreferencia(reatRows[+b.dataset.reatConsent])));
+ $('reat-lista').querySelectorAll('[data-reat-msg]').forEach(b=>b.addEventListener('click',()=>abrirReativacaoWhats(reatRows[+b.dataset.reatMsg])));
+ document.querySelectorAll('#reativacao-tab [data-reat-sort]').forEach(b=>{
+  const ativo=b.dataset.reatSort===reatSortKey;
+  b.setAttribute('aria-sort',ativo?(reatSortDir==='asc'?'ascending':'descending'):'none');
+  b.querySelector('.reat-sort-icon').textContent=ativo?(reatSortDir==='asc'?'↑':'↓'):'↕';
+ });
+}
+async function consultarReativacao(mais=false){
+ if(reatBusy)return;reatBusy=true;
+ if(!mais){reatCursor=0;reatRows=[];reatSortKey='ultima_compra';reatSortDir='desc';$('reat-lista').innerHTML='<tr><td colspan="6">Consultando...</td></tr>';}
+ $('reat-status').textContent='Consultando ERP...';$('reat-mais').style.display='none';
+ try{
+  const qs=new URLSearchParams({dias:$('reat-dias').value,perfil:$('reat-perfil').value,cursor:String(reatCursor)});
+  const res=await api('/api/reativacao?'+qs);
+  reatRows.push(...res.clientes);reatCursor=res.proximo_cursor||0;
+  renderReativacao();
+  $('reat-status').textContent=reatRows.length+' clientes exibidos. Ordem padrão: última compra mais próxima de hoje. A ordenação manual reorganiza os registros carregados. '+res.observacao;
+  $('reat-mais').style.display=res.proximo_cursor?'inline-block':'none';
+ }catch(e){$('reat-status').textContent='Erro: '+e.message;if(!mais)$('reat-lista').innerHTML='<tr><td colspan="6">Falha na consulta.</td></tr>';}
+ finally{reatBusy=false;}
+}
+// V20.5.9 — Preferência comercial centralizada e bloqueio entre módulos.
+let reatConsentCliente=null;
+function fecharPreferencia(){$('reat-consent-modal').classList.remove('open');reatConsentCliente=null;}
+function abrirPreferencia(c){
+ reatConsentCliente=c;$('reat-consent-cliente').textContent=c.nome;
+ $('reat-consent-status').value=c.consentimento||'nao_informado';
+ $('reat-consent-origem').value=c.consentimento_origem||'No balcão';
+ const hoje=new Date(); const localHoje=new Date(hoje.getTime()-hoje.getTimezoneOffset()*60000).toISOString().slice(0,10);
+ $('reat-consent-data').value=localHoje;$('reat-consent-aviso').textContent=(c.consentimento==='autorizado'?'Autorização registrada anteriormente.':c.consentimento==='recusado'?'Cliente solicitou não receber ofertas. Preserve esta preferência.':'Não há autorização registrada. Se o cliente já autorizou, selecione Autorizado e confirme a origem.');
+ $('reat-consent-modal').classList.add('open');
+}
+$('reat-consent-fechar').addEventListener('click',fecharPreferencia);
+$('reat-consent-cancelar').addEventListener('click',fecharPreferencia);
+$('reat-consent-salvar').addEventListener('click',async()=>{
+ const c=reatConsentCliente;if(!c)return;
+ const status=$('reat-consent-status').value,origem=$('reat-consent-origem').value.trim(),data=$('reat-consent-data').value;
+ if(status==='autorizado'&&(!data||origem.length<5)){$('reat-consent-aviso').textContent='Informe a data e a origem da autorização já concedida.';return;}
+ if(status==='recusado'&&origem.length<3){$('reat-consent-aviso').textContent='Informe como o cliente pediu para não receber mensagens.';return;}
+ if(!window.confirm(status==='autorizado'?'Confirma que este cliente já autorizou receber mensagens promocionais?':'Confirma a alteração da preferência comercial deste cliente?'))return;
+ try{
+  const resp=await fetch('/api/consentimento-comercial',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cliente_id:c.pessoaid,status,origem,data_consentimento:data})});
+  const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha ao salvar');
+  c.consentimento=status;c.consentimento_origem=origem;renderReativacao();fecharPreferencia();
+  $('reat-status').textContent='Preferência comercial registrada para '+c.nome+'.';
+ }catch(e){$('reat-consent-aviso').textContent=e.message;}
+});
+// V20.5.7 — WhatsApp manual de reativação com auditoria e confirmação explícita.
+let reatWhatsCliente=null,reatWhatsRegistro=null;
+async function reatChecarHistorico(c){
+ const r=await api('/api/whatsapp-registros?cliente_id='+encodeURIComponent(c.pessoaid));
+ const registros=r.registros||[];
+ const limite=Date.now()-3*86400000;
+ const recente=registros.find(x=>x.status==='Enviado confirmado'&&Number.isFinite(Date.parse(String(x.criado_em||'').replace(' ','T')))&&Date.parse(String(x.criado_em).replace(' ','T'))>=limite);
+ const ultimo=registros[0];
+ $('reat-whats-historico').textContent=ultimo?'Último atendimento registrado: '+ultimo.criado_em+' · '+ultimo.status+' · '+(ultimo.tipo_aviso||'WhatsApp'):'Nenhum atendimento registrado para este cliente.';
+ if(recente){c.contato_recente=true;renderReativacao();throw Error('Envio confirmado nos últimos 3 dias ('+recente.criado_em+'). Novo contato bloqueado.');}
+ return registros;
+}
+function fecharReativacaoWhats(){$('reat-whats-modal').classList.remove('open');reatWhatsCliente=null;reatWhatsRegistro=null;}
+$('reat-whats-fechar').addEventListener('click',fecharReativacaoWhats);
+$('reat-whats-modal').addEventListener('click',e=>{if(e.target===$('reat-whats-modal'))fecharReativacaoWhats();});
+async function abrirReativacaoWhats(c){
+ if(c.consentimento!=='autorizado'){abrirPreferencia(c);$('reat-consent-aviso').textContent=c.consentimento==='recusado'?'Cliente solicitou não receber mensagens. Não envie ofertas.':'Para enviar ofertas, registre uma autorização comercial já concedida.';return;}if(c.contato_recente){$('reat-status').textContent='Contato recente: aguarde o intervalo de segurança.';return;}
+ reatWhatsCliente=c;reatWhatsRegistro=null;
+ $('reat-whats-confirmar').disabled=true;$('reat-whats-abrir').disabled=true;
+ $('reat-whats-historico').textContent='Consultando histórico de WhatsApp...';
+ $('reat-whats-resumo').textContent=c.nome+' · Última compra: '+dataBR(c.ultima_compra)+' · '+c.dias_sem_compra+' dias sem comprar';
+ $('reat-whats-numero').value='';$('reat-whats-aviso').textContent='Consultando cadastro...';
+ const primeiro=String(c.nome||'').trim().split(/\s+/)[0];
+ $('reat-whats-texto').value=`Olá, ${primeiro}! Tudo bem? 😊\n\n💚 Aqui é da *Sonifarma!*\n\nFaz um tempinho que não vemos você por aqui! Temos novidades e ofertas para você conhecer.\n\n🛍️ https://www.sonifarma.com.br/\n\n👉 Se quiser conhecer as ofertas disponíveis, responda *SIM*!\n\nSe não quiser receber nossas mensagens, é só avisar.`;
+ $('reat-whats-modal').classList.add('open');
+ try{const r=await api('/api/ficha-cadastro?id='+encodeURIComponent(c.pessoaid));if(reatWhatsCliente!==c)return;const d=r.cadastro||{};$('reat-whats-numero').value=d.celular||'';$('reat-whats-aviso').textContent=d.celular?'Revise o celular, a mensagem e o consentimento antes de abrir.':'Nenhum celular cadastrado; informe um celular válido e autorizado.';$('reat-whats-abrir').disabled=false;}
+ catch(e){$('reat-whats-aviso').textContent='Cadastro indisponível. Confira o número manualmente.';$('reat-whats-abrir').disabled=false;}
+ try{await reatChecarHistorico(c);}catch(e){$('reat-whats-abrir').disabled=true;$('reat-whats-aviso').textContent='Verificação de histórico: '+e.message;}
+}
+$('reat-whats-copiar').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('reat-whats-texto').value);$('reat-whats-aviso').textContent='Mensagem copiada.';}catch(e){$('reat-whats-texto').select();$('reat-whats-aviso').textContent='Copie com Ctrl+C.';}});
+$('reat-whats-abrir').addEventListener('click',async()=>{
+ const c=reatWhatsCliente,numero=whatsNumero($('reat-whats-numero').value),msg=$('reat-whats-texto').value.trim();
+ if(!c||!numero||!msg){$('reat-whats-aviso').textContent='Confira o celular com DDD e a mensagem.';return;}
+ try{await reatChecarHistorico(c);}catch(e){$('reat-whats-abrir').disabled=true;$('reat-whats-aviso').textContent=e.message;return;}
+ if(!window.confirm('Confirma que o cliente autorizou receber comunicações promocionais e que o telefone está correto?'))return;
+ const janela=window.open('about:blank','_blank');if(!janela){$('reat-whats-aviso').textContent='Permita pop-ups para abrir o WhatsApp.';return;}
+ $('reat-whats-abrir').disabled=true;
+ try{const resp=await fetch('/api/whatsapp-registros',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cliente_id:c.pessoaid,ean:'REATIVACAO',produto_descricao:'Reativação de clientes',tipo_aviso:'reativacao',previsao:c.ultima_compra,telefone_final:numero.slice(-4),cliente_nome:c.nome,status:'WhatsApp aberto'})});const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha ao registrar');if(!Number.isInteger(Number(r.id))||Number(r.id)<=0)throw Error('API não devolveu um ID de registro válido.');reatWhatsRegistro=Number(r.id);await whatsHistoricoAtualizar();janela.location.replace('https://web.whatsapp.com/send?phone='+numero+'&text='+encodeURIComponent(msg));$('reat-whats-confirmar').disabled=false;$('reat-whats-aviso').textContent='WhatsApp aberto e registrado. Confirme somente depois de enviar a mensagem.';}
+ catch(e){janela.close();$('reat-whats-abrir').disabled=false;$('reat-whats-aviso').textContent='Não foi possível abrir: '+e.message;}
+});
+$('reat-whats-confirmar').addEventListener('click',async()=>{
+ if(!reatWhatsRegistro)return;
+ if(!window.confirm('Confirma que enviou manualmente a mensagem no WhatsApp?'))return;
+ try{const resp=await fetch('/api/whatsapp-confirmar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:reatWhatsRegistro})});const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha');$('reat-whats-confirmar').disabled=true;$('reat-whats-abrir').disabled=true;$('reat-whats-aviso').textContent='Envio confirmado e registrado no Pós-venda. Contato bloqueado por 3 dias.';reatWhatsRegistro=null;await whatsHistoricoAtualizar();const c=reatWhatsCliente;if(c){c.contato_recente=true;renderReativacao();await reatChecarHistorico(c).catch(()=>{});}}
+ catch(e){$('reat-whats-aviso').textContent='Falha ao confirmar: '+e.message;}
+});
+document.querySelectorAll('#reativacao-tab [data-reat-sort]').forEach(b=>b.addEventListener('click',()=>{
+ const key=b.dataset.reatSort;
+ if(reatSortKey===key)reatSortDir=reatSortDir==='asc'?'desc':'asc';
+ else {reatSortKey=key;reatSortDir=(key==='ultima_compra'||key==='total_compras')?'desc':'asc';}
+ renderReativacao();
+}));
+$('reat-buscar').addEventListener('click',()=>consultarReativacao(false));
+$('reat-mais').addEventListener('click',()=>consultarReativacao(true));
+</script></body></html>

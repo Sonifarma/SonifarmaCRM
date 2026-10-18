@@ -1,0 +1,22 @@
+SONIFARMA - Diagnostico PostgreSQL (Windows Server 2019)
+
+1. Instale Python 3.12 64-bit, caso nao esteja instalado.
+2. Extraia esta pasta para C:\Sonifarma\integracao.
+3. Abra PowerShell nessa pasta.
+4. Execute:
+   py -3.12 -m venv .venv
+   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+   Copy-Item .env.example .env
+   .\.venv\Scripts\python.exe testar_conexao.py
+5. Digite a senha quando solicitada. Nao coloque senha em arquivos ou mensagens.
+6. O relatorio_estrutura.json lista metadados (nomes de tabelas/colunas e privilegios), nao dados de clientes.
+
+OBSERVACOES:
+- O teste de porta TCP ja retornou True, mas isso nao prova autenticacao nem SSL.
+- SSL prefer pode usar conexao sem criptografia. Solicite ao DBA verificacao e certificado;
+  use verify-full com certificado confiavel e hostname valido em producao.
+- O usuario deve ter somente SELECT, sem permissoes de escrita ou DDL.
+- O programa ativa transacao read-only e timeout de 10 segundos.
+- PostgreSQL antigo pode falhar por incompatibilidade de protocolo/autenticacao/SSL.
+- Nao altere o ERP para resolver erros sem antes consultar o responsavel tecnico.
+- O relatorio pode revelar detalhes internos do esquema; revise antes de compartilhar.

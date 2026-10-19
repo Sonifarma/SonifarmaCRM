@@ -71,3 +71,9 @@ A confirmação humana de envio no Pós-venda passa a validar o número utilizad
 Para essa funcionalidade, atualize **index.html e iniciar_interface.py**, com o painel parado, e reinicie. A coluna adicional no SQLite é criada automaticamente, sem apagar o histórico. É armazenado um hash do número, além dos quatro últimos dígitos já registrados, sem gravar o telefone completo no histórico. A migração não altera o ERP.
 
 Registros antigos, que só possuem quatro últimos dígitos, continuam preservados, mas não validam um número completo por suposição. A indicação representa confirmação do atendente; não é consulta automática à Meta nem comprovação de entrega ou leitura. A autorização comercial e o intervalo de contato continuam sendo exigidos separadamente.
+
+## Coluna Último envio
+
+Na ficha do cliente, a aba Próximas compras mostra o último contato de cada produto/ciclo e mantém o botão WhatsApp ao lado. Os estados são Não enviado, Aberto · aguardando confirmação e Confirmado. Ao confirmar um novo envio, a data/hora e o atendente ficam registrados separadamente do resultado do atendimento. Alterar o resultado depois não altera essa data. O detalhe ao passar o mouse mostra atendente e final do telefone. Registros antigos sem data de confirmação mostram Data não registrada; a data de abertura não é usada como se fosse a de envio.
+
+A consulta dessa coluna usa um resumo por cliente e ciclo, sem depender do limite de 200 registros da listagem geral. Se a consulta falhar, aparece Histórico indisponível em vez de presumir que não houve contato. Atualize o HTML e o servidor Python e reinicie o painel para aplicar; a migração local é aditiva.

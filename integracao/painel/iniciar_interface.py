@@ -156,6 +156,8 @@ def agenda_conn():
         telefone_final TEXT NOT NULL, status TEXT NOT NULL, criado_em TEXT NOT NULL)""")
     # V20: migração aditiva, sem modificar dados antigos.
     cols={r[1] for r in con.execute("PRAGMA table_info(whatsapp_registros)")}
+    for campo in ('confirmado_em','confirmado_por'):
+        if campo not in cols:con.execute('ALTER TABLE whatsapp_registros ADD COLUMN '+campo+' TEXT')
     if 'telefone_hash' not in cols:
         con.execute("ALTER TABLE whatsapp_registros ADD COLUMN telefone_hash TEXT NOT NULL DEFAULT ''")
     if 'resultado' not in cols:
@@ -1196,7 +1198,8 @@ class Handler(SimpleHTTPRequestHandler):
                             if consent and consent[0]=='recusado':return self.respond(403,{'erro':'Cliente solicitou não receber mensagens. Confirmação bloqueada.'})
                             if reg[1]=='reativacao' and (not consent or consent[0]!='autorizado'):
                                 return self.respond(403,{'erro':'Autorização comercial ausente.'})
-                        cur=con.execute("UPDATE whatsapp_registros SET status='Enviado confirmado',atualizado_em=? WHERE id=? AND status='WhatsApp aberto'",(datetime.now().isoformat(timespec='seconds'),rid))
+                        agora=datetime.now().isoformat(timespec='seconds')
+                        cur=con.execute("UPDATE whatsapp_registros SET status='Enviado confirmado',atualizado_em=?,confirmado_em=?,confirmado_por=? WHERE id=? AND status='WhatsApp aberto'",(agora,agora,u['login'],rid))
                         if cur.rowcount!=1:return self.respond(409,{'erro':'Registro não encontrado ou já confirmado'})
                 with TASK_LOCK:
                     with agenda_conn() as con:cliente=con.execute('SELECT cliente_id FROM whatsapp_registros WHERE id=?',(rid,)).fetchone()
@@ -1355,10 +1358,13 @@ class Handler(SimpleHTTPRequestHandler):
             if cid is not None and (not cid.isdecimal() or not 0<int(cid)<10**17): return self.respond(400,{'erro':'Cliente inválido'})
             with TASK_LOCK:
                 with agenda_conn() as con:
-                    colunas="id,cliente_id,ean,produto_descricao,previsao,telefone_final,status,criado_em,resultado,atualizado_em,tipo_aviso,(telefone_hash!='' AND status='Enviado confirmado')"
-                    if cid is None: rows=con.execute('SELECT '+colunas+' FROM whatsapp_registros ORDER BY id DESC LIMIT 200').fetchall()
+                    colunas="id,cliente_id,ean,produto_descricao,previsao,telefone_final,status,criado_em,resultado,atualizado_em,tipo_aviso,(telefone_hash!='' AND status='Enviado confirmado'),confirmado_em,confirmado_por"
+                    if filtros.get('resumo',[''])[0]=='1':
+                        if cid is None:return self.respond(400,{'erro':'Informe o cliente'})
+                        rows=con.execute('SELECT '+colunas+" FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY ean,CASE WHEN ean='' THEN produto_descricao ELSE '' END,previsao ORDER BY id DESC) AS ordem FROM whatsapp_registros WHERE cliente_id=?) WHERE ordem=1 ORDER BY id DESC",(int(cid),)).fetchall()
+                    elif cid is None: rows=con.execute('SELECT '+colunas+' FROM whatsapp_registros ORDER BY id DESC LIMIT 200').fetchall()
                     else: rows=con.execute('SELECT '+colunas+' FROM whatsapp_registros WHERE cliente_id=? ORDER BY id DESC LIMIT 200',(int(cid),)).fetchall()
-            return self.respond(200,{'registros':[dict(zip(('id','cliente_id','ean','produto_descricao','previsao','telefone_final','status','criado_em','resultado','atualizado_em','tipo_aviso','whatsapp_validado'),r)) for r in rows]})
+            return self.respond(200,{'registros':[dict(zip(('id','cliente_id','ean','produto_descricao','previsao','telefone_final','status','criado_em','resultado','atualizado_em','tipo_aviso','whatsapp_validado','confirmado_em','confirmado_por'),r)) for r in rows]})
         if parsed.path=='/api/agenda':
             filtros=parse_qs(parsed.query)
             cid_raw=filtros.get('cliente_id',[None])[0]

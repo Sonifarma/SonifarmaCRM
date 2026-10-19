@@ -92,6 +92,31 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(self.request('/api/whatsapp-confirmar', {'id': rid})[0], 403)
         self.assertFalse(self.valid())
 
+    def test_confirmation_metadata_survives_result_changes(self):
+        rid = self.opened()
+        self.assertEqual(self.request('/api/whatsapp-confirmar', {'id': rid})[0], 200)
+        row = self.request('/api/whatsapp-registros?cliente_id=1&resumo=1')[1]['registros'][0]
+        self.assertTrue(row['confirmado_em'])
+        self.assertEqual(row['confirmado_por'], 'tester')
+        self.assertEqual(self.request('/api/whatsapp-resultado', {'id': rid, 'resultado': 'Interessado'})[0], 200)
+        updated = self.request('/api/whatsapp-registros?cliente_id=1&resumo=1')[1]['registros'][0]
+        self.assertEqual(updated['confirmado_em'], row['confirmado_em'])
+        self.assertEqual(updated['confirmado_por'], row['confirmado_por'])
+
+    def test_summary_isolates_product_cycle_customer_and_is_not_limited_to_200(self):
+        rid = self.opened()
+        self.assertEqual(self.request('/api/whatsapp-confirmar', {'id': rid})[0], 200)
+        with closing(panel.agenda_conn()) as con, con:
+            sql = "INSERT INTO whatsapp_registros(cliente_id,ean,produto_descricao,previsao,telefone_final,status,criado_em) VALUES(?,?,?,?,?,'WhatsApp aberto','2026-10-19')"
+            con.executemany(sql, [(1, 'OTHER', 'Outro', '2026-10-21', '1234')]*205)
+            con.execute(sql, (2, '12345678', 'Teste', '2026-10-20', '1234'))
+            con.execute(sql, (1, '12345678', 'Teste', '2026-11-20', '1234'))
+        rows = self.request('/api/whatsapp-registros?cliente_id=1&resumo=1')[1]['registros']
+        self.assertEqual(len(rows), 3)
+        self.assertTrue(all(r['cliente_id'] == 1 for r in rows))
+        self.assertEqual(next(r for r in rows if r['id'] == rid)['status'], 'Enviado confirmado')
+        self.assertEqual(self.request('/api/whatsapp-registros?resumo=1')[0], 400)
+
     def test_existing_database_migrates_without_changing_history(self):
         with closing(sqlite3.connect(panel.TASK_DB)) as con, con:
             con.execute('CREATE TABLE whatsapp_registros(id INTEGER PRIMARY KEY,cliente_id INTEGER,ean TEXT,produto_descricao TEXT,previsao TEXT,telefone_final TEXT,status TEXT,criado_em TEXT)')

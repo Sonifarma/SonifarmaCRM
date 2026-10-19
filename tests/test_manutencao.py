@@ -1,3 +1,4 @@
+from contextlib import closing
 import importlib.util
 from pathlib import Path
 import sqlite3
@@ -20,12 +21,12 @@ class MaintenanceTests(unittest.TestCase):
         self.base = self.root / 'painel'
         self.base.mkdir()
         self.db = self.base / m.DATABASES[0]
-        with sqlite3.connect(self.db) as con:
+        with closing(sqlite3.connect(self.db)) as con, con:
             con.execute('CREATE TABLE dados(valor TEXT)')
             con.execute("INSERT INTO dados VALUES ('preservar')")
 
     def test_backup_restores_committed_wal_and_detects_corruption(self):
-        with sqlite3.connect(self.db) as con:
+        with closing(sqlite3.connect(self.db)) as con, con:
             con.execute('PRAGMA journal_mode=WAL')
             con.execute("INSERT INTO dados VALUES ('wal')")
             con.commit()
@@ -35,7 +36,7 @@ class MaintenanceTests(unittest.TestCase):
                 restored = self.root / 'restored.sqlite3'
                 restored.write_bytes(z.read(self.db.name))
                 manifest = z.read('manifest.json')
-            with sqlite3.connect(restored) as copy:
+            with closing(sqlite3.connect(restored)) as copy:
                 self.assertEqual(copy.execute('SELECT valor FROM dados').fetchall(), [('preservar',), ('wal',)])
         broken = self.root / 'broken.zip'
         with zipfile.ZipFile(broken, 'w') as z:
@@ -59,7 +60,7 @@ class MaintenanceTests(unittest.TestCase):
         self.assertEqual((rollback / 'index.html').read_text(), 'old')
         self.assertEqual((self.base / '.env').read_text(), 'local config')
         self.assertEqual((self.base / 'sonifarma_tls.key').read_text(), 'local key')
-        with sqlite3.connect(self.db) as con:
+        with closing(sqlite3.connect(self.db)) as con, con:
             self.assertEqual(con.execute('SELECT valor FROM dados').fetchone()[0], 'preservar')
         m.verify_backup(archive)
 
@@ -70,6 +71,56 @@ class MaintenanceTests(unittest.TestCase):
             m.update_code(self.base, source, self.root / 'backup')
         with self.assertRaises(ValueError):
             m.create_backup(source, self.root / 'backup')
+
+    def test_backup_closes_all_connections_without_garbage_collection(self):
+        connections = []
+        original_connect = sqlite3.connect
+
+        class TrackedConnection(sqlite3.Connection):
+            explicitly_closed = False
+
+            def close(self):
+                super().close()
+                self.explicitly_closed = True
+
+        def connect(*args, **kwargs):
+            connection = original_connect(*args, factory=TrackedConnection, **kwargs)
+            connections.append(connection)  # Keep references so GC cannot hide leaks.
+            return connection
+
+        with patch.object(m.sqlite3, 'connect', side_effect=connect):
+            archive = m.create_backup(self.base, self.root / 'backup')
+            m.verify_backup(archive)
+        self.assertEqual(len(connections), 4)
+        self.assertTrue(all(con.explicitly_closed for con in connections))
+        self.assertEqual(sorted(p.name for p in (self.root / 'backup').iterdir()), [archive.name])
+
+    def test_failed_backup_closes_connections_and_publishes_no_archive(self):
+        connections = []
+        original_connect = sqlite3.connect
+
+        class FailingConnection(sqlite3.Connection):
+            explicitly_closed = False
+
+            def backup(self, target, **kwargs):
+                raise sqlite3.OperationalError('Simulated backup failure')
+
+            def close(self):
+                super().close()
+                self.explicitly_closed = True
+
+        def connect(*args, **kwargs):
+            connection = original_connect(*args, factory=FailingConnection, **kwargs)
+            connections.append(connection)
+            return connection
+
+        destination = self.root / 'backup'
+        with patch.object(m.sqlite3, 'connect', side_effect=connect):
+            with self.assertRaises(sqlite3.OperationalError):
+                m.create_backup(self.base, destination)
+        self.assertEqual(len(connections), 2)
+        self.assertTrue(all(con.explicitly_closed for con in connections))
+        self.assertEqual(list(destination.iterdir()), [])
 
     def test_failed_copy_rolls_back_code(self):
         source = self.root / 'release'

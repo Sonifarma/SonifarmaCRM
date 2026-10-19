@@ -1,5 +1,6 @@
 """Backup verificável e atualização somente de código, sem dependências extras."""
 import argparse
+from contextlib import closing
 from datetime import datetime
 import hashlib
 import json
@@ -34,7 +35,7 @@ def verify_backup(archive):
                 raise ValueError('Checksum inválido: ' + name)
             path = Path(work) / name
             path.write_bytes(data)
-            with sqlite3.connect(path) as con:
+            with closing(sqlite3.connect(path)) as con:
                 if con.execute('PRAGMA integrity_check').fetchall() != [('ok',)]:
                     raise ValueError('Banco inválido: ' + name)
     return sorted(files)
@@ -53,8 +54,8 @@ def create_backup(base, destination):
             if not source.exists():
                 continue
             # API de backup inclui transações confirmadas no WAL, mesmo com painel ativo.
-            with sqlite3.connect(source.resolve().as_uri() + '?mode=ro', uri=True) as src:
-                with sqlite3.connect(work / name) as dst:
+            with closing(sqlite3.connect(source.resolve().as_uri() + '?mode=ro', uri=True)) as src:
+                with closing(sqlite3.connect(work / name)) as dst:
                     src.backup(dst)
             files[name] = hashlib.sha256((work / name).read_bytes()).hexdigest()
         if not files:

@@ -1,8 +1,0 @@
-SONIFARMA V20.5.4 - LINK SITE / ANTIDUPLICIDADE / EMBALAGENS
-
-Faça backup do index.html e iniciar_interface.py. Substitua SOMENTE esses dois arquivos na pasta do painel, mantendo todos os arquivos .sqlite3, .cred, certificados e scripts. Reinicie o servidor Python e atualize o navegador com Ctrl+F5.
-
-Link do produto: informe a URL real HTTPS do site e clique Salvar link. A URL fica armazenada na tabela links_produtos do SQLite de nomes comerciais (criada automaticamente). Não cria links fictícios.
-Antiduplicidade: bloqueio no servidor para recompra confirmada do mesmo cliente/EAN nas 72 horas anteriores; avisos Farmácia Popular permanecem separados. Registro WhatsApp aberto não conta como enviado confirmado.
-Embalagens: filtros avançados recolhidos e carregamento progressivo ao rolar a tabela (lotes de 50); limite de seleção continua 100.
-Meta API: nenhuma alteração.

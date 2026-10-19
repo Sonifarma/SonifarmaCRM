@@ -77,3 +77,13 @@ Registros antigos, que só possuem quatro últimos dígitos, continuam preservad
 Na ficha do cliente, a aba Próximas compras mostra o último contato de cada produto/ciclo e mantém o botão WhatsApp ao lado. Os estados são Não enviado, Aberto · aguardando confirmação e Confirmado. Ao confirmar um novo envio, a data/hora e o atendente ficam registrados separadamente do resultado do atendimento. Alterar o resultado depois não altera essa data. O detalhe ao passar o mouse mostra atendente e final do telefone. Registros antigos sem data de confirmação mostram Data não registrada; a data de abertura não é usada como se fosse a de envio.
 
 A consulta dessa coluna usa um resumo por cliente e ciclo, sem depender do limite de 200 registros da listagem geral. Se a consulta falhar, aparece Histórico indisponível em vez de presumir que não houve contato. Atualize o HTML e o servidor Python e reinicie o painel para aplicar; a migração local é aditiva.
+
+## Ficha compacta e carregamento
+
+Os contatos, última compra, total de compras e o estado do WhatsApp permanecem visíveis. Data de nascimento, sexo, e-mail e valores ficam em **Mais dados do cliente**. A tabela tem cabeçalho fixo e uma área maior de rolagem; o editor de quantidade mantém os mesmos controles.
+
+A aba inicial solicita cadastro, previsões e resumo de envios em paralelo. O histórico é solicitado apenas ao abrir Histórico de compras ou Resumo e reutilizado enquanto a ficha permanecer aberta. Ordenar a lista não refaz a consulta dos envios. O resumo de envios usa um índice em memória por produto/ciclo e é atualizado após registrar ou confirmar contatos. **Atualizar ficha** recarrega os dados, inclusive alterações feitas por outro atendente. Ao fechar ou trocar de cliente, as requisições da ficha são canceladas no navegador e respostas antigas são descartadas; uma consulta já iniciada no servidor pode terminar normalmente.
+
+Para aplicar esta otimização, substitua apenas o `index.html` e atualize o navegador com Ctrl+F5. Não exige alteração do ERP ou dos bancos locais.
+
+O teste de navegador `tests/test_ficha_browser.cjs` usa dados fictícios e um servidor HTTP local. Requer Node.js, Playwright e Chromium disponíveis no ambiente de testes. Execute `node tests/test_ficha_browser.cjs`; opcionalmente, `PLAYWRIGHT_MODULE` indica a instalação do Playwright e `CHROMIUM_EXECUTABLE` indica o navegador. Ele verifica consultas evitadas ao ordenar, carregamento sob demanda, recuperação de falha, troca rápida de cliente e layout em tela pequena.

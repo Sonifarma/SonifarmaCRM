@@ -122,6 +122,42 @@
 .ultimo-envio small{font-size:12px;font-weight:400;color:#52677b;white-space:nowrap}
 .envio-confirmado{color:#167347}.envio-pendente{color:#805900}
 </style>
+<style id="sonifarma-ficha-compacta">
+#ficha-modal>.client-dialog{width:min(1400px,calc(100vw - 24px));height:calc(100dvh - 24px);padding:16px!important}
+#ficha-modal .modal-head{align-items:center;gap:12px;padding-bottom:8px}
+#ficha-modal .modal-head p{margin:4px 0 0}
+#ficha-modal .ficha-acoes{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0}
+#ficha-modal .ficha-acoes button{padding:8px 11px;min-height:36px}
+#ficha-modal .ficha-cadastro{padding:10px 12px;margin:8px 0 0}
+#ficha-modal .ficha-cadastro-grid{gap:8px 16px}
+#ficha-modal .ficha-detalhes summary{cursor:pointer;color:#36566d;font-size:12px;padding:5px 0}
+#ficha-modal .ficha-detalhes[open] .ficha-cadastro-grid{margin-top:6px}
+#ficha-modal .whatsapp-validacao{margin:7px 0 3px;padding:7px 10px;font-size:12px}
+#ficha-modal .modal-tabs{margin:10px 0 0;gap:6px}
+#ficha-modal .modal-tabs button{padding:8px 12px}
+#ficha-modal .modal-note{margin:8px 0;font-size:12px}
+#ficha-modal .modal-scroll{max-height:none;min-height:0;scrollbar-gutter:stable}
+#ficha-modal .modal-scroll thead{position:sticky;top:0;z-index:2;background:#f5f9fc}
+#ficha-modal .modal-scroll th,#ficha-modal .modal-scroll td{padding:9px 8px;vertical-align:middle}
+#ficha-modal .modal-scroll table{min-width:1050px}
+#ficha-modal .ajuste-linha{display:grid;grid-template-columns:80px 80px auto auto;gap:4px 6px;min-width:278px;align-items:end}
+#ficha-modal .ajuste-linha .ajuste-status{grid-column:1;grid-row:2;font-size:10px}
+#ficha-modal .ajuste-linha>.ajuste-campo:first-child{grid-column:1;grid-row:1}
+#ficha-modal .ajuste-linha>.ajuste-campo:not(:first-child){grid-column:2;grid-row:1}
+#ficha-modal .ajuste-linha>button{grid-row:1;padding:7px 8px}
+#ficha-modal .ajuste-linha input{width:100%;min-width:0;box-sizing:border-box}
+#ficha-modal .ultimo-envio{min-width:155px}
+@media(max-width:700px){
+ #ficha-modal>.client-dialog{width:calc(100vw - 12px);height:calc(100dvh - 12px);padding:10px!important}
+ #ficha-modal .modal-head{align-items:flex-start;flex-wrap:wrap}
+ #ficha-modal .ficha-acoes{justify-content:flex-start;flex-shrink:1}
+ #ficha-modal .ficha-cadastro-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-height:580px){
+ #ficha-modal>.client-dialog{overflow-y:auto}
+ #ficha-modal .modal-scroll{flex:0 0 auto;min-height:200px;max-height:55dvh}
+}
+</style>
 </head><body><div class="auth-overlay" id="auth-overlay"><div class="auth-box"><h2 id="auth-titulo">Sonifarma · Acesso</h2><p class="muted" id="auth-descricao">Informe suas credenciais para acessar o painel.</p><input id="auth-login" placeholder="Usuário" autocomplete="username"><input id="auth-senha" type="password" placeholder="Senha" autocomplete="current-password"><button class="primary" type="button" id="auth-entrar">Entrar</button><p id="auth-erro" class="auth-erro"></p></div></div><div class="shell"><aside class="sidebar"><h2>SONIFARMA</h2><p>Inteligência de clientes</p><nav><button class="nav" data-tab="dashboard">▦ Dashboard</button><button class="nav active" data-tab="central-tab">⌕ Central de Consultas</button><button class="nav" data-tab="reativacao-tab">↺ Reativação</button><button class="nav" data-tab="auditoria-tab" id="nav-auditoria" style="display:none">☷ Auditoria</button><button class="nav" data-tab="usuarios-tab" id="nav-usuarios" style="display:none">♙ Usuários</button></nav><p style="margin-top:30px" id="sessao-usuario">Aguardando login</p><button id="btn-sair" type="button" style="width:100%;display:none">Sair</button></aside><div class="workspace"><header><div><div class="brand">SONI<span>FARMA</span> <span style="font-size:13px;font-weight:500;color:#c3d4df">| Inteligência de Clientes</span></div><div class="sub">Histórico de compras · Indicadores agregados</div></div><div class="tag">Painel local · Somente leitura</div></header><main><section class="tab" id="auditoria-tab"><h1>Auditoria e histórico de contatos</h1><p class="muted">Acesso exclusivo MASTER · Últimos 500 registros por consulta · Registros não podem ser alterados pela interface.</p>
 <div class="panel"><div class="filterbar" style="align-items:end">
 <label>Data inicial<input type="date" id="audit-data-inicio" style="min-width:145px"></label>
@@ -153,7 +189,7 @@
 <div class="panel"><div class="filterbar"><select id="recompra-janela"><option value="todos">Todos os produtos</option><option value="atrasadas">Previsão ultrapassada</option><option value="misto3">Hoje ± 3 dias</option><option value="anteriores7">Anteriores 7 dias</option><option value="anteriores15">Anteriores 15 dias</option><option value="anteriores30">Anteriores 30 dias</option><option value="7">Próximos 7 dias</option><option value="15">Próximos 15 dias</option><option value="30">Próximos 30 dias</option><option value="sem_previsao">Sem posologia confirmada</option></select><button id="recompra-atualizar">Consultar previsões</button></div>
 <div class="scroll"><table><thead><tr><th>Produto</th><th>Última compra</th><th>Compras em dias distintos</th><th>Qtd. Apres. / Tomar/dia</th><th>Duração / Próxima estimativa</th><th>Guia / apresentação</th></tr></thead><tbody id="recompra-lista"><tr><td colspan="6">Selecione um cliente para iniciar.</td></tr></tbody></table></div><p id="recompra-aviso" class="muted"></p></div>
 <p class="warning">Estimativa estatística por embalagem, baseada na mediana dos intervalos entre pelo menos três datas de compra distintas nos últimos 730 dias. Não é orientação de tratamento nem prova de que o cliente precisa comprar novamente. O guia pode conter duplicidades. Nenhuma mensagem é enviada automaticamente.</p></section>
-<section class="tab" id="posvenda-tab"><h1>Agenda de pós-venda</h1><div class="panel" id="whats-posvenda-painel"><h2>WhatsApp · produto selecionado</h2><p class="muted" id="whats-produto-aviso">Selecione o botão WhatsApp em um produto da Central de Recompras.</p><div id="whats-produto-resumo" style="font-weight:700;margin:10px 0"></div><div class="actions"><button type="button" id="whats-posvenda-preparar" disabled style="background:#167347;color:white">Preparar mensagem para revisão</button></div><p class="muted">O nome do medicamento é exibido apenas para o atendente. A mensagem externa não inclui medicamentos automaticamente.</p></div><p class="muted">Acompanhamentos internos. Sem envio de mensagens. Registros armazenados apenas no servidor local, fora do ERP.</p><div class="panel"><h2>Novo acompanhamento</h2><div class="filterbar"><input id="agenda-cliente" type="number" min="1" placeholder="Código do cliente no ERP"><input id="agenda-data" type="date"><select id="agenda-motivo"><option>Acompanhamento</option><option>Retorno solicitado</option><option>Conferir cadastro</option></select><button id="agenda-criar">Adicionar à agenda</button></div><p class="muted" id="agenda-aviso">Selecione um cliente na consulta para preencher automaticamente o código. Não registre medicamentos, diagnósticos ou informações de saúde nesta agenda.</p></div><div class="panel wide"><div class="row"><h2>Histórico WhatsApp</h2><button type="button" id="whats-historico-atualizar">Atualizar</button></div><div id="whats-indicadores" class="muted">Carregando indicadores...</div><div id="whats-historico">Nenhum envio confirmado nesta sessão.</div></div><div class="panel wide scroll"><div class="row"><h2>Atendimentos agendados</h2><button id="agenda-atualizar">↻ Atualizar</button></div><table><thead><tr><th>Data</th><th>Cliente (ID)</th><th>Motivo</th><th>Status</th><th>Ação</th></tr></thead><tbody id="agenda-lista"><tr><td colspan="5">Carregando...</td></tr></tbody></table></div><p class="warning">Agenda local em SQLite. Não há autenticação de usuários nem autorização individual; use apenas no próprio servidor, com acesso restrito. Para utilização em rede, será necessário implementar login, permissões, auditoria e política de retenção.</p></section></main></div></div><div class="client-modal" id="ficha-modal" role="dialog" aria-modal="true" aria-labelledby="ficha-titulo"><div class="client-dialog"><div class="modal-head"><div><h2 id="ficha-titulo">Ficha do cliente</h2><p class="muted" id="ficha-subtitulo">Carregando...</p></div><button type="button" class="modal-close" id="ficha-fechar" aria-label="Fechar ficha">×</button></div><div style="padding:0 14px"><button type="button" id="whats-ficha-btn" style="background:#167347;color:white">WhatsApp · preparar mensagem</button></div><div id="ficha-cadastro" class="ficha-cadastro" aria-live="polite">Carregando resumo cadastral...</div><div class="modal-tabs"><button type="button" data-ficha-tab="previsoes" class="selected">Próximas compras</button><button type="button" data-ficha-tab="historico">Histórico de compras</button><button type="button" data-ficha-tab="resumo">Resumo</button><button type="button" data-ficha-tab="posvenda">Pós-venda</button></div><p class="modal-note" id="ficha-aviso">Carregando dados...</p><div class="modal-scroll" id="ficha-conteudo"></div><p class="muted">Dados confidenciais. Acompanhamentos são internos; estimativas de recompra não são orientação de uso. ERP somente leitura; ajustes de posologia são armazenados localmente.</p></div></div><div class="client-modal" id="emb-modal" role="dialog" aria-modal="true" aria-label="Selecionar embalagens"><div class="client-dialog" style="width:min(920px,100%);max-height:90vh">
+<section class="tab" id="posvenda-tab"><h1>Agenda de pós-venda</h1><div class="panel" id="whats-posvenda-painel"><h2>WhatsApp · produto selecionado</h2><p class="muted" id="whats-produto-aviso">Selecione o botão WhatsApp em um produto da Central de Recompras.</p><div id="whats-produto-resumo" style="font-weight:700;margin:10px 0"></div><div class="actions"><button type="button" id="whats-posvenda-preparar" disabled style="background:#167347;color:white">Preparar mensagem para revisão</button></div><p class="muted">O nome do medicamento é exibido apenas para o atendente. A mensagem externa não inclui medicamentos automaticamente.</p></div><p class="muted">Acompanhamentos internos. Sem envio de mensagens. Registros armazenados apenas no servidor local, fora do ERP.</p><div class="panel"><h2>Novo acompanhamento</h2><div class="filterbar"><input id="agenda-cliente" type="number" min="1" placeholder="Código do cliente no ERP"><input id="agenda-data" type="date"><select id="agenda-motivo"><option>Acompanhamento</option><option>Retorno solicitado</option><option>Conferir cadastro</option></select><button id="agenda-criar">Adicionar à agenda</button></div><p class="muted" id="agenda-aviso">Selecione um cliente na consulta para preencher automaticamente o código. Não registre medicamentos, diagnósticos ou informações de saúde nesta agenda.</p></div><div class="panel wide"><div class="row"><h2>Histórico WhatsApp</h2><button type="button" id="whats-historico-atualizar">Atualizar</button></div><div id="whats-indicadores" class="muted">Carregando indicadores...</div><div id="whats-historico">Nenhum envio confirmado nesta sessão.</div></div><div class="panel wide scroll"><div class="row"><h2>Atendimentos agendados</h2><button id="agenda-atualizar">↻ Atualizar</button></div><table><thead><tr><th>Data</th><th>Cliente (ID)</th><th>Motivo</th><th>Status</th><th>Ação</th></tr></thead><tbody id="agenda-lista"><tr><td colspan="5">Carregando...</td></tr></tbody></table></div><p class="warning">Agenda local em SQLite. Não há autenticação de usuários nem autorização individual; use apenas no próprio servidor, com acesso restrito. Para utilização em rede, será necessário implementar login, permissões, auditoria e política de retenção.</p></section></main></div></div><div class="client-modal" id="ficha-modal" role="dialog" aria-modal="true" aria-labelledby="ficha-titulo"><div class="client-dialog"><div class="modal-head"><div><h2 id="ficha-titulo">Ficha do cliente</h2><p class="muted" id="ficha-subtitulo">Carregando...</p></div><div class="ficha-acoes"><button type="button" id="ficha-atualizar" title="Recarregar dados e envios deste cliente">Atualizar ficha</button><button type="button" id="whats-ficha-btn" style="background:#167347;color:white">WhatsApp</button><button type="button" class="modal-close" id="ficha-fechar" aria-label="Fechar ficha">×</button></div></div><div id="ficha-cadastro" class="ficha-cadastro" aria-live="polite">Carregando resumo cadastral...</div><div class="modal-tabs"><button type="button" data-ficha-tab="previsoes" class="selected">Próximas compras</button><button type="button" data-ficha-tab="historico">Histórico de compras</button><button type="button" data-ficha-tab="resumo">Resumo</button><button type="button" data-ficha-tab="posvenda">Pós-venda</button></div><p class="modal-note" id="ficha-aviso">Carregando dados...</p><div class="modal-scroll" id="ficha-conteudo"></div><p class="muted">Dados confidenciais. Acompanhamentos são internos; estimativas de recompra não são orientação de uso. ERP somente leitura; ajustes de posologia são armazenados localmente.</p></div></div><div class="client-modal" id="emb-modal" role="dialog" aria-modal="true" aria-label="Selecionar embalagens"><div class="client-dialog" style="width:min(920px,100%);max-height:90vh">
 <div class="modal-head"><div><h2>Filtro de embalagens</h2><p class="muted">Selecione uma ou várias embalagens. O filtro considera qualquer uma das selecionadas.</p></div><button type="button" id="emb-fechar" aria-label="Fechar">×</button></div>
 <div class="row" style="padding:12px 0;flex-wrap:wrap"><span id="emb-total" class="muted">Nenhuma embalagem selecionada</span><div class="actions"><button type="button" id="emb-limpar">Limpar</button><button type="button" id="emb-adicionar" title="Pesquisar e adicionar">＋</button><button type="button" id="emb-remover" title="Remover marcadas">−</button></div></div>
 <div id="emb-selecionadas" class="modal-scroll" style="min-height:140px"></div>
@@ -180,7 +216,7 @@
 'use strict';let data=null;const $=id=>document.getElementById(id);const num=v=>new Intl.NumberFormat('pt-BR',{maximumFractionDigits:0}).format(Number(v)||0);const money=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v)||0);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function bars(target,rows,key,colors){const max=Math.max(1,...rows.map(x=>Number(x[key])||0));$(target).innerHTML=rows.map((r,i)=>`<div class="baritem"><div class="barlabel"><span>${esc(r.faixa)}</span><strong>${num(r[key])}</strong></div><div class="track"><div class="fill ${colors&&colors[i]||''}" style="width:${Math.max(0,Math.min(100,Number(r[key])*100/max))}%"></div></div></div>`).join('')||'<div class="empty">Sem dados</div>'}function draw(){if(!data)return;const r=data.resultados||{},s=(r.resumo||[])[0]||{},ina=r.faixas_inatividade||[],freq=r.frequencia_365_dias||[],months=r.compras_mensais_12_meses||[];$('compras').textContent=num(s.compras_validas);$('clientes').textContent=num(s.clientes_identificados);$('unidades').textContent=num(s.unidades_liquidas);$('valor').textContent=money(s.valor_liquido_estimado);const dt=data.gerado_em||'';$('updated').textContent='Dados atualizados em '+(dt?new Date(dt).toLocaleString('pt-BR'):'data desconhecida')+' · Período: '+(s.primeira_compra?new Date(s.primeira_compra).toLocaleDateString('pt-BR'):'—')+' a '+(s.ultima_compra?new Date(s.ultima_compra).toLocaleDateString('pt-BR'):'—');bars('inactive',ina,'clientes',['teal','','orange','']);bars('frequency',freq,'clientes',['teal','','','']);const totalIna=ina.reduce((a,x)=>a+Number(x.clientes||0),0),long=ina.find(x=>String(x.faixa).includes('90 dias'))?.clientes||0;$('inactiveInsight').textContent=totalIna?`${num(long)} clientes (${(100*long/totalIna).toFixed(1).replace('.',',')}%) estão na faixa de 90 dias ou mais sem compra.`:'Sem dados de inatividade';const totalFreq=freq.reduce((a,x)=>a+Number(x.clientes||0),0),one=freq.find(x=>x.faixa==='1 compra')?.clientes||0;$('frequencyInsight').textContent=totalFreq?`${num(one)} clientes (${(100*one/totalFreq).toFixed(1).replace('.',',')}%) fizeram uma compra nos últimos 365 dias.`:'Sem dados de frequência';$('monthly').innerHTML=months.map(x=>`<tr><td>${esc(x.mes)}</td><td class="num">${num(x.compras)}</td><td class="num">${num(x.clientes)}</td><td class="num">${money(x.valor_estimado)}</td></tr>`).join('');const metric=$('metric').value,max=Math.max(1,...months.map(x=>Number(x[metric])||0));$('plot').innerHTML=months.map((x,i)=>{let value=Number(x[metric])||0,label=metric==='valor_estimado'?num(Math.round(value/1000))+' mil':num(value);return `<div class="col" title="${esc(x.mes)}: ${esc(label)}"><div class="count">${esc(label)}</div><div class="bar ${i===months.length-1?'partial':''}" style="height:${Math.max(1,value/max*170)}px"></div><div class="lbl">${esc(String(x.mes).slice(5))}/${esc(String(x.mes).slice(2,4))}</div></div>`}).join('');$('footer').textContent='Sonifarma · '+(data.modulo||'Histórico agregado')+' · '+(Object.keys(data.erros||{}).length?'Relatório com avisos':'Relatório sem erros registrados');if(Object.keys(data.erros||{}).length){$('error').style.display='block';$('error').textContent='O relatório registra erros: '+Object.keys(data.erros).join(', ')}else{$('error').style.display='none'}}async function load(){try{const res=await fetch('modulo1_resultado_agregado.json?ts='+Date.now(),{cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);const parsed=await res.json();if(!parsed.resultados)throw Error('Formato do relatório inválido');data=parsed;draw()}catch(e){$('error').style.display='block';$('error').textContent='Não foi possível abrir modulo1_resultado_agregado.json. Confira se o arquivo está na mesma pasta e inicie pelo script Python. Detalhe: '+e.message}}$('refresh').addEventListener('click',load);$('metric').addEventListener('change',draw);$('csv').addEventListener('click',()=>{if(!data)return;const r=data.resultados||{},rows=[['secao','categoria','quantidade','clientes','valor_estimado'],...(r.faixas_inatividade||[]).map(x=>['inatividade',x.faixa,'',x.clientes,'']),...(r.frequencia_365_dias||[]).map(x=>['frequencia',x.faixa,'',x.clientes,'']),...(r.compras_mensais_12_meses||[]).map(x=>['mes',x.mes,x.compras,x.clientes,x.valor_estimado])];const csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='sonifarma_indicadores_agregados.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)});load();
 
 const tabs=[...document.querySelectorAll('.nav')];function showTab(id){tabs.forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.id===id));}tabs.forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
-let erp=false;let chosen=null;async function api(url){let response=await fetch(url,{cache:'no-store'});let payload=await response.json();if(!response.ok)throw Error(payload.erro||'Falha na consulta');return payload;}
+let erp=false;let chosen=null;async function api(url,opcoes={}){let response=await fetch(url,{...opcoes,cache:'no-store'});let payload=await response.json();if(!response.ok)throw Error(payload.erro||'Falha na consulta');return payload;}
 async function statusERP(){try{const s=await api('/api/status');erp=s.erp;$('erp-status').textContent=erp?'ERP conectado • Consulta somente leitura':'ERP desconectado • Reinicie com --erp para pesquisar clientes';$('buscar').disabled=!erp;}catch(e){$('erp-status').textContent='Serviço de consulta indisponível';$('buscar').disabled=true;}}statusERP();
 async function buscarClientes(){const q=$('busca').value.trim();if(q.length<3){$('lista-clientes').innerHTML='<tr><td colspan="4">Digite ao menos 3 letras.</td></tr>';return;}$('lista-clientes').innerHTML='<tr><td colspan="4">Consultando...</td></tr>';try{let r=await api('/api/clientes?q='+encodeURIComponent(q));$('lista-clientes').innerHTML=r.clientes.map((c,i)=>`<tr class="clickrow" data-idx="${i}"><td>${esc(c.nome)}</td><td>${c.ultima_compra?new Date(c.ultima_compra).toLocaleDateString('pt-BR'):'—'}</td><td class="num">${num(c.vendas_candidatas)}</td><td>Ver histórico →</td></tr>`).join('')||'<tr><td colspan="4">Nenhum cliente encontrado.</td></tr>';$('lista-clientes').querySelectorAll('[data-idx]').forEach(tr=>tr.addEventListener('click',()=>abrirHistorico(r.clientes[Number(tr.dataset.idx)])));}catch(e){$('lista-clientes').innerHTML='<tr><td colspan="4">'+esc(e.message)+'</td></tr>';}}
 $('buscar').addEventListener('click',buscarClientes);$('busca').addEventListener('keydown',e=>{if(e.key==='Enter')buscarClientes()});
@@ -328,25 +364,28 @@ $('central-proxima').style.display='block';$('central-proxima').style.opacity='0
 $('central-limpar').addEventListener('click',()=>{for(const id of ['central-nome','central-produto','central-dia','central-tipo','central-status'])$(id).value='';for(const [id,v] of Object.entries({'central-janela':'misto3','central-uso':'todos','central-ordem':'data_misto','central-mes':'0','central-notificacao':'todos'}))$(id).value=v;embAplicadas=[];embAtualizarContagem();pbmApplied.clear();$('pbm-count').textContent='0';pessoaApplied.clear();pessoaUpdate();v16Applied.fabricante.clear();v16Applied.classificacao.clear();v164Refresh();centralCursor=0;centralNext=null;centralSignature='';centralJob='';$('central-proxima').disabled=true;$('central-total').textContent='Aguardando consulta';$('central-resultados').innerHTML='<div class="empty">Filtros limpos. Clique em Consultar clientes.</div>';});
 
 
-let fichaAtual=null,fichaDados={},fichaAba='previsoes',fichaAnteriorFoco=null;
+let fichaAtual=null,fichaDados={},fichaAba='previsoes',fichaAnteriorFoco=null,fichaControle=null;
 let fichaOrdem={previsoes:{col:'proxima_compra',dir:'asc'},historico:{col:'data_compra',dir:'desc'},posvenda:{col:'data_prevista',dir:'desc'}};
 function fichaComparar(a,b,col){let x=a[col],y=b[col];if(x==null||x==='')return y==null||y===''?0:1;if(y==null||y==='')return -1;if(col==='posologia') {x=Number(x);y=Number(y);}if(typeof x==='number'&&typeof y==='number')return x-y;return String(x).localeCompare(String(y),'pt-BR',{numeric:true,sensitivity:'base'});}
 function fichaOrdenar(itens,aba){const o=fichaOrdem[aba];return [...itens].sort((a,b)=>{const v=fichaComparar(a,b,o.col);return o.dir==='desc'?-v:v;});}
 function fichaCabecalho(aba,col,titulo){const o=fichaOrdem[aba],ativo=o.col===col;return `<th scope="col" aria-sort="${ativo?(o.dir==='desc'?'descending':'ascending'):'none'}"><button type="button" class="ficha-sort-btn" data-ficha-sort-aba="${aba}" data-ficha-sort-col="${col}" title="Ordenar por ${titulo}">${titulo} ${ativo?(o.dir==='desc'?'↓':'↑'):'↕'}</button></th>`;}
 function instalarOrdenacaoFicha(){document.querySelectorAll('#ficha-conteudo [data-ficha-sort-col]').forEach(b=>b.addEventListener('click',()=>{const aba=b.dataset.fichaSortAba,col=b.dataset.fichaSortCol,o=fichaOrdem[aba];fichaOrdem[aba]={col,dir:o.col===col?(o.dir==='desc'?'asc':'desc'):(col==='proxima_compra'||col==='data_compra'||col==='data_prevista'?'desc':'asc')};if(aba==='posvenda'&&typeof atualizarAgendaFicha==='function')atualizarAgendaFicha();else renderFicha();}));}
 function fecharFicha(){
+ fichaControle?.abort();fichaControle=null;fichaEnviosSequencia++;fichaEnvios=null;fichaEnviosPendente=null;
  $('ficha-modal').classList.remove('open');document.body.style.overflow='';
  fichaAtual=null;if(fichaAnteriorFoco&&fichaAnteriorFoco.isConnected)fichaAnteriorFoco.focus();
 }
 $('ficha-fechar').addEventListener('click',fecharFicha);
 $('ficha-modal').addEventListener('click',e=>{if(e.target===$('ficha-modal'))fecharFicha();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('ficha-modal').classList.contains('open'))fecharFicha();});
-$('ficha-modal').addEventListener('keydown',e=>{if(e.key!=='Tab')return;const items=[...$('ficha-modal').querySelectorAll('button:not([disabled]),input:not([disabled])')].filter(x=>x.offsetParent!==null);if(!items.length)return;const first=items[0],last=items[items.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}});
+$('ficha-modal').addEventListener('keydown',e=>{if(e.key!=='Tab')return;const items=[...$('ficha-modal').querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,a[href]')].filter(x=>x.offsetParent!==null);if(!items.length)return;const first=items[0],last=items[items.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}});
 function formatarMoedaFicha(v){return v==null?'—':Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
 function formatarDataFicha(v){if(!v)return '—';const t=String(v).trim();let m=t.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return m[3]+'/'+m[2]+'/'+m[1];m=t.match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)return m[1]+'/'+m[2]+'/'+m[3];m=t.match(/^(?:\d{2}T)?\d{2}:\d{2}:\d{2}\/(\d{2})\/(\d{2})\/(\d{4})/);if(m)return m[1]+'/'+m[2]+'/'+m[3];return '—';}
 function renderCadastroFicha(d){
- const campos=[['Data nasc.',formatarDataFicha(d.datanascimento)],['Sexo',d.sexo||'—'],['E-mail',d.email||'—'],['Telefone',d.telefone||'—'],['Celular',d.celular||'—'],['Valor médio',formatarMoedaFicha(d.valor_medio)],['Valor total',formatarMoedaFicha(d.valor_total)],['Compras totais',d.compras_total??'—'],['1ª compra',formatarDataFicha(d.primeira_compra)],['Última compra',formatarDataFicha(d.ultima_compra)]];
- $('ficha-cadastro').innerHTML='<div class="ficha-cadastro-grid">'+campos.map(([k,v])=>'<div class="ficha-campo"><small>'+esc(k)+'</small><strong>'+esc(v)+'</strong></div>').join('')+'</div><p id="ficha-whatsapp-validacao" class="whatsapp-validacao">'+esc(avisoValidacaoWhatsApp(d.celular||d.telefone||''))+'</p>';
+ const principais=[['Celular',d.celular||'—'],['Telefone',d.telefone||'—'],['Última compra',formatarDataFicha(d.ultima_compra)],['Compras totais',d.compras_total??'—']];
+ const detalhes=[['Data nasc.',formatarDataFicha(d.datanascimento)],['Sexo',d.sexo||'—'],['E-mail',d.email||'—'],['Valor médio',formatarMoedaFicha(d.valor_medio)],['Valor total',formatarMoedaFicha(d.valor_total)],['1ª compra',formatarDataFicha(d.primeira_compra)]];
+ const campos=lista=>'<div class="ficha-cadastro-grid">'+lista.map(([k,v])=>'<div class="ficha-campo"><small>'+esc(k)+'</small><strong>'+esc(v)+'</strong></div>').join('')+'</div>';
+ $('ficha-cadastro').innerHTML=campos(principais)+'<p id="ficha-whatsapp-validacao" class="whatsapp-validacao">'+esc(avisoValidacaoWhatsApp(d.celular||d.telefone||''))+'</p><details class="ficha-detalhes"><summary>Mais dados do cliente</summary>'+campos(detalhes)+'</details>';
  consultarValidacaoWhatsApp(d.celular||d.telefone||'',fichaAtual?.id,$('ficha-whatsapp-validacao'));
 }
 function janelaFicha(){return $('central-janela').value;}
@@ -354,21 +393,41 @@ function pbmsFicha(){return fichaAtual&&Array.isArray(fichaAtual.pbms)?fichaAtua
 function urlRecompraFicha(id,janela){const q=new URLSearchParams({id:String(id),janela:String(janela)});const pbms=pbmsFicha();if(pbms.length)q.set('pbms',pbms.join(','));const classificacoes=fichaAtual?.classificacoes||[];if(classificacoes.length)q.set('classificacoes',classificacoes.join(','));return '/api/recompra?'+q.toString();}
 async function abrirFichaCliente(id,nome){
  if(!Number.isSafeInteger(id)||id<=0)return;
- fichaAnteriorFoco=document.activeElement;fichaAtual={id,nome,pbms:[...pbmApplied.keys()],classificacoes:[...v16Applied.classificacao.keys()]};fichaDados={historico:null,previsoes:null,erros:[]};fichaAba='previsoes';fichaOrdem={previsoes:{col:'proxima_compra',dir:'asc'},historico:{col:'data_compra',dir:'desc'},posvenda:{col:'data_prevista',dir:'desc'}};
+ fichaControle?.abort();const controle=new AbortController();fichaControle=controle;
+ fichaEnviosSequencia++;fichaEnvios=null;fichaEnviosPendente=null;
+ if(!$('ficha-modal').contains(document.activeElement))fichaAnteriorFoco=document.activeElement;
+ fichaAtual={id,nome,pbms:[...pbmApplied.keys()],classificacoes:[...v16Applied.classificacao.keys()]};
+ const dados={historico:null,previsoes:null,erros:[],previsoesCarregando:true};fichaDados=dados;
+ fichaAba='previsoes';fichaOrdem={previsoes:{col:'proxima_compra',dir:'asc'},historico:{col:'data_compra',dir:'desc'},posvenda:{col:'data_prevista',dir:'desc'}};
  $('ficha-titulo').textContent=nome;$('ficha-subtitulo').textContent='Código ERP: '+id;
- whatsCadastro=null; $('ficha-cadastro').textContent='Carregando resumo cadastral...';
- api('/api/ficha-cadastro?id='+id).then(r=>{if(fichaAtual&&fichaAtual.id===id){if(r.cadastro){whatsCadastro=r.cadastro;renderCadastroFicha(r.cadastro);}else $('ficha-cadastro').textContent='Cadastro não encontrado.';}}).catch(()=>{if(fichaAtual&&fichaAtual.id===id)$('ficha-cadastro').textContent='Resumo cadastral indisponível; as demais abas continuam disponíveis.';});
+ whatsCadastro=null;$('ficha-cadastro').textContent='Carregando resumo cadastral...';
+ api('/api/ficha-cadastro?id='+id,{signal:controle.signal}).then(r=>{
+  if(fichaControle!==controle)return;
+  if(r.cadastro){whatsCadastro=r.cadastro;renderCadastroFicha(r.cadastro);}else $('ficha-cadastro').textContent='Cadastro não encontrado.';
+ }).catch(e=>{if(fichaControle===controle&&!controle.signal.aborted)$('ficha-cadastro').textContent='Resumo cadastral indisponível; as demais abas continuam disponíveis.';});
  $('ficha-modal').classList.add('open');document.body.style.overflow='hidden';$('ficha-fechar').focus();
- $('ficha-aviso').textContent='Consultando dados...';$('ficha-conteudo').innerHTML='';
- const janela=janelaFicha();
- const results=await Promise.allSettled([api('/api/historico?id='+id),api(urlRecompraFicha(id,janela))]);
- if(!fichaAtual||fichaAtual.id!==id)return;
- const [h,r]=results;
- fichaDados={historico:h.status==='fulfilled'?h.value.itens:null,previsoes:r.status==='fulfilled'?r.value.previsoes:null,
-  erros:[h.status==='rejected'?'Histórico indisponível.':'',r.status==='rejected'?'Previsões indisponíveis.':''].filter(Boolean),
-  limitado:r.status==='fulfilled'&&r.value.historico_limitado};
- try{renderFicha();}catch(e){$('ficha-aviso').textContent='Falha ao exibir esta aba. Selecione outra aba ou tente novamente.';}
+ $('ficha-aviso').textContent='Consultando previsões...';$('ficha-conteudo').innerHTML='<p>Carregando próximas compras...</p>';
+ carregarUltimosEnvios(id);
+ try{
+  const r=await api(urlRecompraFicha(id,janelaFicha()),{signal:controle.signal});
+  if(fichaControle!==controle)return;
+  dados.previsoes=r.previsoes;dados.limitado=r.historico_limitado;
+ }catch(e){if(fichaControle!==controle||controle.signal.aborted)return;dados.erros.push('Previsões indisponíveis.');}
+ if(fichaControle!==controle)return;
+ dados.previsoesCarregando=false;try{renderFicha();}catch(e){$('ficha-aviso').textContent='Não foi possível exibir a ficha. Use Atualizar ficha para tentar novamente.';}
 }
+async function carregarHistoricoFicha(){
+ if(!fichaAtual||fichaDados.historico!==null||fichaDados.historicoCarregando||fichaDados.erroHistorico)return;
+ const dados=fichaDados,controle=fichaControle,id=fichaAtual.id;dados.historicoCarregando=true;
+ try{
+  const r=await api('/api/historico?id='+id,{signal:controle?.signal});
+  if(fichaDados!==dados)return;dados.historico=r.itens||[];
+ }catch(e){if(fichaDados!==dados||controle?.signal.aborted)return;dados.erroHistorico=true;}
+ finally{dados.historicoCarregando=false;}
+ if(fichaDados===dados&&fichaAtual&&['historico','resumo'].includes(fichaAba))renderFicha();
+}
+$('ficha-conteudo').addEventListener('click',e=>{if(e.target.closest('[data-ficha-retry]')){fichaDados.erroHistorico=false;renderFicha();}});
+$('ficha-atualizar').addEventListener('click',()=>{if(fichaAtual)abrirFichaCliente(fichaAtual.id,fichaAtual.nome);});
 function renderFicha(){
  if(!fichaAtual)return;
  const d=fichaDados;document.querySelectorAll('[data-ficha-tab]').forEach(b=>b.classList.toggle('selected',b.dataset.fichaTab===fichaAba));
@@ -377,19 +436,22 @@ function renderFicha(){
  $('ficha-aviso').textContent=d.erros.length?d.erros.join(' '):(d.limitado?'Resultados possivelmente incompletos. ':'')+'Previsões do filtro: '+periodo+'.';
  let html='';
  if(fichaAba==='previsoes'){
-  if(!prev)html='<p>Não foi possível carregar as previsões. Tente abrir a ficha novamente.</p>';
+  if(!prev)html=d.previsoesCarregando?'<p>Carregando próximas compras...</p>':'<p>Não foi possível carregar as previsões. Use Atualizar ficha para tentar novamente.</p>';
   else if(!prev.length)html='<p>Nenhum produto previsto para '+esc(periodo)+'.</p>';
   else html='<table><thead><tr>'+fichaCabecalho('previsoes','produto','Produto')+''+fichaCabecalho('previsoes','ultima_compra','Última compra')+''+fichaCabecalho('previsoes','quantidade_ultima_compra','Caixas')+''+fichaCabecalho('previsoes','posologia','Qtd. Apres. / Tomar/dia')+''+'<th scope="col">Último envio</th><th scope="col">Ação</th>'+fichaCabecalho('previsoes','duracao_dias','Duração')+''+fichaCabecalho('previsoes','proxima_compra','Próxima compra')+'</tr></thead><tbody>'+fichaOrdenar(prev,'previsoes').map(p=>`<tr><td>${esc(p.produto)}</td><td>${dataBR(p.ultima_compra)}</td><td>${num(p.quantidade_ultima_compra)}</td><td>${editorPosologia(fichaAtual.id,p)}</td><td class="ultimo-envio" data-envio-cliente="${fichaAtual.id}" data-envio-ean="${esc(p.ean||'')}" data-envio-produto="${esc(p.produto)}" data-envio-ciclo="${esc(p.proxima_compra||'')}">Consultando...</td><td><button type="button" class="whats-produto whats-mini" title="Preparar WhatsApp deste produto" aria-label="Preparar WhatsApp deste produto" data-wcid="${fichaAtual.id}" data-wcnome="${esc(fichaAtual.nome)}" data-wproduto="${esc(p.produto)}" data-wean="${esc(p.ean||'')}" data-wdata="${esc(p.proxima_compra||'')}">✉</button></td><td>${num(p.duracao_dias)} dias</td><td><strong>${dataBR(p.proxima_compra)}</strong></td></tr>`).join('')+'</tbody></table>';
   }else if(fichaAba==='posvenda'){
    html='<div class="panel"><h2>Acompanhamentos deste cliente</h2><div class="filterbar"><input type="date" id="ficha-agenda-data" aria-label="Data do acompanhamento"><select id="ficha-agenda-motivo" aria-label="Motivo"><option>Acompanhamento</option><option>Retorno solicitado</option><option>Conferir cadastro</option></select><button type="button" id="ficha-agenda-criar">Agendar</button></div><p class="muted" id="ficha-agenda-status">Consultando agenda...</p><div id="ficha-agenda-lista"></div><p class="muted">Não registre diagnósticos, medicamentos ou informações de saúde na agenda.</p></div><div class="panel"><div class="row"><h2>Histórico WhatsApp deste cliente</h2><button type="button" id="ficha-whats-atualizar">Atualizar</button></div><p id="ficha-whats-status" class="muted">Consultando contatos...</p><div id="ficha-whats-lista"></div></div>';
  }else if(fichaAba==='historico'){
-  if(!hist)html='<p>Não foi possível carregar o histórico.</p>';
+  if(!hist)html=d.erroHistorico?'<p>Histórico indisponível. <button type="button" data-ficha-retry>Tentar novamente</button></p>':'<p>Carregando histórico de compras...</p>';
   else html='<table><thead><tr>'+fichaCabecalho('historico','data_compra','Data')+''+fichaCabecalho('historico','vendaid','Venda')+''+fichaCabecalho('historico','produto','Produto')+''+fichaCabecalho('historico','quantidade_original','Comprado')+''+fichaCabecalho('historico','quantidade_devolvida','Devolvido')+''+fichaCabecalho('historico','quantidade_liquida','Saldo')+''+fichaCabecalho('historico','valor_estimado','Valor estimado')+'</tr></thead><tbody>'+fichaOrdenar(hist,'historico').map(x=>`<tr><td>${dataBR(String(x.data_compra||'').slice(0,10))}</td><td>${esc(x.vendaid)}</td><td>${esc(x.produto)}</td><td>${num(x.quantidade_original)}</td><td>${num(x.quantidade_devolvida)}</td><td>${num(x.quantidade_liquida)}</td><td>${money(x.valor_estimado)}</td></tr>`).join('')+'</tbody></table>';
+ }else if(!hist){
+  html=d.erroHistorico?'<p>Resumo indisponível. <button type="button" data-ficha-retry>Tentar novamente</button></p>':'<p>Carregando resumo...</p>';
  }else{
   const vendas=new Set((hist||[]).map(x=>x.vendaid));const ultima=(hist||[]).map(x=>String(x.data_compra||'').slice(0,10)).filter(Boolean).sort().reverse()[0];
   html=`<div class="cards"><div class="card"><div class="label">Vendas exibidas</div><div class="value">${vendas.size}</div></div><div class="card"><div class="label">Produtos no período</div><div class="value">${prev?prev.length:'—'}</div></div><div class="card"><div class="label">Última compra exibida</div><div class="detail">${dataBR(ultima)}</div></div></div><p class="muted">O histórico exibido pode ser limitado a 100 linhas.</p>`;
  }
  $('ficha-conteudo').innerHTML=html||'<p>Sem registros para exibir.</p>';instalarOrdenacaoFicha();
+ if(['historico','resumo'].includes(fichaAba))carregarHistoricoFicha();
   if(fichaAba==='posvenda'){iniciarAgendaFicha(fichaAtual.id);iniciarWhatsFicha(fichaAtual.id);}
  if(fichaAba==='previsoes'&&prev){carregarUltimosEnvios(fichaAtual.id);instalarEdicaoPosologia($('ficha-conteudo'),async()=>{
   if(!fichaAtual)return;const id=fichaAtual.id;
@@ -622,7 +684,8 @@ $('whats-posvenda-preparar').addEventListener('click',async()=>{
 // V19.3: registro local somente após confirmação humana; não comprova entrega.
 let whatsAbertoParaConfirmar=false;
 let whatsRegistrosCache=[];
-let fichaEnvios=null, fichaEnviosSequencia=0;
+let fichaEnvios=null, fichaEnviosSequencia=0,fichaEnviosPendente=null;
+function chaveUltimoEnvio(cid,ean,produto,ciclo){return JSON.stringify([String(cid),String(ean||''),ean?'':String(produto||'').trim(),String(ciclo||'').slice(0,10)]);}
 function dataHoraEnvio(valor){
  const m=/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(String(valor||''));
  return m?`${m[3]}/${m[2]}/${m[1]} às ${m[4]}:${m[5]}`:'Data não registrada';
@@ -632,7 +695,7 @@ function pintarUltimosEnvios(){
   el.classList.remove('envio-confirmado','envio-pendente');el.removeAttribute('title');
   if(!fichaEnvios||String(fichaEnvios.cliente)!==el.dataset.envioCliente){el.textContent='Consultando...';return;}
   if(fichaEnvios.erro){el.textContent='Histórico indisponível';return;}
-  const r=fichaEnvios.registros.find(r=>String(r.cliente_id)===el.dataset.envioCliente&&String(r.previsao||'').slice(0,10)===el.dataset.envioCiclo.slice(0,10)&&(el.dataset.envioEan?String(r.ean||'')===el.dataset.envioEan:!r.ean&&String(r.produto_descricao||'').trim()===el.dataset.envioProduto.trim()));
+  const r=fichaEnvios.indice.get(chaveUltimoEnvio(el.dataset.envioCliente,el.dataset.envioEan,el.dataset.envioProduto,el.dataset.envioCiclo));
   const botao=el.parentElement.querySelector('.whats-produto');
   if(botao){const confirmado=r?.status==='Enviado confirmado';botao.classList.toggle('whats-enviado',confirmado);botao.textContent=confirmado?'✓':'✉';botao.title=confirmado?'Mensagem já confirmada neste ciclo':'Preparar WhatsApp deste produto';}
   if(!r){el.textContent='Não enviado';return;}
@@ -645,15 +708,24 @@ function pintarUltimosEnvios(){
   }else{el.classList.add('envio-pendente');el.textContent='Aberto · aguardando confirmação';}
  });
 }
-async function carregarUltimosEnvios(clienteId){
- const seq=++fichaEnviosSequencia;
- fichaEnvios=null;pintarUltimosEnvios();
- try{
-  const dados=await api('/api/whatsapp-registros?cliente_id='+encodeURIComponent(clienteId)+'&resumo=1');
-  if(seq!==fichaEnviosSequencia)return;
-  fichaEnvios={cliente:clienteId,registros:dados.registros||[]};
- }catch(e){if(seq!==fichaEnviosSequencia)return;fichaEnvios={cliente:clienteId,erro:true};}
- pintarUltimosEnvios();
+async function carregarUltimosEnvios(clienteId,forcar=false){
+ if(!forcar&&String(fichaEnvios?.cliente)===String(clienteId)){pintarUltimosEnvios();return;}
+ if(!forcar&&String(fichaEnviosPendente?.cliente)===String(clienteId))return fichaEnviosPendente.promise;
+ const seq=++fichaEnviosSequencia,controle=fichaControle;
+ const carregar=async()=>{
+  if(!fichaEnvios||String(fichaEnvios.cliente)!==String(clienteId))fichaEnvios=null;
+  pintarUltimosEnvios();
+  try{
+   const dados=await api('/api/whatsapp-registros?cliente_id='+encodeURIComponent(clienteId)+'&resumo=1',{signal:controle?.signal});
+   if(seq!==fichaEnviosSequencia)return;
+   const indice=new Map();
+   for(const r of dados.registros||[]){const chave=chaveUltimoEnvio(r.cliente_id,r.ean,r.produto_descricao,r.previsao);if(!indice.has(chave))indice.set(chave,r);}
+   fichaEnvios={cliente:clienteId,indice};
+  }catch(e){if(seq!==fichaEnviosSequencia||controle?.signal.aborted)return;fichaEnvios={cliente:clienteId,erro:true};}
+  finally{if(seq===fichaEnviosSequencia)fichaEnviosPendente=null;}
+  pintarUltimosEnvios();
+ };
+ const promise=carregar();fichaEnviosPendente={cliente:clienteId,promise};return promise;
 }
 function whatsChave(p){return [String(p?.clienteId||''),String(p?.ean||''),String(p?.proximaCompra||'').slice(0,10),String(p?.descricao||p?.produto||'').trim()].join('|');}
 function whatsChaveRegistro(r){return [String(r.cliente_id),String(r.ean||''),String(r.previsao||'').slice(0,10),String(r.produto_descricao||'').trim()].join('|');}
@@ -667,7 +739,7 @@ async function whatsHistoricoAtualizar(){
  const opts=['Aguardando resposta','Interessado','Não precisa agora','Recompra realizada'];
  el.innerHTML=whatsRegistrosCache.length?'<div class="scroll"><table><thead><tr><th>Data/hora</th><th>Cliente ERP</th><th>Produto (interno)</th><th>Previsão</th><th>Envio</th><th>Número WhatsApp</th><th>Resposta / resultado</th></tr></thead><tbody>'+whatsRegistrosCache.map(x=>'<tr><td>'+esc(x.criado_em)+'</td><td>'+esc(x.cliente_id)+'</td><td>'+esc(x.produto_descricao)+'</td><td>'+esc(x.previsao)+'</td><td>'+esc(x.status)+'</td><td>'+ (x.whatsapp_validado?'✓ Validado':'Validação pendente')+'</td><td><select class="whats-resultado" data-regid="'+x.id+'">'+opts.map(o=>'<option '+(x.resultado===o?'selected':'')+'>'+esc(o)+'</option>').join('')+'</select></td></tr>').join('')+'</tbody></table></div>':'<p class="muted">Nenhum envio confirmado.</p>';
  whatsPintarBotoes();
- if(fichaAtual&&fichaAba==='previsoes')await carregarUltimosEnvios(fichaAtual.id);
+ if(fichaAtual&&fichaAba==='previsoes')await carregarUltimosEnvios(fichaAtual.id,true);
  }catch(e){el.textContent='Histórico indisponível: '+e.message;}
 }
 document.addEventListener('change',async e=>{if(!e.target.matches('.whats-resultado'))return;const b=e.target;b.disabled=true;try{const resp=await fetch('/api/whatsapp-resultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:Number(b.dataset.regid),resultado:b.value})});const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha ao atualizar');await whatsHistoricoAtualizar();}catch(err){alert('Não foi possível registrar a resposta: '+err.message);await whatsHistoricoAtualizar();}finally{b.disabled=false;}});
@@ -689,7 +761,7 @@ function whatsNumero(valor){let n=String(valor||'').replace(/\D/g,'');if(n.start
 function avisoValidacaoWhatsApp(valor){
  if(!String(valor||'').trim())return 'Celular não informado. Confirme com o cliente um número com DDD e verifique se ele possui WhatsApp.';
  if(!whatsNumero(valor))return 'Número com formato inválido. Confira o DDD e o telefone antes de verificar no WhatsApp.';
- return 'WhatsApp não verificado. Antes de enviar, confirme no WhatsApp se o número está ativo e pertence ao cliente. A autorização de contato não valida o número.';
+ return 'WhatsApp não verificado. Confirme o número e o destinatário antes de enviar.';
 }
 async function consultarValidacaoWhatsApp(valor,clienteId,aviso){
  if(!aviso)return;

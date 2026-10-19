@@ -114,6 +114,7 @@
 #reativacao-tab .reat-table td:nth-child(3),#reativacao-tab .reat-table td:nth-child(4){font-variant-numeric:tabular-nums}
 </style><style id="sonifarma-validacao-whatsapp">
 .whatsapp-validacao{margin:8px 0 12px;padding:10px 12px;border:1px solid #d8a132;border-radius:8px;background:#fff7df;color:#674400;font-size:14px;line-height:1.45}
+.whatsapp-validacao.validado{border-color:#73ad81;background:#edf8ef;color:#215d32}
 </style>
 </head><body><div class="auth-overlay" id="auth-overlay"><div class="auth-box"><h2 id="auth-titulo">Sonifarma · Acesso</h2><p class="muted" id="auth-descricao">Informe suas credenciais para acessar o painel.</p><input id="auth-login" placeholder="Usuário" autocomplete="username"><input id="auth-senha" type="password" placeholder="Senha" autocomplete="current-password"><button class="primary" type="button" id="auth-entrar">Entrar</button><p id="auth-erro" class="auth-erro"></p></div></div><div class="shell"><aside class="sidebar"><h2>SONIFARMA</h2><p>Inteligência de clientes</p><nav><button class="nav" data-tab="dashboard">▦ Dashboard</button><button class="nav active" data-tab="central-tab">⌕ Central de Consultas</button><button class="nav" data-tab="reativacao-tab">↺ Reativação</button><button class="nav" data-tab="auditoria-tab" id="nav-auditoria" style="display:none">☷ Auditoria</button><button class="nav" data-tab="usuarios-tab" id="nav-usuarios" style="display:none">♙ Usuários</button></nav><p style="margin-top:30px" id="sessao-usuario">Aguardando login</p><button id="btn-sair" type="button" style="width:100%;display:none">Sair</button></aside><div class="workspace"><header><div><div class="brand">SONI<span>FARMA</span> <span style="font-size:13px;font-weight:500;color:#c3d4df">| Inteligência de Clientes</span></div><div class="sub">Histórico de compras · Indicadores agregados</div></div><div class="tag">Painel local · Somente leitura</div></header><main><section class="tab" id="auditoria-tab"><h1>Auditoria e histórico de contatos</h1><p class="muted">Acesso exclusivo MASTER · Últimos 500 registros por consulta · Registros não podem ser alterados pela interface.</p>
 <div class="panel"><div class="filterbar" style="align-items:end">
@@ -339,7 +340,8 @@ function formatarMoedaFicha(v){return v==null?'—':Number(v).toLocaleString('pt
 function formatarDataFicha(v){if(!v)return '—';const t=String(v).trim();let m=t.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return m[3]+'/'+m[2]+'/'+m[1];m=t.match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)return m[1]+'/'+m[2]+'/'+m[3];m=t.match(/^(?:\d{2}T)?\d{2}:\d{2}:\d{2}\/(\d{2})\/(\d{2})\/(\d{4})/);if(m)return m[1]+'/'+m[2]+'/'+m[3];return '—';}
 function renderCadastroFicha(d){
  const campos=[['Data nasc.',formatarDataFicha(d.datanascimento)],['Sexo',d.sexo||'—'],['E-mail',d.email||'—'],['Telefone',d.telefone||'—'],['Celular',d.celular||'—'],['Valor médio',formatarMoedaFicha(d.valor_medio)],['Valor total',formatarMoedaFicha(d.valor_total)],['Compras totais',d.compras_total??'—'],['1ª compra',formatarDataFicha(d.primeira_compra)],['Última compra',formatarDataFicha(d.ultima_compra)]];
- $('ficha-cadastro').innerHTML='<div class="ficha-cadastro-grid">'+campos.map(([k,v])=>'<div class="ficha-campo"><small>'+esc(k)+'</small><strong>'+esc(v)+'</strong></div>').join('')+'</div><p class="whatsapp-validacao">'+esc(avisoValidacaoWhatsApp(d.celular||d.telefone||''))+'</p>';
+ $('ficha-cadastro').innerHTML='<div class="ficha-cadastro-grid">'+campos.map(([k,v])=>'<div class="ficha-campo"><small>'+esc(k)+'</small><strong>'+esc(v)+'</strong></div>').join('')+'</div><p id="ficha-whatsapp-validacao" class="whatsapp-validacao">'+esc(avisoValidacaoWhatsApp(d.celular||d.telefone||''))+'</p>';
+ consultarValidacaoWhatsApp(d.celular||d.telefone||'',fichaAtual?.id,$('ficha-whatsapp-validacao'));
 }
 function janelaFicha(){return $('central-janela').value;}
 function pbmsFicha(){return fichaAtual&&Array.isArray(fichaAtual.pbms)?fichaAtual.pbms:[];}
@@ -624,7 +626,7 @@ async function whatsHistoricoAtualizar(){
  const conta=(x)=>whatsRegistrosCache.filter(a=>a.resultado===x).length;
  $('whats-indicadores').textContent='Atendimentos registrados: '+whatsRegistrosCache.length+' · Interessados: '+conta('Interessado')+' · Não precisa agora: '+conta('Não precisa agora')+' · Recompras realizadas: '+conta('Recompra realizada')+' · Aguardando resposta: '+conta('Aguardando resposta')+' (últimos 200 registros)';
  const opts=['Aguardando resposta','Interessado','Não precisa agora','Recompra realizada'];
- el.innerHTML=whatsRegistrosCache.length?'<div class="scroll"><table><thead><tr><th>Data/hora</th><th>Cliente ERP</th><th>Produto (interno)</th><th>Previsão</th><th>Envio</th><th>Resposta / resultado</th></tr></thead><tbody>'+whatsRegistrosCache.map(x=>'<tr><td>'+esc(x.criado_em)+'</td><td>'+esc(x.cliente_id)+'</td><td>'+esc(x.produto_descricao)+'</td><td>'+esc(x.previsao)+'</td><td>'+esc(x.status)+'</td><td><select class="whats-resultado" data-regid="'+x.id+'">'+opts.map(o=>'<option '+(x.resultado===o?'selected':'')+'>'+esc(o)+'</option>').join('')+'</select></td></tr>').join('')+'</tbody></table></div>':'<p class="muted">Nenhum envio confirmado.</p>';
+ el.innerHTML=whatsRegistrosCache.length?'<div class="scroll"><table><thead><tr><th>Data/hora</th><th>Cliente ERP</th><th>Produto (interno)</th><th>Previsão</th><th>Envio</th><th>Número WhatsApp</th><th>Resposta / resultado</th></tr></thead><tbody>'+whatsRegistrosCache.map(x=>'<tr><td>'+esc(x.criado_em)+'</td><td>'+esc(x.cliente_id)+'</td><td>'+esc(x.produto_descricao)+'</td><td>'+esc(x.previsao)+'</td><td>'+esc(x.status)+'</td><td>'+ (x.whatsapp_validado?'✓ Validado':'Validação pendente')+'</td><td><select class="whats-resultado" data-regid="'+x.id+'">'+opts.map(o=>'<option '+(x.resultado===o?'selected':'')+'>'+esc(o)+'</option>').join('')+'</select></td></tr>').join('')+'</tbody></table></div>':'<p class="muted">Nenhum envio confirmado.</p>';
  whatsPintarBotoes();
  }catch(e){el.textContent='Histórico indisponível: '+e.message;}
 }
@@ -634,7 +636,7 @@ $('whats-confirmar').addEventListener('click',async()=>{
  if(!whatsRegistroAbertoId){$('whats-aviso').textContent='Abra o WhatsApp e registre o atendimento primeiro.';return;}
  if(!window.confirm('Confirma que enviou manualmente a mensagem no WhatsApp?'))return;
  try{const resp=await fetch('/api/whatsapp-confirmar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:whatsRegistroAbertoId})});const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Erro ao confirmar');
- $('whats-aviso').textContent='Envio confirmado no Pós-venda.';$('whats-confirmar').disabled=true;whatsRegistroAbertoId=null;await whatsHistoricoAtualizar();
+ atualizarValidacoesWhatsApp();$('whats-aviso').textContent='Envio confirmado no Pós-venda. O número utilizado foi validado no WhatsApp.';$('whats-confirmar').disabled=true;whatsRegistroAbertoId=null;await whatsHistoricoAtualizar();
  }catch(e){$('whats-aviso').textContent='Não foi possível confirmar: '+e.message;}
 });
 let whatsRegistroAbertoId=null;
@@ -649,8 +651,25 @@ function avisoValidacaoWhatsApp(valor){
  if(!whatsNumero(valor))return 'Número com formato inválido. Confira o DDD e o telefone antes de verificar no WhatsApp.';
  return 'WhatsApp não verificado. Antes de enviar, confirme no WhatsApp se o número está ativo e pertence ao cliente. A autorização de contato não valida o número.';
 }
+async function consultarValidacaoWhatsApp(valor,clienteId,aviso){
+ if(!aviso)return;
+ const consulta=String(Number(aviso.dataset.consulta||0)+1);aviso.dataset.consulta=consulta;
+ aviso.classList.remove('validado');aviso.textContent=avisoValidacaoWhatsApp(valor);
+ const numero=whatsNumero(valor);if(!numero||!clienteId)return;
+ try{
+  const r=await api('/api/whatsapp-validacao?'+new URLSearchParams({cliente_id:String(clienteId),numero}));
+  if(!aviso.isConnected||aviso.dataset.consulta!==consulta)return;
+  if(r.validado===true){aviso.textContent='✓ Número validado no WhatsApp por envio confirmado no Pós-venda.';aviso.classList.add('validado');}
+ }catch(e){if(aviso.isConnected&&aviso.dataset.consulta===consulta)aviso.textContent='Não foi possível consultar a validação deste número. Confira no WhatsApp antes de enviar.';}
+}
 function atualizarAvisoWhatsApp(campoId,avisoId){
- $(avisoId).textContent=avisoValidacaoWhatsApp($(campoId).value);
+ const cid=campoId==='reat-whats-numero'?reatWhatsCliente?.pessoaid:(whatsContexto?.clienteId||fichaAtual?.id);
+ return consultarValidacaoWhatsApp($(campoId).value,cid,$(avisoId));
+}
+function atualizarValidacoesWhatsApp(){
+ atualizarAvisoWhatsApp('whats-numero','whats-validacao-numero');
+ atualizarAvisoWhatsApp('reat-whats-numero','reat-whats-validacao-numero');
+ if(fichaAtual&&whatsCadastro)consultarValidacaoWhatsApp(whatsCadastro.celular||whatsCadastro.telefone||'',fichaAtual.id,$('ficha-whatsapp-validacao'));
 }
 $('whats-numero').addEventListener('input',()=>atualizarAvisoWhatsApp('whats-numero','whats-validacao-numero'));
 $('reat-whats-numero').addEventListener('input',()=>atualizarAvisoWhatsApp('reat-whats-numero','reat-whats-validacao-numero'));
@@ -721,7 +740,7 @@ document.getElementById('whats-abrir').addEventListener('click',async()=>{
  if(!janela){aviso.textContent='Pop-up bloqueado. Autorize pop-ups e tente novamente.';return;}
  botao.disabled=true;aviso.textContent='Registrando atendimento no Pós-venda...';
  try{
-   const resp=await fetch('/api/whatsapp-registros',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cliente_id:p.clienteId,ean:p.ean||'',produto_descricao:p.descricao||p.produto||'',tipo_aviso:$('whats-tipo-aviso').value,previsao:p.proximaCompra||'',telefone_final:numero.slice(-4),cliente_nome:fichaAtual?.nome||'',status:'WhatsApp aberto'})});
+   const resp=await fetch('/api/whatsapp-registros',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cliente_id:p.clienteId,ean:p.ean||'',produto_descricao:p.descricao||p.produto||'',tipo_aviso:$('whats-tipo-aviso').value,previsao:p.proximaCompra||'',telefone_final:numero.slice(-4),telefone:numero,cliente_nome:fichaAtual?.nome||'',status:'WhatsApp aberto'})});
    const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha ao gravar no Pós-venda (HTTP '+resp.status+')');
    // Usa o ID devolvido pelo INSERT; a listagem é apenas visual, não deve impedir a abertura.
    if(!Number.isInteger(Number(r.id))||Number(r.id)<=0)throw Error('API não devolveu o identificador do registro.');
@@ -872,13 +891,13 @@ $('reat-whats-abrir').addEventListener('click',async()=>{
  if(!window.confirm('Confirma que o cliente autorizou receber comunicações promocionais e que o telefone está correto?'))return;
  const janela=window.open('about:blank','_blank');if(!janela){$('reat-whats-aviso').textContent='Permita pop-ups para abrir o WhatsApp.';return;}
  $('reat-whats-abrir').disabled=true;
- try{const resp=await fetch('/api/whatsapp-registros',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cliente_id:c.pessoaid,ean:'REATIVACAO',produto_descricao:'Reativação de clientes',tipo_aviso:'reativacao',previsao:c.ultima_compra,telefone_final:numero.slice(-4),cliente_nome:c.nome,status:'WhatsApp aberto'})});const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha ao registrar');if(!Number.isInteger(Number(r.id))||Number(r.id)<=0)throw Error('API não devolveu um ID de registro válido.');reatWhatsRegistro=Number(r.id);await whatsHistoricoAtualizar();janela.location.replace('https://web.whatsapp.com/send?phone='+numero+'&text='+encodeURIComponent(msg));$('reat-whats-confirmar').disabled=false;$('reat-whats-aviso').textContent='WhatsApp aberto e registrado. Confirme somente depois de enviar a mensagem.';}
+ try{const resp=await fetch('/api/whatsapp-registros',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cliente_id:c.pessoaid,ean:'REATIVACAO',produto_descricao:'Reativação de clientes',tipo_aviso:'reativacao',previsao:c.ultima_compra,telefone_final:numero.slice(-4),telefone:numero,cliente_nome:c.nome,status:'WhatsApp aberto'})});const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha ao registrar');if(!Number.isInteger(Number(r.id))||Number(r.id)<=0)throw Error('API não devolveu um ID de registro válido.');reatWhatsRegistro=Number(r.id);await whatsHistoricoAtualizar();janela.location.replace('https://web.whatsapp.com/send?phone='+numero+'&text='+encodeURIComponent(msg));$('reat-whats-confirmar').disabled=false;$('reat-whats-aviso').textContent='WhatsApp aberto e registrado. Confirme somente depois de enviar a mensagem.';}
  catch(e){janela.close();$('reat-whats-abrir').disabled=false;$('reat-whats-aviso').textContent='Não foi possível abrir: '+e.message;}
 });
 $('reat-whats-confirmar').addEventListener('click',async()=>{
  if(!reatWhatsRegistro)return;
  if(!window.confirm('Confirma que enviou manualmente a mensagem no WhatsApp?'))return;
- try{const resp=await fetch('/api/whatsapp-confirmar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:reatWhatsRegistro})});const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha');$('reat-whats-confirmar').disabled=true;$('reat-whats-abrir').disabled=true;$('reat-whats-aviso').textContent='Envio confirmado e registrado no Pós-venda. Contato bloqueado por 3 dias.';reatWhatsRegistro=null;await whatsHistoricoAtualizar();const c=reatWhatsCliente;if(c){c.contato_recente=true;renderReativacao();await reatChecarHistorico(c).catch(()=>{});}}
+ try{const resp=await fetch('/api/whatsapp-confirmar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:reatWhatsRegistro})});const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha');$('reat-whats-confirmar').disabled=true;$('reat-whats-abrir').disabled=true;atualizarValidacoesWhatsApp();$('reat-whats-aviso').textContent='Envio confirmado e número validado no WhatsApp. Contato bloqueado por 3 dias.';reatWhatsRegistro=null;await whatsHistoricoAtualizar();const c=reatWhatsCliente;if(c){c.contato_recente=true;renderReativacao();await reatChecarHistorico(c).catch(()=>{});}}
  catch(e){$('reat-whats-aviso').textContent='Falha ao confirmar: '+e.message;}
 });
 document.querySelectorAll('#reativacao-tab [data-reat-sort]').forEach(b=>b.addEventListener('click',()=>{

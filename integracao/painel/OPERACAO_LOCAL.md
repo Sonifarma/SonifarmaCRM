@@ -63,3 +63,11 @@ O controle para apenas o processo identificado pelo PID e caminho; cancela se a 
 5. Reinstale a supervisão após a validação.
 
 O IP de rede e a porta continuam os originais nesta etapa. Uma alteração de IP também exige atualizar o certificado e a configuração de rede; não foi aplicada automaticamente.
+
+## Validação do número no WhatsApp
+
+A confirmação humana de envio no Pós-venda passa a validar o número utilizado para aquele cliente. Apenas abrir o WhatsApp ou ter autorização comercial não valida o telefone. O aviso passa a verde na ficha e nas telas de mensagem quando existe envio confirmado para o mesmo cliente e número completo. Alterar o telefone volta a exigir validação, exceto se esse outro número já tiver envio confirmado próprio.
+
+Para essa funcionalidade, atualize **index.html e iniciar_interface.py**, com o painel parado, e reinicie. A coluna adicional no SQLite é criada automaticamente, sem apagar o histórico. É armazenado um hash do número, além dos quatro últimos dígitos já registrados, sem gravar o telefone completo no histórico. A migração não altera o ERP.
+
+Registros antigos, que só possuem quatro últimos dígitos, continuam preservados, mas não validam um número completo por suposição. A indicação representa confirmação do atendente; não é consulta automática à Meta nem comprovação de entrega ou leitura. A autorização comercial e o intervalo de contato continuam sendo exigidos separadamente.

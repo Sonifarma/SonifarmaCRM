@@ -1,5 +1,6 @@
 """Painel unificado Sonifarma. HTTP local, PostgreSQL somente leitura, sem gravar dados pessoais."""
 import argparse
+from contextlib import closing
 import getpass
 import json
 import os
@@ -127,6 +128,25 @@ def nomes_conn():
     con.execute("CREATE TABLE IF NOT EXISTS links_produtos (chave TEXT PRIMARY KEY, url TEXT NOT NULL, atualizado_em TEXT NOT NULL, usuario TEXT NOT NULL)")
     return con
 
+def telefone_whatsapp_hash(valor):
+    numero=re.sub(r'[^0-9]','',str(valor or ''))
+    if numero.startswith('00'):numero=numero[2:]
+    if len(numero) in (10,11):numero='55'+numero
+    if not re.fullmatch(r'55[0-9]{10,11}',numero):return ''
+    return hashlib.sha256(numero.encode('ascii')).hexdigest()
+
+
+def whatsapp_validado(cliente_id,numero):
+    digest=telefone_whatsapp_hash(numero)
+    if not digest:return False
+    with TASK_LOCK:
+        with closing(agenda_conn()) as con:
+            # A migração é aditiva; registros antigos sem número completo não validam outro celular.
+            with con:
+                return con.execute("SELECT 1 FROM whatsapp_registros WHERE cliente_id=? AND telefone_hash=? AND status='Enviado confirmado' LIMIT 1",
+                                   (cliente_id,digest)).fetchone() is not None
+
+
 def agenda_conn():
     con=sqlite3.connect(str(TASK_DB), timeout=5)
     con.execute("CREATE TABLE IF NOT EXISTS tarefas (id INTEGER PRIMARY KEY AUTOINCREMENT, cliente_id INTEGER NOT NULL, data_prevista TEXT NOT NULL, motivo TEXT NOT NULL CHECK(motivo IN ('Acompanhamento','Retorno solicitado','Conferir cadastro')), status TEXT NOT NULL DEFAULT 'Pendente' CHECK(status IN ('Pendente','Concluída')), criado_em TEXT NOT NULL)")
@@ -136,6 +156,8 @@ def agenda_conn():
         telefone_final TEXT NOT NULL, status TEXT NOT NULL, criado_em TEXT NOT NULL)""")
     # V20: migração aditiva, sem modificar dados antigos.
     cols={r[1] for r in con.execute("PRAGMA table_info(whatsapp_registros)")}
+    if 'telefone_hash' not in cols:
+        con.execute("ALTER TABLE whatsapp_registros ADD COLUMN telefone_hash TEXT NOT NULL DEFAULT ''")
     if 'resultado' not in cols:
         con.execute("ALTER TABLE whatsapp_registros ADD COLUMN resultado TEXT NOT NULL DEFAULT 'Aguardando resposta'")
     if 'atualizado_em' not in cols:
@@ -1120,7 +1142,7 @@ class Handler(SimpleHTTPRequestHandler):
                 cid=d.get('cliente_id'); status=d.get('status')
                 if isinstance(cid,str) and cid.isdecimal(): cid=int(cid)
                 if not isinstance(cid,int) or isinstance(cid,bool) or not 0<cid<10**17: raise ValueError()
-                if status not in ('WhatsApp aberto','Enviado confirmado'): raise ValueError()
+                if status!='WhatsApp aberto': raise ValueError()
                 ean=str(d.get('ean',''))[:18]; desc=str(d.get('produto_descricao',''))[:180]
                 tipo_aviso=str(d.get('tipo_aviso','recompra'))
                 if tipo_aviso not in ('recompra','popular_amanha','popular_hoje','reativacao'): raise ValueError('Tipo de aviso inválido')
@@ -1136,6 +1158,9 @@ class Handler(SimpleHTTPRequestHandler):
                 if tipo_aviso.startswith('popular_'):
                     ean='FARMACIA_POPULAR';desc='Farmácia Popular — aviso de retirada'
                 previsao=str(d.get('previsao',''))[:12]; final=str(d.get('telefone_final',''))
+                telefone=d.get('telefone','')
+                digest=telefone_whatsapp_hash(telefone)
+                if telefone and (not digest or re.sub(r'[^0-9]','',str(telefone))[-4:]!=final):raise ValueError('Telefone inválido')
                 if re.fullmatch(r'\d{2}/\d{2}/\d{4}',previsao):
                     previsao=datetime.strptime(previsao,'%d/%m/%Y').date().isoformat()
                 if not final.isdecimal() or len(final)!=4 or not desc: raise ValueError()
@@ -1155,8 +1180,8 @@ class Handler(SimpleHTTPRequestHandler):
                         if tipo_aviso=='reativacao':
                             recente=con.execute("SELECT id FROM whatsapp_registros WHERE cliente_id=? AND status='Enviado confirmado' AND criado_em>=? LIMIT 1",(cid,(datetime.now()-timedelta(days=3)).isoformat(timespec='seconds'))).fetchone()
                             if recente:return self.respond(409,{'erro':'Cliente com envio confirmado nos últimos 3 dias. Contato bloqueado.'})
-                        cur=con.execute('INSERT INTO whatsapp_registros(cliente_id,ean,produto_descricao,previsao,telefone_final,status,criado_em,tipo_aviso) VALUES(?,?,?,?,?,?,?,?)',
-                            (cid,ean,desc,previsao,final,status,datetime.now().isoformat(timespec='seconds'),tipo_aviso))
+                        cur=con.execute('INSERT INTO whatsapp_registros(cliente_id,ean,produto_descricao,previsao,telefone_final,status,criado_em,tipo_aviso,telefone_hash) VALUES(?,?,?,?,?,?,?,?,?)',
+                            (cid,ean,desc,previsao,final,status,datetime.now().isoformat(timespec='seconds'),tipo_aviso,digest))
                         registro_id=cur.lastrowid
                 registrar(self.identidade(),'WhatsApp aberto',cid,registro_id,str(d.get('cliente_nome',''))[:100],self.client_address[0])
                 return self.respond(200,{'ok':True,'id':registro_id,'status':status})
@@ -1318,15 +1343,22 @@ class Handler(SimpleHTTPRequestHandler):
                 with nomes_conn() as con:
                     row=con.execute('SELECT url FROM links_produtos WHERE chave=?',(chave,)).fetchone()
             return self.respond(200,{'url':row[0] if row else ''})
+        if parsed.path=='/api/whatsapp-validacao':
+            filtros=parse_qs(parsed.query)
+            cid=filtros.get('cliente_id',[''])[0]
+            numero=filtros.get('numero',[''])[0]
+            if not cid.isdecimal() or not 0<int(cid)<10**17 or not telefone_whatsapp_hash(numero):
+                return self.respond(400,{'erro':'Cliente ou telefone inválido'})
+            return self.respond(200,{'validado':whatsapp_validado(int(cid),numero)})
         if parsed.path=='/api/whatsapp-registros':
             filtros=parse_qs(parsed.query);cid=filtros.get('cliente_id',[None])[0]
             if cid is not None and (not cid.isdecimal() or not 0<int(cid)<10**17): return self.respond(400,{'erro':'Cliente inválido'})
             with TASK_LOCK:
                 with agenda_conn() as con:
-                    colunas='id,cliente_id,ean,produto_descricao,previsao,telefone_final,status,criado_em,resultado,atualizado_em,tipo_aviso'
+                    colunas="id,cliente_id,ean,produto_descricao,previsao,telefone_final,status,criado_em,resultado,atualizado_em,tipo_aviso,(telefone_hash!='' AND status='Enviado confirmado')"
                     if cid is None: rows=con.execute('SELECT '+colunas+' FROM whatsapp_registros ORDER BY id DESC LIMIT 200').fetchall()
                     else: rows=con.execute('SELECT '+colunas+' FROM whatsapp_registros WHERE cliente_id=? ORDER BY id DESC LIMIT 200',(int(cid),)).fetchall()
-            return self.respond(200,{'registros':[dict(zip(('id','cliente_id','ean','produto_descricao','previsao','telefone_final','status','criado_em','resultado','atualizado_em','tipo_aviso'),r)) for r in rows]})
+            return self.respond(200,{'registros':[dict(zip(('id','cliente_id','ean','produto_descricao','previsao','telefone_final','status','criado_em','resultado','atualizado_em','tipo_aviso','whatsapp_validado'),r)) for r in rows]})
         if parsed.path=='/api/agenda':
             filtros=parse_qs(parsed.query)
             cid_raw=filtros.get('cliente_id',[None])[0]

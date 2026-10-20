@@ -471,6 +471,49 @@ ORDER BY data_compra DESC, vendaid DESC, produtoid
 LIMIT 100
 """
 
+# Reativação: todos os períodos e produtos do cliente, sem o limite do histórico recente.
+SQL_PRODUTOS_COMPRADOS = """
+WITH itens AS (
+ SELECT v.id AS vendaid, v.datahorafechamento AS data_compra,
+        em.produtoid, pr.descricao AS produto, iv.quantidade AS quantidade_original,
+        COALESCE(dev.quantidade_devolvida,0) AS quantidade_devolvida,
+        GREATEST(0::numeric,iv.quantidade-COALESCE(dev.quantidade_devolvida,0)) AS quantidade_liquida,
+        ROUND(iv.valortotal*GREATEST(0::numeric,iv.quantidade-COALESCE(dev.quantidade_devolvida,0))/iv.quantidade,2) AS valor_estimado
+ FROM public.venda v
+ JOIN public.itemvenda iv ON iv.vendaid=v.id
+ JOIN public.embalagem em ON em.id=iv.embalagemid
+ JOIN public.produto pr ON pr.id=em.produtoid
+ LEFT JOIN LATERAL (
+   SELECT SUM(d.quantidade) AS quantidade_devolvida, COUNT(*) AS devolucoes
+   FROM public.itemdevolucaovenda d WHERE d.itemvendaid=iv.id
+ ) dev ON TRUE
+ WHERE v.pessoaid=%s AND v.status IN ('F','D') AND v.datahorafechamento IS NOT NULL
+   AND iv.quantidade>0
+   AND (iv.status='F' OR (iv.status='D' AND dev.devolucoes>0))
+   AND NOT EXISTS(SELECT 1 FROM public.estornovenda e WHERE e.vendaid=v.id)
+), produtos AS (
+ SELECT produtoid,produto,MIN(data_compra) AS primeira_compra,MAX(data_compra) AS ultima_compra,
+        COUNT(DISTINCT vendaid) AS compras,
+        SUM(quantidade_original) AS quantidade_original,
+        SUM(quantidade_devolvida) AS quantidade_devolvida,
+        SUM(quantidade_liquida) AS quantidade_liquida,
+        ROUND(SUM(valor_estimado),2) AS valor_estimado
+ FROM itens GROUP BY produtoid,produto
+)
+SELECT *,COUNT(*) OVER() AS total_produtos FROM produtos
+ORDER BY ultima_compra DESC,produtoid ASC
+LIMIT %s OFFSET %s
+"""
+
+
+def consultar_produtos_comprados(cliente_id,offset=0):
+    tamanho=50
+    rows=query(SQL_PRODUTOS_COMPRADOS,(cliente_id,tamanho+1,offset),limit=tamanho+1)
+    total=int(rows[0]['total_produtos']) if rows else 0
+    return {'produtos':[{k:v for k,v in r.items() if k!='total_produtos'} for r in rows[:tamanho]],
+            'total':total,'offset':offset,'proximo_offset':offset+tamanho if len(rows)>tamanho else None}
+
+
 # Módulo 4: histórico recente por produto, sempre limitado a um cliente.
 # O EAN é consultado no guia separadamente para não multiplicar itens com EAN duplicado.
 SQL_RECOMPRA = """
@@ -1330,7 +1373,7 @@ class Handler(SimpleHTTPRequestHandler):
                         rows=con.execute('SELECT momento,usuario,atividade,cliente_id,registro_id,detalhe,ip FROM auditoria'+where+' ORDER BY id DESC LIMIT 500',vals).fetchall()
                 return self.respond(200,{'registros':[dict(zip(('momento','usuario','atividade','cliente_id','registro_id','detalhe','ip'),r)) for r in rows]})
             # Audita consultas sensíveis, sem armazenar nomes ou termos pesquisados.
-            if parsed.path in ('/api/ficha-cadastro','/api/historico','/api/recompra'):
+            if parsed.path in ('/api/ficha-cadastro','/api/historico','/api/recompra','/api/produtos-comprados'):
                 args0=parse_qs(parsed.query)
                 try:registrar(u['login'],'Consulta '+parsed.path.rsplit('/',1)[-1],args0.get('id',args0.get('cliente_id',['']))[0],ip=self.client_address[0])
                 except Exception:pass
@@ -1500,6 +1543,12 @@ class Handler(SimpleHTTPRequestHandler):
                 if len(nome)<3 or len(nome)>70:
                     return self.respond(400,{'erro':'Digite ao menos 3 e no máximo 70 caracteres.'})
                 return self.respond(200,{'clientes':query(SQL_CLIENTES,('%'+nome+'%',))})
+            if parsed.path=='/api/produtos-comprados':
+                ident=args.get('id',[''])[0]
+                offset=args.get('offset',['0'])[0]
+                if not re.fullmatch(r'[1-9][0-9]{0,17}',ident) or not re.fullmatch(r'[0-9]{1,9}',offset):
+                    return self.respond(400,{'erro':'Cliente ou página inválida.'})
+                return self.respond(200,consultar_produtos_comprados(int(ident),int(offset)))
             if parsed.path=='/api/historico':
                 ident=args.get('id',[''])[0]
                 if not re.fullmatch(r'[1-9][0-9]{0,17}',ident):

@@ -121,3 +121,12 @@ O fluxo é: registrar uma autorização já concedida quando necessário, revisa
 O último contato aparece novamente ao reabrir a ficha; o histórico do Pós-venda e o histórico do consumidor mostram o tipo de contato e os dados da confirmação. A API local consulta a preferência e os registros atuais antes de preparar a mensagem. O pop-up do WhatsApp nasce no clique antes das consultas assíncronas, e o fechamento do diálogo retorna à ficha.
 
 Atualize `index.html` e `iniciar_interface.py` e reinicie o servidor para aplicar. A funcionalidade reutiliza tabelas, autenticação, auditoria e regras de confirmação existentes. O teste `tests/test_reativacao_envio_browser.cjs` usa somente servidor e WhatsApp simulados; não envia mensagens reais.
+
+
+### Processo iniciado sem listener confirmado
+
+O controle identifica o Python que atende a porta, inclusive quando ele é filho do launcher de um ambiente virtual Windows. Um processo já iniciado também precisa passar pela verificação HTTPS com o certificado local. Processos sem vínculo com o PID registrado não são assumidos nem encerrados.
+
+Se a confirmação falhar, consulte `sonifarma_servidor.log`, `sonifarma_erros.log` e os listeners da porta 8765. O endereço de rede esperado continua sendo `192.168.0.239`; a correção de identificação não resolve IP ausente, erro de conexão ao ERP ou certificado inválido.
+
+Regressão do controle: `pwsh -NoProfile -File tests/test_controle_windows.ps1` na raiz do repositório. Os testes simulam CIM e TCP e não substituem a validação na instalação Windows.

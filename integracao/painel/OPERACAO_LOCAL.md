@@ -87,3 +87,11 @@ A aba inicial solicita cadastro, previsões e resumo de envios em paralelo. O hi
 Para aplicar esta otimização, substitua apenas o `index.html` e atualize o navegador com Ctrl+F5. Não exige alteração do ERP ou dos bancos locais.
 
 O teste de navegador `tests/test_ficha_browser.cjs` usa dados fictícios e um servidor HTTP local. Requer Node.js, Playwright e Chromium disponíveis no ambiente de testes. Execute `node tests/test_ficha_browser.cjs`; opcionalmente, `PLAYWRIGHT_MODULE` indica a instalação do Playwright e `CHROMIUM_EXECUTABLE` indica o navegador. Ele verifica consultas evitadas ao ordenar, carregamento sob demanda, recuperação de falha, troca rápida de cliente e layout em tela pequena.
+
+## Avisos de Farmácia Popular na coluna Último envio
+
+Os tipos Farmácia Popular — amanhã/hoje são registrados para o cliente e a data de retirada, com identificador `FARMACIA_POPULAR`, e não para cada EAN de medicamento. A coluna agora considera esse aviso em todas as linhas do mesmo cliente/data prevista e identifica o tipo de contato abaixo da data de confirmação. Isso não significa envio individual de cada medicamento. Clientes e datas diferentes continuam separados; os contatos de recompra mantêm o vínculo por produto.
+
+Depois da confirmação, o resumo da ficha é atualizado independentemente da listagem geral do Pós-venda. O resumo mantém os tipos amanhã/hoje separados antes de selecionar o contato mais recente. Em registros antigos sem data de confirmação, a API pode recuperar data e atendente do evento explícito Envio confirmado na auditoria local, pelo mesmo registro e cliente. Sem esse evento, permanece Data não registrada. A consulta não altera os bancos antigos nem usa a data de abertura como data de envio.
+
+Esta correção exige atualizar `index.html` e `iniciar_interface.py` e reiniciar o servidor local.

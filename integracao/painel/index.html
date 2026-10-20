@@ -690,6 +690,16 @@ let whatsAbertoParaConfirmar=false;
 let whatsRegistrosCache=[];
 let fichaEnvios=null, fichaEnviosSequencia=0,fichaEnviosPendente=null;
 function chaveUltimoEnvio(cid,ean,produto,ciclo){return JSON.stringify([String(cid),String(ean||''),ean?'':String(produto||'').trim(),String(ciclo||'').slice(0,10)]);}
+function envioFarmaciaPopular(r){return r.ean==='FARMACIA_POPULAR'&&['popular_amanha','popular_hoje'].includes(r.tipo_aviso);}
+function chaveAvisoPopular(cid,ciclo){return JSON.stringify([String(cid),String(ciclo||'').slice(0,10)]);}
+function registroUltimoEnvio(cid,ean,produto,ciclo){
+ const direto=fichaEnvios.indice.get(chaveUltimoEnvio(cid,ean,produto,ciclo));
+ const popular=fichaEnvios.populares.get(chaveAvisoPopular(cid,ciclo));
+ return !direto?popular:!popular?direto:Number(direto.id)>Number(popular.id)?direto:popular;
+}
+function registroCorrespondeEnvio(r,cid,ean,produto,ciclo){
+ return String(r.cliente_id)===String(cid)&&String(r.previsao||'').slice(0,10)===String(ciclo||'').slice(0,10)&&(envioFarmaciaPopular(r)||(ean?String(r.ean||'')===String(ean):!r.ean&&String(r.produto_descricao||'').trim()===String(produto||'').trim()));
+}
 function dataHoraEnvio(valor){
  const m=/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(String(valor||''));
  return m?`${m[3]}/${m[2]}/${m[1]} às ${m[4]}:${m[5]}`:'Data não registrada';
@@ -699,7 +709,7 @@ function pintarUltimosEnvios(){
   el.classList.remove('envio-confirmado','envio-pendente');el.removeAttribute('title');
   if(!fichaEnvios||String(fichaEnvios.cliente)!==el.dataset.envioCliente){el.textContent='Consultando...';return;}
   if(fichaEnvios.erro){el.textContent='Histórico indisponível';return;}
-  const r=fichaEnvios.indice.get(chaveUltimoEnvio(el.dataset.envioCliente,el.dataset.envioEan,el.dataset.envioProduto,el.dataset.envioCiclo));
+  const r=registroUltimoEnvio(el.dataset.envioCliente,el.dataset.envioEan,el.dataset.envioProduto,el.dataset.envioCiclo);
   const botao=el.parentElement.querySelector('.whats-produto');
   if(botao){const confirmado=r?.status==='Enviado confirmado';botao.classList.toggle('whats-enviado',confirmado);botao.textContent=confirmado?'✓':'✉';botao.title=confirmado?'Mensagem já confirmada neste ciclo':'Preparar WhatsApp deste produto';}
   if(!r){el.textContent='Não enviado';return;}
@@ -708,8 +718,9 @@ function pintarUltimosEnvios(){
    const estado=document.createElement('strong');estado.textContent='✓ Confirmado';
    const data=document.createElement('small');data.textContent=dataHoraEnvio(r.confirmado_em);
    el.replaceChildren(estado,data);
-   el.title='Confirmado por: '+(r.confirmado_por||'não registrado')+' · Telefone final: '+(r.telefone_final||'não registrado');
-  }else{el.classList.add('envio-pendente');el.textContent='Aberto · aguardando confirmação';}
+   if(envioFarmaciaPopular(r)){const tipo=document.createElement('small');tipo.textContent=r.tipo_aviso==='popular_amanha'?'Farmácia Popular · aviso para amanhã':'Farmácia Popular · aviso para hoje';el.append(tipo);}
+   el.title='Confirmado por: '+(r.confirmado_por||'não registrado')+' · Telefone final: '+(r.telefone_final||'não registrado')+(envioFarmaciaPopular(r)?' · Aviso da retirada para o cliente nesta data, sem envio individual por medicamento.':'');
+  }else{el.classList.add('envio-pendente');el.textContent='Aberto · aguardando confirmação'+(envioFarmaciaPopular(r)?' · Farmácia Popular':'');}
  });
 }
 async function carregarUltimosEnvios(clienteId,forcar=false){
@@ -722,9 +733,13 @@ async function carregarUltimosEnvios(clienteId,forcar=false){
   try{
    const dados=await api('/api/whatsapp-registros?cliente_id='+encodeURIComponent(clienteId)+'&resumo=1',{signal:controle?.signal});
    if(seq!==fichaEnviosSequencia)return;
-   const indice=new Map();
-   for(const r of dados.registros||[]){const chave=chaveUltimoEnvio(r.cliente_id,r.ean,r.produto_descricao,r.previsao);if(!indice.has(chave))indice.set(chave,r);}
-   fichaEnvios={cliente:clienteId,indice};
+   const indice=new Map(),populares=new Map();
+   for(const r of dados.registros||[]){
+    const chave=chaveUltimoEnvio(r.cliente_id,r.ean,r.produto_descricao,r.previsao);
+    if(!indice.has(chave)||Number(r.id)>Number(indice.get(chave).id))indice.set(chave,r);
+    if(envioFarmaciaPopular(r)){const chave=chaveAvisoPopular(r.cliente_id,r.previsao);if(!populares.has(chave)||Number(r.id)>Number(populares.get(chave).id))populares.set(chave,r);}
+   }
+   fichaEnvios={cliente:clienteId,indice,populares};
   }catch(e){if(seq!==fichaEnviosSequencia||controle?.signal.aborted)return;fichaEnvios={cliente:clienteId,erro:true};}
   finally{if(seq===fichaEnviosSequencia)fichaEnviosPendente=null;}
   pintarUltimosEnvios();
@@ -734,17 +749,25 @@ async function carregarUltimosEnvios(clienteId,forcar=false){
 function whatsChave(p){return [String(p?.clienteId||''),String(p?.ean||''),String(p?.proximaCompra||'').slice(0,10),String(p?.descricao||p?.produto||'').trim()].join('|');}
 function whatsChaveRegistro(r){return [String(r.cliente_id),String(r.ean||''),String(r.previsao||'').slice(0,10),String(r.produto_descricao||'').trim()].join('|');}
 function whatsRegistroAtual(){const chave=whatsChave(whatsContexto);return whatsRegistrosCache.find(r=>whatsChaveRegistro(r)===chave);}
-function whatsPintarBotoes(){document.querySelectorAll('.whats-produto').forEach(b=>{const k=[b.dataset.wcid||'',b.dataset.wean||'',(b.dataset.wdata||'').slice(0,10)].join('|');const enviado=whatsRegistrosCache.some(r=>r.status==='Enviado confirmado'&&[String(r.cliente_id),String(r.ean||''),String(r.previsao||'').slice(0,10)].join('|')===k);b.classList.toggle('whats-enviado',enviado);b.title=enviado?'Mensagem já confirmada neste ciclo':'Preparar WhatsApp';if(b.classList.contains('whats-mini'))b.textContent=enviado?'✓':'✉';else b.textContent=enviado?'✓ Contatado':'Preparar WhatsApp';});}
+function whatsPintarBotoes(){document.querySelectorAll('.whats-produto').forEach(b=>{
+ const enviado=whatsRegistrosCache.some(r=>r.status==='Enviado confirmado'&&registroCorrespondeEnvio(r,b.dataset.wcid,b.dataset.wean,b.dataset.wproduto,b.dataset.wdata));
+ b.classList.toggle('whats-enviado',enviado);b.title=enviado?'Contato confirmado para este produto ou aviso Farmácia Popular nesta data':'Preparar WhatsApp';
+ if(b.classList.contains('whats-mini'))b.textContent=enviado?'✓':'✉';else b.textContent=enviado?'✓ Contatado':'Preparar WhatsApp';
+});}
+
 async function whatsHistoricoAtualizar(){
  const el=$('whats-historico');if(!el)return;
+ // O resumo da ficha atualiza mesmo se a listagem geral falhar.
+ const atualizarFicha=fichaAtual&&fichaAba==='previsoes'?carregarUltimosEnvios(fichaAtual.id,true):Promise.resolve();
  try{const r=await api('/api/whatsapp-registros');whatsRegistrosCache=r.registros||[];
  const conta=(x)=>whatsRegistrosCache.filter(a=>a.resultado===x).length;
  $('whats-indicadores').textContent='Atendimentos registrados: '+whatsRegistrosCache.length+' · Interessados: '+conta('Interessado')+' · Não precisa agora: '+conta('Não precisa agora')+' · Recompras realizadas: '+conta('Recompra realizada')+' · Aguardando resposta: '+conta('Aguardando resposta')+' (últimos 200 registros)';
  const opts=['Aguardando resposta','Interessado','Não precisa agora','Recompra realizada'];
  el.innerHTML=whatsRegistrosCache.length?'<div class="scroll"><table><thead><tr><th>Data/hora</th><th>Cliente ERP</th><th>Produto (interno)</th><th>Previsão</th><th>Envio</th><th>Número WhatsApp</th><th>Resposta / resultado</th></tr></thead><tbody>'+whatsRegistrosCache.map(x=>'<tr><td>'+esc(x.criado_em)+'</td><td>'+esc(x.cliente_id)+'</td><td>'+esc(x.produto_descricao)+'</td><td>'+esc(x.previsao)+'</td><td>'+esc(x.status)+'</td><td>'+ (x.whatsapp_validado?'✓ Validado':'Validação pendente')+'</td><td><select class="whats-resultado" data-regid="'+x.id+'">'+opts.map(o=>'<option '+(x.resultado===o?'selected':'')+'>'+esc(o)+'</option>').join('')+'</select></td></tr>').join('')+'</tbody></table></div>':'<p class="muted">Nenhum envio confirmado.</p>';
  whatsPintarBotoes();
- if(fichaAtual&&fichaAba==='previsoes')await carregarUltimosEnvios(fichaAtual.id,true);
  }catch(e){el.textContent='Histórico indisponível: '+e.message;}
+ await atualizarFicha;
+ pintarUltimosEnvios();
 }
 document.addEventListener('change',async e=>{if(!e.target.matches('.whats-resultado'))return;const b=e.target;b.disabled=true;try{const resp=await fetch('/api/whatsapp-resultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:Number(b.dataset.regid),resultado:b.value})});const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha ao atualizar');await whatsHistoricoAtualizar();}catch(err){alert('Não foi possível registrar a resposta: '+err.message);await whatsHistoricoAtualizar();}finally{b.disabled=false;}});
 $('whats-historico-atualizar').addEventListener('click',whatsHistoricoAtualizar);

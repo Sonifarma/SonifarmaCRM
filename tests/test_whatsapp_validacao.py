@@ -117,6 +117,37 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(next(r for r in rows if r['id'] == rid)['status'], 'Enviado confirmado')
         self.assertEqual(self.request('/api/whatsapp-registros?resumo=1')[0], 400)
 
+    def test_summary_keeps_popular_reminder_types_and_confirmation_dates(self):
+        tomorrow = self.opened(tipo_aviso='popular_amanha')
+        today = self.opened(tipo_aviso='popular_hoje')
+        self.assertEqual(self.request('/api/whatsapp-confirmar', {'id': tomorrow})[0], 200)
+        rows = self.request('/api/whatsapp-registros?cliente_id=1&resumo=1')[1]['registros']
+        self.assertEqual(len(rows), 2)
+        self.assertEqual({r['tipo_aviso'] for r in rows}, {'popular_amanha', 'popular_hoje'})
+        self.assertEqual({r['ean'] for r in rows}, {'FARMACIA_POPULAR'})
+        confirmed = next(r for r in rows if r['id'] == tomorrow)
+        self.assertEqual(confirmed['status'], 'Enviado confirmado')
+        self.assertTrue(confirmed['confirmado_em'])
+        self.assertIsNone(next(r for r in rows if r['id'] == today)['confirmado_em'])
+
+    def test_legacy_confirmation_date_uses_only_explicit_audit_event(self):
+        rid = self.opened(tipo_aviso='popular_amanha')
+        with closing(panel.agenda_conn()) as con, con:
+            con.execute("UPDATE whatsapp_registros SET status='Enviado confirmado',atualizado_em='2026-10-20T12:00:00' WHERE id=?", (rid,))
+        row = self.request('/api/whatsapp-registros?cliente_id=1&resumo=1')[1]['registros'][0]
+        self.assertIsNone(row['confirmado_em'])
+        panel.registrar('outro_cliente', 'Envio confirmado', 2, rid)
+        row = self.request('/api/whatsapp-registros?cliente_id=1&resumo=1')[1]['registros'][0]
+        self.assertIsNone(row['confirmado_em'])
+        panel.registrar('atendente', 'Envio confirmado', 1, rid)
+        with closing(panel.auth_conn()) as con, con:
+            con.execute("UPDATE auditoria SET momento='2026-10-20T09:15:00' WHERE atividade='Envio confirmado'")
+        row = self.request('/api/whatsapp-registros?cliente_id=1&resumo=1')[1]['registros'][0]
+        self.assertEqual(row['confirmado_em'], '2026-10-20T09:15:00')
+        self.assertEqual(row['confirmado_por'], 'atendente')
+        with closing(panel.agenda_conn()) as con:
+            self.assertIsNone(con.execute('SELECT confirmado_em FROM whatsapp_registros WHERE id=?',(rid,)).fetchone()[0])
+
     def test_existing_database_migrates_without_changing_history(self):
         with closing(sqlite3.connect(panel.TASK_DB)) as con, con:
             con.execute('CREATE TABLE whatsapp_registros(id INTEGER PRIMARY KEY,cliente_id INTEGER,ean TEXT,produto_descricao TEXT,previsao TEXT,telefone_final TEXT,status TEXT,criado_em TEXT)')

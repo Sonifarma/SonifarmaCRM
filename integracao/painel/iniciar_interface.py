@@ -147,6 +147,26 @@ def whatsapp_validado(cliente_id,numero):
                                    (cliente_id,digest)).fetchone() is not None
 
 
+def completar_datas_confirmacao(registros):
+    pendentes={str(r['id']):r for r in registros if r['status']=='Enviado confirmado' and not r.get('confirmado_em')}
+    if not pendentes or not AUTH_DB.exists():return registros
+    # Apenas o evento explícito de confirmação pode recuperar a data de registros antigos.
+    try:
+        with AUTH_LOCK, closing(sqlite3.connect(AUTH_DB.resolve().as_uri()+'?mode=ro',uri=True,timeout=5)) as con:
+            ids=list(pendentes)
+            for inicio in range(0,len(ids),500):
+                lote=ids[inicio:inicio+500]
+                sql="SELECT registro_id,cliente_id,momento,usuario FROM auditoria WHERE atividade='Envio confirmado' AND registro_id IN ("+','.join('?' for _ in lote)+') ORDER BY momento'
+                for rid,cid,momento,usuario in con.execute(sql,lote):
+                    registro=pendentes.get(str(rid))
+                    if registro and str(registro['cliente_id'])==str(cid) and not registro.get('confirmado_em'):
+                        registro['confirmado_em']=momento
+                        registro['confirmado_por']=registro.get('confirmado_por') or usuario
+    except sqlite3.Error:
+        pass  # Sem auditoria disponível, a interface informa Data não registrada.
+    return registros
+
+
 def agenda_conn():
     con=sqlite3.connect(str(TASK_DB), timeout=5)
     con.execute("CREATE TABLE IF NOT EXISTS tarefas (id INTEGER PRIMARY KEY AUTOINCREMENT, cliente_id INTEGER NOT NULL, data_prevista TEXT NOT NULL, motivo TEXT NOT NULL CHECK(motivo IN ('Acompanhamento','Retorno solicitado','Conferir cadastro')), status TEXT NOT NULL DEFAULT 'Pendente' CHECK(status IN ('Pendente','Concluída')), criado_em TEXT NOT NULL)")
@@ -1361,10 +1381,11 @@ class Handler(SimpleHTTPRequestHandler):
                     colunas="id,cliente_id,ean,produto_descricao,previsao,telefone_final,status,criado_em,resultado,atualizado_em,tipo_aviso,(telefone_hash!='' AND status='Enviado confirmado'),confirmado_em,confirmado_por"
                     if filtros.get('resumo',[''])[0]=='1':
                         if cid is None:return self.respond(400,{'erro':'Informe o cliente'})
-                        rows=con.execute('SELECT '+colunas+" FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY ean,CASE WHEN ean='' THEN produto_descricao ELSE '' END,previsao ORDER BY id DESC) AS ordem FROM whatsapp_registros WHERE cliente_id=?) WHERE ordem=1 ORDER BY id DESC",(int(cid),)).fetchall()
+                        rows=con.execute('SELECT '+colunas+" FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY ean,CASE WHEN ean='' THEN produto_descricao ELSE '' END,previsao,tipo_aviso ORDER BY id DESC) AS ordem FROM whatsapp_registros WHERE cliente_id=?) WHERE ordem=1 ORDER BY id DESC",(int(cid),)).fetchall()
                     elif cid is None: rows=con.execute('SELECT '+colunas+' FROM whatsapp_registros ORDER BY id DESC LIMIT 200').fetchall()
                     else: rows=con.execute('SELECT '+colunas+' FROM whatsapp_registros WHERE cliente_id=? ORDER BY id DESC LIMIT 200',(int(cid),)).fetchall()
-            return self.respond(200,{'registros':[dict(zip(('id','cliente_id','ean','produto_descricao','previsao','telefone_final','status','criado_em','resultado','atualizado_em','tipo_aviso','whatsapp_validado','confirmado_em','confirmado_por'),r)) for r in rows]})
+            registros=[dict(zip(('id','cliente_id','ean','produto_descricao','previsao','telefone_final','status','criado_em','resultado','atualizado_em','tipo_aviso','whatsapp_validado','confirmado_em','confirmado_por'),r)) for r in rows]
+            return self.respond(200,{'registros':completar_datas_confirmacao(registros)})
         if parsed.path=='/api/agenda':
             filtros=parse_qs(parsed.query)
             cid_raw=filtros.get('cliente_id',[None])[0]

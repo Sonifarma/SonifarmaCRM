@@ -167,6 +167,20 @@ def completar_datas_confirmacao(registros):
     return registros
 
 
+def estado_reativacao_cliente(cliente_id):
+    with TASK_LOCK, closing(agenda_conn()) as con, con:
+        pref=con.execute('SELECT status,origem,data_consentimento FROM consentimento_comercial WHERE cliente_id=?',(cliente_id,)).fetchone()
+        recente=con.execute("SELECT 1 FROM whatsapp_registros WHERE cliente_id=? AND status='Enviado confirmado' AND criado_em>=? LIMIT 1",(cliente_id,(datetime.now()-timedelta(days=3)).isoformat(timespec='seconds'))).fetchone()
+        campos='id,cliente_id,ean,produto_descricao,previsao,telefone_final,status,criado_em,tipo_aviso,confirmado_em,confirmado_por'
+        row=con.execute('SELECT '+campos+" FROM whatsapp_registros WHERE cliente_id=? AND tipo_aviso='reativacao' ORDER BY id DESC LIMIT 1",(cliente_id,)).fetchone()
+    ultimo=dict(zip(campos.split(','),row)) if row else None
+    if ultimo:completar_datas_confirmacao([ultimo])
+    return {'consentimento':pref[0] if pref else 'nao_informado',
+            'consentimento_origem':pref[1] if pref else '',
+            'data_consentimento':pref[2] if pref else None,
+            'contato_recente':bool(recente),'ultimo':ultimo}
+
+
 def agenda_conn():
     con=sqlite3.connect(str(TASK_DB), timeout=5)
     con.execute("CREATE TABLE IF NOT EXISTS tarefas (id INTEGER PRIMARY KEY AUTOINCREMENT, cliente_id INTEGER NOT NULL, data_prevista TEXT NOT NULL, motivo TEXT NOT NULL CHECK(motivo IN ('Acompanhamento','Retorno solicitado','Conferir cadastro')), status TEXT NOT NULL DEFAULT 'Pendente' CHECK(status IN ('Pendente','Concluída')), criado_em TEXT NOT NULL)")
@@ -1409,6 +1423,11 @@ class Handler(SimpleHTTPRequestHandler):
                 with nomes_conn() as con:
                     row=con.execute('SELECT url FROM links_produtos WHERE chave=?',(chave,)).fetchone()
             return self.respond(200,{'url':row[0] if row else ''})
+        if parsed.path=='/api/reativacao-contato':
+            cid=parse_qs(parsed.query).get('cliente_id',[''])[0]
+            if not re.fullmatch(r'[1-9][0-9]{0,16}',cid):
+                return self.respond(400,{'erro':'Cliente inválido'})
+            return self.respond(200,estado_reativacao_cliente(int(cid)))
         if parsed.path=='/api/whatsapp-validacao':
             filtros=parse_qs(parsed.query)
             cid=filtros.get('cliente_id',[''])[0]

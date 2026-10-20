@@ -148,6 +148,50 @@ class ValidationTests(unittest.TestCase):
         with closing(panel.agenda_conn()) as con:
             self.assertIsNone(con.execute('SELECT confirmado_em FROM whatsapp_registros WHERE id=?',(rid,)).fetchone()[0])
 
+    def authorize_reactivation(self, status='autorizado'):
+        code, result = self.request('/api/consentimento-comercial', {
+            'cliente_id': 1, 'status': status, 'origem': 'Autorizacao no balcao',
+            'data_consentimento': panel.date.today().isoformat()})
+        self.assertEqual(code, 200, result)
+
+    def test_reactivation_state_persists_opening_confirmation_and_number_validation(self):
+        status, state = self.request('/api/reativacao-contato?cliente_id=1')
+        self.assertEqual(status, 200)
+        self.assertEqual(state['consentimento'], 'nao_informado')
+        self.assertIsNone(state['ultimo'])
+        self.authorize_reactivation()
+        rid = self.opened(tipo_aviso='reativacao')
+        state = self.request('/api/reativacao-contato?cliente_id=1')[1]
+        self.assertEqual(state['ultimo']['tipo_aviso'], 'reativacao')
+        self.assertEqual(state['ultimo']['status'], 'WhatsApp aberto')
+        self.assertFalse(state['contato_recente'])
+        self.assertEqual(self.request('/api/whatsapp-confirmar', {'id': rid})[0], 200)
+        for _ in range(2):
+            state = self.request('/api/reativacao-contato?cliente_id=1')[1]
+            self.assertTrue(state['contato_recente'])
+            self.assertEqual(state['ultimo']['status'], 'Enviado confirmado')
+            self.assertEqual(state['ultimo']['confirmado_por'], 'tester')
+            self.assertTrue(state['ultimo']['confirmado_em'])
+        self.assertTrue(self.valid())
+        other = self.request('/api/reativacao-contato?cliente_id=2')[1]
+        self.assertIsNone(other['ultimo'])
+        self.assertFalse(other['contato_recente'])
+
+    def test_reactivation_requires_consent_and_respects_contacts_from_other_modules(self):
+        payload = dict(cliente_id=1, tipo_aviso='reativacao', status='WhatsApp aberto',
+                       previsao='2026-10-20', telefone_final='1234', telefone='5519999991234')
+        self.assertEqual(self.request('/api/whatsapp-registros', payload)[0], 403)
+        self.authorize_reactivation()
+        rid = self.opened(tipo_aviso='popular_hoje')
+        self.assertEqual(self.request('/api/whatsapp-confirmar', {'id': rid})[0], 200)
+        state = self.request('/api/reativacao-contato?cliente_id=1')[1]
+        self.assertTrue(state['contato_recente'])
+        self.assertIsNone(state['ultimo'])
+        self.assertEqual(self.request('/api/whatsapp-registros', payload)[0], 409)
+        self.authorize_reactivation('recusado')
+        self.assertEqual(self.request('/api/whatsapp-registros', payload)[0], 403)
+        self.assertEqual(self.request('/api/reativacao-contato?cliente_id=0')[0], 400)
+
     def test_existing_database_migrates_without_changing_history(self):
         with closing(sqlite3.connect(panel.TASK_DB)) as con, con:
             con.execute('CREATE TABLE whatsapp_registros(id INTEGER PRIMARY KEY,cliente_id INTEGER,ean TEXT,produto_descricao TEXT,previsao TEXT,telefone_final TEXT,status TEXT,criado_em TEXT)')

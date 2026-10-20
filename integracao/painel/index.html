@@ -158,7 +158,49 @@
  #ficha-modal .modal-scroll{flex:0 0 auto;min-height:200px;max-height:55dvh}
 }
 </style>
-</head><body><div class="auth-overlay" id="auth-overlay"><div class="auth-box"><h2 id="auth-titulo">Sonifarma · Acesso</h2><p class="muted" id="auth-descricao">Informe suas credenciais para acessar o painel.</p><input id="auth-login" placeholder="Usuário" autocomplete="username"><input id="auth-senha" type="password" placeholder="Senha" autocomplete="current-password"><button class="primary" type="button" id="auth-entrar">Entrar</button><p id="auth-erro" class="auth-erro"></p></div></div><div class="shell"><aside class="sidebar"><h2>SONIFARMA</h2><p>Inteligência de clientes</p><nav><button class="nav" data-tab="dashboard">▦ Dashboard</button><button class="nav active" data-tab="central-tab">⌕ Central de Consultas</button><button class="nav" data-tab="reativacao-tab">↺ Reativação</button><button class="nav" data-tab="auditoria-tab" id="nav-auditoria" style="display:none">☷ Auditoria</button><button class="nav" data-tab="usuarios-tab" id="nav-usuarios" style="display:none">♙ Usuários</button></nav><p style="margin-top:30px" id="sessao-usuario">Aguardando login</p><button id="btn-sair" type="button" style="width:100%;display:none">Sair</button></aside><div class="workspace"><header><div><div class="brand">SONI<span>FARMA</span> <span style="font-size:13px;font-weight:500;color:#c3d4df">| Inteligência de Clientes</span></div><div class="sub">Histórico de compras · Indicadores agregados</div></div><div class="tag">Painel local · Somente leitura</div></header><main><section class="tab" id="auditoria-tab"><h1>Auditoria e histórico de contatos</h1><p class="muted">Acesso exclusivo MASTER · Últimos 500 registros por consulta · Registros não podem ser alterados pela interface.</p>
+<style id="sonifarma-identidade-visual">
+:root{--soni-turquesa:#00a6ad;--soni-turquesa-escuro:#00777d;--soni-laranja:#ff6900;--navy:#16464b;--navy2:#006c73;--teal:#00777d;--blue:#008e96;--bg:#f3f9f9;--line:#dcebea;--text:#203a3d;--muted:#597579}
+body{background:var(--bg);color:var(--text)}
+.sidebar{background:#fff;color:var(--text);border-right:1px solid var(--line);border-top:5px solid var(--soni-laranja);padding-top:20px}
+.sonifarma-marca{display:flex;justify-content:center;align-items:center;padding:4px 8px 10px}
+.sonifarma-logo{display:block;width:100%;height:auto;max-width:205px}
+.sidebar>p{color:var(--muted);margin-top:0;margin-bottom:22px;text-align:center}
+.sidebar .nav{color:#365b5e;font-weight:600;border-left:3px solid transparent}
+.sidebar .nav.active{background:var(--soni-turquesa-escuro);color:#fff;border-left-color:var(--soni-laranja)}
+.sidebar .nav:hover:not(.active){background:#e7f6f6;color:#005e65;border-left-color:var(--soni-turquesa)}
+.sidebar #btn-sair{background:#fff;color:var(--soni-turquesa-escuro);border-color:#acd8d9}
+header{background:#fff;color:var(--text);border-top:5px solid var(--soni-laranja);border-bottom:3px solid var(--soni-turquesa);padding-top:16px;padding-bottom:16px}
+header .brand{color:var(--soni-turquesa-escuro);font-size:23px}
+header .sub{color:var(--muted)}
+header .tag{background:#e9f8f7;border:1px solid #a3d5d7;color:#195d62}
+button.primary,.filterbar button,#central-buscar,#reat-buscar,.client-dialog .modal-tabs button.selected{background:var(--soni-turquesa-escuro);border-color:var(--soni-turquesa-escuro);color:#fff}
+#central-limpar,#ficha-limpar-filtros,#reat-limpar{background:#fff8f2;color:#854000;border-color:#f5ba8e}
+#ficha-atualizar{border-color:#9bcdd0;color:var(--soni-turquesa-escuro)}
+.client-link{color:#006e75}
+.card,.panel{border-color:var(--line);box-shadow:0 2px 12px #16464b09}
+.card .value{color:var(--soni-turquesa-escuro)}
+th,#ficha-modal .modal-scroll thead{background:#edf7f7;color:#476d70}
+.stat,.clickrow:hover{background:#ecf8f6}
+.status{background:#e5f5f2;color:#20665c}
+.plot .bar{background:linear-gradient(180deg,var(--soni-turquesa),var(--soni-turquesa-escuro))}
+.fill.orange{background:var(--soni-laranja)}
+.auth-overlay{background:#eaf6f6;border-top:7px solid var(--soni-laranja)}
+.auth-box{border:1px solid #cce5e5;border-top:5px solid var(--soni-turquesa);box-shadow:0 18px 65px #07565c20;padding:28px}
+.auth-marca{max-width:245px;margin:0 auto 22px}
+.auth-marca .sonifarma-logo{max-width:none}
+.auth-box h2{color:var(--soni-turquesa-escuro);font-size:19px;margin-bottom:10px}
+.auth-box button.primary{font-weight:700}
+button:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid #b44900;outline-offset:3px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--soni-turquesa-escuro);outline-offset:2px}
+@media(max-width:850px){
+ .sidebar{border-right:0;border-bottom:1px solid var(--line);padding-top:10px}
+ .sidebar .sonifarma-marca{justify-content:flex-start;padding:0 10px 8px}
+ .sidebar .sonifarma-logo{max-width:165px}
+ .sidebar nav{padding-bottom:3px}
+ header .brand{font-size:20px}
+}
+</style>
+</head><body><div class="auth-overlay" id="auth-overlay"><div class="auth-box"><div class="sonifarma-marca auth-marca"><img class="sonifarma-logo" src="/sonifarma-logo.png" width="1942" height="809" decoding="async" alt="Sonifarma — Farmácia e Manipulação"></div><h2 id="auth-titulo">Sonifarma · Acesso</h2><p class="muted" id="auth-descricao">Informe suas credenciais para acessar o painel.</p><input id="auth-login" placeholder="Usuário" autocomplete="username"><input id="auth-senha" type="password" placeholder="Senha" autocomplete="current-password"><button class="primary" type="button" id="auth-entrar">Entrar</button><p id="auth-erro" class="auth-erro"></p></div></div><div class="shell"><aside class="sidebar"><div class="sonifarma-marca"><img class="sonifarma-logo" src="/sonifarma-logo.png" width="1942" height="809" decoding="async" alt="Sonifarma — Farmácia e Manipulação"></div><p>Inteligência de clientes</p><nav><button class="nav" data-tab="dashboard">▦ Dashboard</button><button class="nav active" data-tab="central-tab">⌕ Central de Consultas</button><button class="nav" data-tab="reativacao-tab">↺ Reativação</button><button class="nav" data-tab="auditoria-tab" id="nav-auditoria" style="display:none">☷ Auditoria</button><button class="nav" data-tab="usuarios-tab" id="nav-usuarios" style="display:none">♙ Usuários</button></nav><p style="margin-top:30px" id="sessao-usuario">Aguardando login</p><button id="btn-sair" type="button" style="width:100%;display:none">Sair</button></aside><div class="workspace"><header><div><div class="brand">Inteligência de Clientes</div><div class="sub">Sonifarma · Histórico de compras e pós-venda</div></div><div class="tag">Painel local · Somente leitura</div></header><main><section class="tab" id="auditoria-tab"><h1>Auditoria e histórico de contatos</h1><p class="muted">Acesso exclusivo MASTER · Últimos 500 registros por consulta · Registros não podem ser alterados pela interface.</p>
 <div class="panel"><div class="filterbar" style="align-items:end">
 <label>Data inicial<input type="date" id="audit-data-inicio" style="min-width:145px"></label>
 <label>Data final<input type="date" id="audit-data-fim" style="min-width:145px"></label>

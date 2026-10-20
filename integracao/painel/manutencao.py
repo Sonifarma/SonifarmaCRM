@@ -15,7 +15,7 @@ import urllib.request
 DATABASES = ('agenda_posvenda.sqlite3', 'posologias_confirmadas.sqlite3',
              'acesso_auditoria.sqlite3', 'nomes_comerciais.sqlite3')
 # A atualização nunca copia configurações, credenciais, certificados ou bancos.
-CODE_FILES = ('iniciar_interface.py', 'index.html', 'manutencao.py',
+CODE_FILES = ('iniciar_interface.py', 'index.html', 'manutencao.py', 'sonifarma-logo.png',
               'SONIFARMA_CONTROLE.ps1', 'SONIFARMA_AUTOMATICO.ps1',
               'START_SONIFARMA.bat', 'STOP_SONIFARMA.bat',
               'RESTART_SONIFARMA.bat', 'STATUS_SONIFARMA.bat')

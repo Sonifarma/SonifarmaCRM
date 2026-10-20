@@ -95,3 +95,9 @@ Os tipos Farmácia Popular — amanhã/hoje são registrados para o cliente e a 
 Depois da confirmação, o resumo da ficha é atualizado independentemente da listagem geral do Pós-venda. O resumo mantém os tipos amanhã/hoje separados antes de selecionar o contato mais recente. Em registros antigos sem data de confirmação, a API pode recuperar data e atendente do evento explícito Envio confirmado na auditoria local, pelo mesmo registro e cliente. Sem esse evento, permanece Data não registrada. A consulta não altera os bancos antigos nem usa a data de abertura como data de envio.
 
 Esta correção exige atualizar `index.html` e `iniciar_interface.py` e reiniciar o servidor local.
+
+## Identidade visual Sonifarma
+
+O tema usa a referência visual enviada pela equipe: turquesa `#00a6ad`, laranja `#ff6900` e fundos claros. Botões com texto branco usam turquesa mais escuro (`#00777d`) para melhorar a leitura. Avisos, erros e confirmações mantêm cores próprias. O logo foi preparado a partir da imagem de referência, com fundo transparente, e está em `sonifarma-logo.png`; é carregado localmente no login e na navegação. O painel não depende do site externo, de fontes remotas ou de CDN para exibir a marca.
+
+A atualização inclui o HTML, o servidor Python, a ferramenta de manutenção e o PNG. Na primeira atualização deste tema, a ferramenta antiga ainda não inclui o logo na lista de arquivos; após `update` e antes de `start`, copie explicitamente `sonifarma-logo.png` da pasta de origem para a instalação. Nas atualizações seguintes, a ferramenta nova também preserva e atualiza esse arquivo. Reinicie o servidor e use Ctrl+F5 para carregar o tema novo.

@@ -1336,7 +1336,7 @@ class Handler(SimpleHTTPRequestHandler):
                 except Exception:pass
         if not parsed.path.startswith('/api/'):
             if parsed.path=='/modulo1_resultado_agregado.json' and not self.autorizado():return
-            if parsed.path not in ('/','/index.html','/modulo1_resultado_agregado.json'):
+            if parsed.path not in ('/','/index.html','/sonifarma-logo.png','/modulo1_resultado_agregado.json'):
                 self.send_error(404)
                 return
             return super().do_GET()

@@ -252,9 +252,9 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 <label>Descrição / EAN / apresentação<input id="emb-busca" placeholder="Digite para pesquisar"></label>
 <label>Fabricante<button type="button" id="v16-open-fabricante" class="v16-picker-open">＋ Selecionar</button><span id="v16-count-fabricante" class="muted">Nenhum selecionado</span></label>
 <label>Classificação<button type="button" id="v16-open-classificacao" class="v16-picker-open">＋ Selecionar</button><span id="v16-count-classificacao" class="muted">Nenhum selecionado</span></label>
+<label>Status do produto<select id="emb-status_produto"><option value="">Todos</option><option value="A">Ativo (A)</option><option value="I">Inativo (I)</option></select></label>
 </div><details id="emb-filtros-avancados"><summary>Mais filtros (opcional)</summary><div class="central-grid emb-advanced-grid"><label>Etiqueta<input id="emb-etiqueta" placeholder="Se disponível"></label>
 <label>Produto (cadastro)<input id="emb-produto" placeholder="Descrição"></label>
-<label>Status do produto<select id="emb-status_produto"><option value="">Todos</option><option value="A">Ativo (A)</option><option value="I">Inativo (I)</option></select></label>
 <label>Controle SNGPC<select id="emb-controle_sngpc"><option value="">Todos</option><option value="controlado">Controlados</option><option value="nao_controlado">Não controlados</option></select></label>
 <label>Grupo remarcação<button type="button" id="v16-open-grupo_remarcacao" class="v16-picker-open">＋ Selecionar</button><span id="v16-count-grupo_remarcacao" class="muted">Nenhum selecionado</span></label>
 <label>Unidade de preço<input id="emb-unidade_preco" placeholder="Se disponível"></label>
@@ -688,11 +688,6 @@ function embAtualizarTodos(){
 }
 $('emb-selecionar-todos').addEventListener('change',e=>{
  if(e.target.checked){
-  const ids=new Set([...embRascunho.map(x=>x.embalagemid),...embEscolhas.keys(),...embResultados.map(x=>x.embalagemid)]);
-  if(ids.size>100){
-   $('emb-pesquisa-aviso').textContent='Selecione no máximo 100 embalagens. Marque individualmente os produtos desejados.';
-   embAtualizarTodos();return;
-  }
   embResultados.forEach(x=>embEscolhas.set(x.embalagemid,x));
  }else embResultados.forEach(x=>embEscolhas.delete(x.embalagemid));
  embRenderResultados();
@@ -739,7 +734,6 @@ $('emb-pesquisa-ok').addEventListener('click',()=>{
  // Captura também marcações da página corrente.
  $('emb-resultados').querySelectorAll('[data-emb-pick]').forEach(el=>{const x=embResultados.find(y=>y.embalagemid===Number(el.dataset.embPick));if(!x)return;if(el.checked)embEscolhas.set(x.embalagemid,x);else embEscolhas.delete(x.embalagemid)});
  const mapa=new Map(embRascunho.map(x=>[x.embalagemid,x]));embEscolhas.forEach((x,id)=>mapa.set(id,x));
- if(mapa.size>100){$('emb-pesquisa-aviso').textContent='Selecione no máximo 100 embalagens.';return;}
  embRascunho=[...mapa.values()];embMarcadas.clear();embRenderSelecionadas();embFecharPesquisa();
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('emb-pesquisa-modal').classList.contains('open')){e.stopImmediatePropagation();embFecharPesquisa();}else if(e.key==='Escape'&&$('emb-modal').classList.contains('open'))embFechar();},true);

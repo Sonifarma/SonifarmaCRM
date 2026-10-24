@@ -1504,8 +1504,8 @@ class Handler(SimpleHTTPRequestHandler):
                     not re.fullmatch(r'[0-9]{1,18}',f['cursor'])):
                     return self.respond(400,{'erro':'Filtros inválidos.'})
                 raw_ids=args.get('embalagens',[''])[0].strip()
-                if raw_ids and (len(raw_ids)>1500 or not re.fullmatch(r'[1-9][0-9]{0,17}(?:,[1-9][0-9]{0,17}){0,99}',raw_ids)):
-                    return self.respond(400,{'erro':'Seleção de embalagens inválida (máximo 100).'})
+                if raw_ids and not all(re.fullmatch(r'[1-9][0-9]{0,17}', item) for item in raw_ids.split(',')):
+                    return self.respond(400,{'erro':'Seleção de embalagens inválida.'})
                 f['embalagens']=[int(x) for x in raw_ids.split(',')] if raw_ids else []
                 pbm_raw=args.get('pbms',[''])[0].strip()
                 if pbm_raw and (len(pbm_raw)>1500 or not re.fullmatch(r'[1-9][0-9]{0,17}(?:,[1-9][0-9]{0,17}){0,99}',pbm_raw)):

@@ -117,6 +117,16 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(next(r for r in rows if r['id'] == rid)['status'], 'Enviado confirmado')
         self.assertEqual(self.request('/api/whatsapp-registros?resumo=1')[0], 400)
 
+    def test_overdue_popular_reminder_is_recorded_confirmed_and_deduplicated(self):
+        rid = self.opened(tipo_aviso='popular_atrasado', previsao='2020-01-01')
+        self.assertEqual(self.request('/api/whatsapp-confirmar', {'id': rid})[0], 200)
+        status, result = self.request('/api/whatsapp-registros', dict(
+            cliente_id=1, ean='12345678', produto_descricao='Teste',
+            tipo_aviso='popular_atrasado', previsao='2020-01-01',
+            telefone_final='1234', telefone='5519999991234', status='WhatsApp aberto'))
+        self.assertEqual(status, 409, result)
+        self.assertTrue(self.valid())
+
     def test_summary_keeps_popular_reminder_types_and_confirmation_dates(self):
         tomorrow = self.opened(tipo_aviso='popular_amanha')
         today = self.opened(tipo_aviso='popular_hoje')

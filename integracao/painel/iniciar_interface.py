@@ -1224,7 +1224,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if status!='WhatsApp aberto': raise ValueError()
                 ean=str(d.get('ean',''))[:18]; desc=str(d.get('produto_descricao',''))[:180]
                 tipo_aviso=str(d.get('tipo_aviso','recompra'))
-                if tipo_aviso not in ('recompra','popular_amanha','popular_hoje','reativacao'): raise ValueError('Tipo de aviso inválido')
+                if tipo_aviso not in ('recompra','popular_amanha','popular_hoje','popular_atrasado','reativacao'): raise ValueError('Tipo de aviso inválido')
                 # V20.5.9: recusa registrada bloqueia todo contato comercial,
                 # inclusive recompra e avisos que possam conter dados sensíveis.
                 with agenda_conn() as ccons:

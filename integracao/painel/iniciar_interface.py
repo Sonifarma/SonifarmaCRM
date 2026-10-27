@@ -566,7 +566,34 @@ FROM public.guiamedicamento
 WHERE codigobarras = ANY(%s)
 ORDER BY codigobarras, id LIMIT 300
 """
-def calcular_recompras(cliente_id, janela='todos', pbms=None, classificacoes=None):
+def validar_intervalo(janela, inicio='', fim=''):
+    if janela != 'intervalo':
+        return
+    try:
+        if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', inicio) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}', fim):
+            raise ValueError()
+        if date.fromisoformat(inicio) > date.fromisoformat(fim):
+            raise ValueError()
+    except (ValueError, TypeError):
+        raise ValueError('Informe datas válidas: a data inicial deve ser anterior ou igual à final.')
+
+
+def previsao_no_periodo(prevista, janela, hoje, inicio='', fim=''):
+    if janela == 'intervalo':
+        return date.fromisoformat(inicio) <= prevista <= date.fromisoformat(fim)
+    if janela == 'atrasadas':
+        return prevista < hoje
+    if janela == 'misto3':
+        return hoje-timedelta(days=3) <= prevista <= hoje+timedelta(days=3)
+    if janela.startswith('anteriores'):
+        return hoje-timedelta(days=int(janela[10:])) <= prevista < hoje
+    if janela in ('7', '15', '30'):
+        return hoje <= prevista <= hoje+timedelta(days=int(janela))
+    return True
+
+
+def calcular_recompras(cliente_id, janela='todos', pbms=None, classificacoes=None, inicio='', fim=''):
+    validar_intervalo(janela, inicio, fim)
     pbms = list(pbms or [])
     pbm_on = bool(pbms)
     classificacoes=list(classificacoes or [])
@@ -584,10 +611,7 @@ def calcular_recompras(cliente_id, janela='todos', pbms=None, classificacoes=Non
         ultima=datas[-1]; linhas=[dict(x,saldo=x['quantidade_liquida']) for x in itens if str(x['data_compra'])[:10]==ultima.isoformat()]
         previsao=calcular_previsao(ultima,linhas,pos.get((cliente_id,produtoid)),guia,overrides)
         prevista=date.fromisoformat(previsao['proxima_compra'])
-        if janela=='atrasadas' and prevista>=hoje: continue
-        if janela=='misto3' and not hoje-timedelta(days=3)<=prevista<=hoje+timedelta(days=3): continue
-        if janela.startswith('anteriores') and not hoje-timedelta(days=int(janela[10:]))<=prevista<hoje: continue
-        if janela in ('7','15','30') and not hoje<=prevista<=hoje+timedelta(days=int(janela)): continue
+        if not previsao_no_periodo(prevista, janela, hoje, inicio, fim): continue
         if janela=='sem_previsao' and previsao['metodo']=='Posologia confirmada': continue
         latest=itens[0]; ean=str(latest['ean'] or '').strip()
         correspondencias=guia.get(ean,[])
@@ -860,13 +884,7 @@ def central_consultas_v4(f):
         ultimos=[x for x in itens if str(x['data_compra'])[:10]==ultima_data]
         previsao=calcular_previsao(ultima,ultimos,pos.get((pid,produtoid)),overrides=overrides)
         previsto=date.fromisoformat(previsao['proxima_compra'])
-        if f['janela']=='atrasadas':
-            if previsto>=hoje: continue
-        elif f['janela']=='misto3':
-            if not hoje-timedelta(days=3)<=previsto<=hoje+timedelta(days=3): continue
-        elif f['janela'].startswith('anteriores'):
-            if not hoje-timedelta(days=int(f['janela'][10:]))<=previsto<hoje: continue
-        elif not hoje<=previsto<=hoje+timedelta(days=int(f['janela'])): continue
+        if not previsao_no_periodo(previsto, f['janela'], hoje, f.get('inicio',''), f.get('fim','')): continue
         gaps=[(b-a).days for a,b in zip(datas,datas[1:])]
         intervalo=int(round(median(gaps))) if gaps else None
         # Escore é heurística de prioridade, NÃO probabilidade de uso do medicamento.
@@ -1489,9 +1507,9 @@ class Handler(SimpleHTTPRequestHandler):
                 except ValueError as e: return self.respond(400,{'erro':str(e)})
             if parsed.path=='/api/central':
                 f={k:args.get(k,[default])[0].strip() for k,default in {
-                  'janela':'misto3','nome':'','uso':'todos','ordem':'data_misto','produto':'',
+                  'inicio':'','fim':'','janela':'misto3','nome':'','uso':'todos','ordem':'data_misto','produto':'',
                   'tipo':'','status':'','mes':'0','dia':'0','notificacao':'todos','cursor':'0'}.items()}
-                if (f['janela'] not in ('misto3','7','15','30','anteriores7','anteriores15','anteriores30','atrasadas') or
+                if (f['janela'] not in ('misto3','7','15','30','anteriores7','anteriores15','anteriores30','atrasadas','intervalo') or
                     f['uso'] not in ('todos','sim','nao') or
                     f['ordem'] not in ('escore','data','data_desc','data_misto','frequencia') or
                     f['notificacao'] not in ('todos','S','N','desconhecido') or
@@ -1503,6 +1521,8 @@ class Handler(SimpleHTTPRequestHandler):
                     not re.fullmatch(r'[0-9]{1,2}',f['dia']) or
                     not re.fullmatch(r'[0-9]{1,18}',f['cursor'])):
                     return self.respond(400,{'erro':'Filtros inválidos.'})
+                try: validar_intervalo(f['janela'], f['inicio'], f['fim'])
+                except ValueError as e: return self.respond(400,{'erro':str(e)})
                 raw_ids=args.get('embalagens',[''])[0].strip()
                 if raw_ids and not all(re.fullmatch(r'[1-9][0-9]{0,17}', item) for item in raw_ids.split(',')):
                     return self.respond(400,{'erro':'Seleção de embalagens inválida.'})
@@ -1540,7 +1560,7 @@ class Handler(SimpleHTTPRequestHandler):
             if parsed.path=='/api/recompra':
                 ident=args.get('id',[''])[0]
                 janela=args.get('janela',['todos'])[0]
-                if not re.fullmatch(r'[1-9][0-9]{0,17}',ident) or janela not in ('todos','misto3','7','15','30','anteriores7','anteriores15','anteriores30','atrasadas','sem_previsao'):
+                if not re.fullmatch(r'[1-9][0-9]{0,17}',ident) or janela not in ('todos','misto3','7','15','30','anteriores7','anteriores15','anteriores30','atrasadas','sem_previsao','intervalo'):
                     return self.respond(400,{'erro':'Filtro ou cliente inválido.'})
                 pbm_raw=args.get('pbms',[''])[0].strip()
                 if pbm_raw and (len(pbm_raw)>1500 or not re.fullmatch(r'[1-9][0-9]{0,17}(?:,[1-9][0-9]{0,17}){0,99}',pbm_raw)):
@@ -1548,7 +1568,10 @@ class Handler(SimpleHTTPRequestHandler):
                 pbms=[int(x) for x in pbm_raw.split(',')] if pbm_raw else []
                 try: classificacoes=ids_classificacao_query(args)
                 except ValueError as e: return self.respond(400,{'erro':str(e)})
-                previsoes,limite=calcular_recompras(int(ident),janela,pbms,classificacoes)
+                inicio=args.get('inicio',[''])[0]; fim=args.get('fim',[''])[0]
+                try: validar_intervalo(janela, inicio, fim)
+                except ValueError as e: return self.respond(400,{'erro':str(e)})
+                previsoes,limite=calcular_recompras(int(ident),janela,pbms,classificacoes,inicio,fim)
                 return self.respond(200,{'previsoes':previsoes,'historico_limitado':limite,
                   'observacao':'Previsões estatísticas; não equivalem a prescrição nem confirmam necessidade de medicamento.'})
             if parsed.path=='/api/ficha-cadastro':

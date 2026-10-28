@@ -25,6 +25,36 @@ const server=http.createServer((req,res)=>{
   await page.goto(`http://127.0.0.1:${server.address().port}`);
   await page.waitForFunction(()=>typeof abrirFichaCliente==='function');
   await page.evaluate(()=>{document.getElementById('auth-overlay').hidden=true;});
+  // Clearing a card must preserve the Central query, loaded rows and pagination.
+  const centralState=()=>page.evaluate(()=>JSON.stringify({filters:centralFiltros(),html:document.getElementById('central-resultados').innerHTML,cursor:centralCursor,next:centralNext,job:centralJob,signature:centralSignature}));
+  await page.evaluate(()=>{
+   document.getElementById('central-janela').value='intervalo';
+   document.getElementById('central-inicio').value='2026-10-01';
+   document.getElementById('central-fim').value='2026-10-31';
+   pbmApplied.set(7,{id:7});v16Applied.classificacao.set(8,{id:8});
+   document.getElementById('central-resultados').innerHTML='<p>Lista de clientes já consultada</p>';
+   centralCursor=50;centralNext=100;centralJob='consulta-em-andamento';centralSignature='filtros-originais';
+  });
+  const before=await centralState();
+  await page.evaluate(()=>abrirFichaCliente(1,'CLIENTE DE TESTE'));
+  await page.waitForSelector('#ficha-conteudo tbody tr');
+  assert(requests.some(x=>x.includes('/api/recompra?')&&x.includes('inicio=2026-10-01')));
+  requests=[];
+  await page.locator('#ficha-limpar-filtros').click();
+  await page.waitForSelector('#ficha-conteudo tbody tr');
+  assert.equal(await centralState(),before,'Card clear changed the Central query');
+  const cleared=requests.filter(x=>x.startsWith('/api/recompra?')).at(-1);
+  assert(cleared.includes('janela=misto3')&&!cleared.includes('pbms=')&&!cleared.includes('classificacoes='));
+  await page.locator('#ficha-atualizar').click();
+  await page.waitForSelector('#ficha-conteudo tbody tr');
+  assert.equal(await centralState(),before);
+  assert(requests.filter(x=>x.startsWith('/api/recompra?')).at(-1).includes('janela=misto3'));
+  await page.locator('#ficha-fechar').click();
+  await page.evaluate(()=>abrirFichaCliente(2,'OUTRO CLIENTE'));
+  await page.waitForSelector('#ficha-conteudo tbody tr');
+  assert(requests.filter(x=>x.startsWith('/api/recompra?')).at(-1).includes('janela=intervalo'));
+  await page.locator('#ficha-fechar').click();
+  await page.evaluate(()=>document.getElementById('central-limpar').click());
   requests=[];
   await page.evaluate(()=>abrirFichaCliente(1,'CLIENTE DE TESTE'));
   await page.waitForSelector('#ficha-conteudo tbody tr');

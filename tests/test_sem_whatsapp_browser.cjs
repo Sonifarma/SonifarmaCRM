@@ -9,13 +9,15 @@ const fs=require('fs'),path=require('path'),assert=require('assert/strict');
    const url=route.request().url();let data={};
    if(!url.includes('/api/'))return route.fulfill({contentType:'text/html',body:fs.readFileSync(path.join(__dirname,'../integracao/painel/index.html'),'utf8')});
    if(url.includes('/api/whatsapp-sem-conta')){posted=route.request().postDataJSON();data={ok:true};}
+   if(url.includes('/api/whatsapp-registros'))data={registros:[{id:42,cliente_id:1,ean:'FARMACIA_POPULAR',tipo_aviso:'popular_hoje',previsao:'2026-10-29',status:posted?'Número sem WhatsApp':'WhatsApp aberto'}]};
    if(url.includes('/api/whatsapp-validacao'))data={validado:false,sem_whatsapp:true};
    return route.fulfill({contentType:'application/json',body:JSON.stringify(data)});
   });
   await page.goto('http://panel.test/');
   await page.evaluate(()=>{
    document.getElementById('auth-overlay').hidden=true;
-   fichaAtual={id:1,nome:'Teste'};whatsContexto={clienteId:1,descricao:'Teste'};whatsRegistroAbertoId=42;
+   fichaAtual={id:1,nome:'Teste'};whatsContexto={clienteId:1,descricao:'Teste'};whatsRegistroAbertoId=null;
+   document.getElementById('ficha-conteudo').innerHTML=['111','222'].map(ean=>'<div><span class="ultimo-envio" data-envio-cliente="1" data-envio-ean="'+ean+'" data-envio-produto="Teste" data-envio-ciclo="2026-10-29"></span></div>').join('');
    document.getElementById('whats-numero').value='(19) 99999-1234';
    document.getElementById('whats-modal').classList.add('open');document.getElementById('whats-confirmar').disabled=false;
   });
@@ -31,7 +33,8 @@ const fs=require('fs'),path=require('path'),assert=require('assert/strict');
   }
   await page.locator('#whats-sem-conta').click();
   await page.waitForFunction(()=>document.getElementById('whats-aviso').textContent.includes('Nenhum envio'));
-  assert.equal(posted.registro_id,42);assert.equal(posted.telefone,'5519999991234');
+  assert.equal(posted.registro_id,null);
+  await page.waitForFunction(()=>[...document.querySelectorAll('.ultimo-envio')].every(el=>el.textContent==='Número sem WhatsApp'));assert.equal(posted.telefone,'5519999991234');
   assert(await page.locator('#whats-confirmar').isDisabled());
   await page.waitForFunction(()=>document.getElementById('whats-validacao-numero').textContent.includes('sem WhatsApp'));
   await page.evaluate(()=>{

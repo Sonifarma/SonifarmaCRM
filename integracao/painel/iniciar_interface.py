@@ -1210,7 +1210,7 @@ class Handler(SimpleHTTPRequestHandler):
                                     return self.respond(409,{'erro':'Registro não corresponde ao cliente e telefone informados.'})
                                 if reg[2]!='WhatsApp aberto':
                                     return self.respond(409,{'erro':'Este atendimento já foi finalizado.'})
-                                con.execute("UPDATE whatsapp_registros SET status='Número sem WhatsApp',atualizado_em=? WHERE id=?",(agora,rid))
+                            con.execute("UPDATE whatsapp_registros SET status='Número sem WhatsApp',atualizado_em=? WHERE cliente_id=? AND telefone_hash=? AND status='WhatsApp aberto'",(agora,cid,digest))
                             con.execute('INSERT OR REPLACE INTO whatsapp_indisponivel VALUES(?,?,?,?)',(cid,digest,agora,u['login']))
                 self.log_operacao('Número sem WhatsApp',{'cliente_id':cid},rid)
                 return self.respond(200,{'ok':True})
@@ -1493,12 +1493,12 @@ class Handler(SimpleHTTPRequestHandler):
             if cid is not None and (not cid.isdecimal() or not 0<int(cid)<10**17): return self.respond(400,{'erro':'Cliente inválido'})
             with TASK_LOCK:
                 with agenda_conn() as con:
-                    colunas="id,cliente_id,ean,produto_descricao,previsao,telefone_final,status,criado_em,resultado,atualizado_em,tipo_aviso,(telefone_hash!='' AND status='Enviado confirmado'),confirmado_em,confirmado_por"
+                    colunas="id,cliente_id,ean,produto_descricao,previsao,telefone_final,CASE WHEN status='WhatsApp aberto' AND EXISTS (SELECT 1 FROM whatsapp_indisponivel wi WHERE wi.cliente_id=wr.cliente_id AND wi.telefone_hash=wr.telefone_hash AND wi.registrado_em>=wr.criado_em) THEN 'Número sem WhatsApp' ELSE status END,criado_em,resultado,atualizado_em,tipo_aviso,(telefone_hash!='' AND status='Enviado confirmado'),confirmado_em,confirmado_por"
                     if filtros.get('resumo',[''])[0]=='1':
                         if cid is None:return self.respond(400,{'erro':'Informe o cliente'})
-                        rows=con.execute('SELECT '+colunas+" FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY ean,CASE WHEN ean='' THEN produto_descricao ELSE '' END,previsao,tipo_aviso ORDER BY id DESC) AS ordem FROM whatsapp_registros WHERE cliente_id=?) WHERE ordem=1 ORDER BY id DESC",(int(cid),)).fetchall()
-                    elif cid is None: rows=con.execute('SELECT '+colunas+' FROM whatsapp_registros ORDER BY id DESC LIMIT 200').fetchall()
-                    else: rows=con.execute('SELECT '+colunas+' FROM whatsapp_registros WHERE cliente_id=? ORDER BY id DESC LIMIT 200',(int(cid),)).fetchall()
+                        rows=con.execute('SELECT '+colunas+" FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY ean,CASE WHEN ean='' THEN produto_descricao ELSE '' END,previsao,tipo_aviso ORDER BY id DESC) AS ordem FROM whatsapp_registros WHERE cliente_id=?) AS wr WHERE ordem=1 ORDER BY id DESC",(int(cid),)).fetchall()
+                    elif cid is None: rows=con.execute('SELECT '+colunas+' FROM whatsapp_registros AS wr ORDER BY id DESC LIMIT 200').fetchall()
+                    else: rows=con.execute('SELECT '+colunas+' FROM whatsapp_registros AS wr WHERE cliente_id=? ORDER BY id DESC LIMIT 200',(int(cid),)).fetchall()
             registros=[dict(zip(('id','cliente_id','ean','produto_descricao','previsao','telefone_final','status','criado_em','resultado','atualizado_em','tipo_aviso','whatsapp_validado','confirmado_em','confirmado_por'),r)) for r in rows]
             return self.respond(200,{'registros':completar_datas_confirmacao(registros)})
         if parsed.path=='/api/agenda':

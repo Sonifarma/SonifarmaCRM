@@ -117,6 +117,23 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(next(r for r in rows if r['id'] == rid)['status'], 'Enviado confirmado')
         self.assertEqual(self.request('/api/whatsapp-registros?resumo=1')[0], 400)
 
+    def test_missing_number_updates_all_pending_attempts_even_without_current_id(self):
+        first=self.opened(tipo_aviso='popular_hoje')
+        second=self.opened(tipo_aviso='popular_amanha')
+        other=self.opened(phone='5519888881234', ean='99999999')
+        self.assertEqual(self.request('/api/whatsapp-sem-conta',dict(
+            cliente_id=1,telefone='5519999991234'))[0],200)
+        for route in ('/api/whatsapp-registros', '/api/whatsapp-registros?cliente_id=1&resumo=1'):
+            rows={r['id']:r for r in self.request(route)[1]['registros']}
+            self.assertEqual(rows[first]['status'],'Número sem WhatsApp')
+            self.assertEqual(rows[second]['status'],'Número sem WhatsApp')
+            self.assertEqual(rows[other]['status'],'WhatsApp aberto')
+        # Older installations may already contain a marker without updated attempts.
+        with panel.agenda_conn() as con:
+            con.execute("UPDATE whatsapp_registros SET status='WhatsApp aberto',criado_em='2020-01-01' WHERE id=?",(first,))
+        rows={r['id']:r for r in self.request('/api/whatsapp-registros?cliente_id=1&resumo=1')[1]['registros']}
+        self.assertEqual(rows[first]['status'],'Número sem WhatsApp')
+
     def test_missing_whatsapp_is_specific_to_customer_and_phone(self):
         rid = self.opened()
         status, result = self.request('/api/whatsapp-sem-conta', dict(cliente_id=1,

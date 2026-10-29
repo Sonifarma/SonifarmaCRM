@@ -136,9 +136,18 @@ def telefone_whatsapp_hash(valor):
     return hashlib.sha256(numero.encode('ascii')).hexdigest()
 
 
-def whatsapp_validado(cliente_id,numero):
+def whatsapp_indisponivel(cliente_id, numero):
     digest=telefone_whatsapp_hash(numero)
     if not digest:return False
+    with TASK_LOCK:
+        with closing(agenda_conn()) as con:
+            with con:
+                return con.execute('SELECT 1 FROM whatsapp_indisponivel WHERE cliente_id=? AND telefone_hash=?', (cliente_id,digest)).fetchone() is not None
+
+
+def whatsapp_validado(cliente_id,numero):
+    digest=telefone_whatsapp_hash(numero)
+    if not digest or whatsapp_indisponivel(cliente_id,numero):return False
     with TASK_LOCK:
         with closing(agenda_conn()) as con:
             # A migração é aditiva; registros antigos sem número completo não validam outro celular.
@@ -188,6 +197,10 @@ def agenda_conn():
         id INTEGER PRIMARY KEY AUTOINCREMENT, cliente_id INTEGER NOT NULL,
         ean TEXT NOT NULL, produto_descricao TEXT NOT NULL, previsao TEXT NOT NULL,
         telefone_final TEXT NOT NULL, status TEXT NOT NULL, criado_em TEXT NOT NULL)""")
+    con.execute("""CREATE TABLE IF NOT EXISTS whatsapp_indisponivel (
+        cliente_id INTEGER NOT NULL, telefone_hash TEXT NOT NULL,
+        registrado_em TEXT NOT NULL, registrado_por TEXT NOT NULL,
+        PRIMARY KEY(cliente_id, telefone_hash))""")
     # V20: migração aditiva, sem modificar dados antigos.
     cols={r[1] for r in con.execute("PRAGMA table_info(whatsapp_registros)")}
     for campo in ('confirmado_em','confirmado_por'):
@@ -1165,7 +1178,7 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(raw)
     def do_POST(self):
-        if self.path not in ('/api/auth/setup','/api/auth/login','/api/auth/logout','/api/usuarios','/api/backup','/api/agenda','/api/posologia','/api/ajuste_previsao','/api/whatsapp-registros','/api/whatsapp-resultado','/api/whatsapp-confirmar','/api/nome-comercial','/api/link-produto','/api/consentimento-comercial'): return self.respond(404,{'erro':'Rota inexistente'})
+        if self.path not in ('/api/auth/setup','/api/auth/login','/api/auth/logout','/api/usuarios','/api/backup','/api/agenda','/api/posologia','/api/ajuste_previsao','/api/whatsapp-registros','/api/whatsapp-resultado','/api/whatsapp-confirmar','/api/whatsapp-sem-conta','/api/nome-comercial','/api/link-produto','/api/consentimento-comercial'): return self.respond(404,{'erro':'Rota inexistente'})
         origin=self.headers.get('Origin','')
         if not self.origem_valida():
             return self.respond(403,{'erro':'Origem não autorizada'})
@@ -1180,6 +1193,27 @@ class Handler(SimpleHTTPRequestHandler):
             if not u:return
             if not hmac.compare_digest(self.headers.get('X-CSRF-Token',''),u['csrf']):return self.respond(403,{'erro':'Token de segurança inválido'})
             if self.path in ('/api/auth/logout','/api/usuarios','/api/backup'):return self.do_AUTH_POST(d)
+            if self.path=='/api/whatsapp-sem-conta':
+                cid=d.get('cliente_id'); digest=telefone_whatsapp_hash(d.get('telefone',''))
+                if not isinstance(cid,int) or isinstance(cid,bool) or not 0<cid<10**17 or not digest:
+                    raise ValueError('Cliente ou telefone inválido')
+                rid=d.get('registro_id')
+                if rid is not None and (not isinstance(rid,int) or isinstance(rid,bool) or rid<=0):
+                    raise ValueError('Registro inválido')
+                agora=datetime.now().isoformat(timespec='seconds')
+                with TASK_LOCK:
+                    with closing(agenda_conn()) as con:
+                        with con:
+                            if rid is not None:
+                                reg=con.execute('SELECT cliente_id,telefone_hash,status FROM whatsapp_registros WHERE id=?',(rid,)).fetchone()
+                                if not reg or reg[:2]!=(cid,digest):
+                                    return self.respond(409,{'erro':'Registro não corresponde ao cliente e telefone informados.'})
+                                if reg[2]!='WhatsApp aberto':
+                                    return self.respond(409,{'erro':'Este atendimento já foi finalizado.'})
+                                con.execute("UPDATE whatsapp_registros SET status='Número sem WhatsApp',atualizado_em=? WHERE id=?",(agora,rid))
+                            con.execute('INSERT OR REPLACE INTO whatsapp_indisponivel VALUES(?,?,?,?)',(cid,digest,agora,u['login']))
+                self.log_operacao('Número sem WhatsApp',{'cliente_id':cid},rid)
+                return self.respond(200,{'ok':True})
             if self.path=='/api/consentimento-comercial':
                 cid=d.get('cliente_id'); status=str(d.get('status','')).strip()
                 origem=str(d.get('origem','')).strip()[:180]
@@ -1296,6 +1330,7 @@ class Handler(SimpleHTTPRequestHandler):
                         agora=datetime.now().isoformat(timespec='seconds')
                         cur=con.execute("UPDATE whatsapp_registros SET status='Enviado confirmado',atualizado_em=?,confirmado_em=?,confirmado_por=? WHERE id=? AND status='WhatsApp aberto'",(agora,agora,u['login'],rid))
                         if cur.rowcount!=1:return self.respond(409,{'erro':'Registro não encontrado ou já confirmado'})
+                        con.execute('DELETE FROM whatsapp_indisponivel WHERE (cliente_id,telefone_hash) IN (SELECT cliente_id,telefone_hash FROM whatsapp_registros WHERE id=?)',(rid,))
                 with TASK_LOCK:
                     with agenda_conn() as con:cliente=con.execute('SELECT cliente_id FROM whatsapp_registros WHERE id=?',(rid,)).fetchone()
                 self.log_operacao('Envio confirmado',{'cliente_id': cliente[0] if cliente else ''},rid)
@@ -1452,7 +1487,7 @@ class Handler(SimpleHTTPRequestHandler):
             numero=filtros.get('numero',[''])[0]
             if not cid.isdecimal() or not 0<int(cid)<10**17 or not telefone_whatsapp_hash(numero):
                 return self.respond(400,{'erro':'Cliente ou telefone inválido'})
-            return self.respond(200,{'validado':whatsapp_validado(int(cid),numero)})
+            return self.respond(200,{'validado':whatsapp_validado(int(cid),numero),'sem_whatsapp':whatsapp_indisponivel(int(cid),numero)})
         if parsed.path=='/api/whatsapp-registros':
             filtros=parse_qs(parsed.query);cid=filtros.get('cliente_id',[None])[0]
             if cid is not None and (not cid.isdecimal() or not 0<int(cid)<10**17): return self.respond(400,{'erro':'Cliente inválido'})

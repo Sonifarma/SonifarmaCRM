@@ -117,6 +117,36 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(next(r for r in rows if r['id'] == rid)['status'], 'Enviado confirmado')
         self.assertEqual(self.request('/api/whatsapp-registros?resumo=1')[0], 400)
 
+    def test_missing_whatsapp_is_specific_to_customer_and_phone(self):
+        rid = self.opened()
+        status, result = self.request('/api/whatsapp-sem-conta', dict(cliente_id=1,
+            telefone='5519999991234', registro_id=rid))
+        self.assertEqual(status, 200, result)
+        self.assertFalse(self.valid())
+        state = self.request('/api/whatsapp-validacao?cliente_id=1&numero=5519999991234')[1]
+        self.assertTrue(state['sem_whatsapp'])
+        self.assertFalse(self.request('/api/whatsapp-validacao?cliente_id=2&numero=5519999991234')[1]['sem_whatsapp'])
+        self.assertFalse(self.request('/api/whatsapp-validacao?cliente_id=1&numero=5519888881234')[1]['sem_whatsapp'])
+        self.assertEqual(self.request('/api/whatsapp-confirmar', {'id':rid})[0],409)
+        rows=self.request('/api/whatsapp-registros?cliente_id=1')[1]['registros']
+        self.assertEqual(rows[0]['status'],'Número sem WhatsApp')
+        self.assertIsNone(rows[0]['confirmado_em'])
+
+    def test_missing_whatsapp_rejects_unrelated_attempt_and_can_be_revalidated(self):
+        rid=self.opened()
+        self.assertEqual(self.request('/api/whatsapp-sem-conta', dict(cliente_id=2,
+            telefone='5519999991234',registro_id=rid))[0],409)
+        self.assertEqual(self.request('/api/whatsapp-confirmar',{'id':rid})[0],200)
+        self.assertTrue(self.valid())
+        self.assertEqual(self.request('/api/whatsapp-sem-conta',dict(cliente_id=1,
+            telefone='5519999991234'))[0],200)
+        self.assertFalse(self.valid())
+        with panel.agenda_conn() as con:
+            con.execute("UPDATE whatsapp_registros SET criado_em='2020-01-01' WHERE id=?",(rid,))
+        newer=self.opened(ean='87654321',previsao='2026-10-25')
+        self.assertEqual(self.request('/api/whatsapp-confirmar',{'id':newer})[0],200)
+        self.assertTrue(self.valid())
+
     def test_overdue_popular_reminder_is_recorded_confirmed_and_deduplicated(self):
         rid = self.opened(tipo_aviso='popular_atrasado', previsao='2020-01-01')
         self.assertEqual(self.request('/api/whatsapp-confirmar', {'id': rid})[0], 200)

@@ -19,6 +19,16 @@ const fs=require('fs'),path=require('path'),assert=require('assert/strict');
    document.getElementById('whats-numero').value='(19) 99999-1234';
    document.getElementById('whats-modal').classList.add('open');document.getElementById('whats-confirmar').disabled=false;
   });
+  for(const width of [1280,390]){
+   await page.setViewportSize({width,height:844});
+   const primary=await page.locator('#whats-modal .whats-primary').boundingBox();
+   const secondary=await page.locator('#whats-modal .whats-secondary').boundingBox();
+   assert(secondary.y<primary.y,'Secondary actions should be above primary actions');
+   for(const id of ['whats-abrir','whats-confirmar','whats-sem-conta']){
+    const box=await page.locator('#'+id).boundingBox();
+    assert(box.x>=0&&box.x+box.width<=width,'Action extends beyond viewport');
+   }
+  }
   await page.locator('#whats-sem-conta').click();
   await page.waitForFunction(()=>document.getElementById('whats-aviso').textContent.includes('Nenhum envio'));
   assert.equal(posted.registro_id,42);assert.equal(posted.telefone,'5519999991234');

@@ -24,11 +24,13 @@ class BirthdayTests(unittest.TestCase):
             self.assertEqual(status,200,result)
             self.assertEqual(len(result['clientes']),50)
             self.assertEqual(result['proximo_cursor'],50)
-            self.assertEqual(query.call_args.args[1],(2,0))
+            self.assertEqual(query.call_args.args[1],(2,True,0))
             self.assertEqual(result['clientes'][0]['campanha'],'aniversario')
             self.assertEqual(result['clientes'][0]['ciclo'],date(date.today().year,2,1).isoformat())
             self.assertEqual(result['clientes'][0]['consentimento'],'nao_informado')
-            for params in ('mes=0','mes=13','mes=abc','cursor=-1'):
+            self.assertEqual(self.request('/api/aniversariantes?mes=2&compras=todos')[0],200)
+            self.assertEqual(query.call_args.args[1],(2,False,0))
+            for params in ('mes=0','mes=13','mes=abc','cursor=-1','compras=19'):
                 self.assertEqual(self.request('/api/aniversariantes?'+params)[0],400)
 
     def test_authorization_confirmation_and_monthly_duplicate(self):

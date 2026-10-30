@@ -27,7 +27,7 @@ const fs=require('fs'),path=require('path'),assert=require('assert/strict');
   await page.locator('[data-tab=aniversariantes-tab]').click();
   assert.equal(await page.locator('#aniv-mes').inputValue(),String(new Date().getMonth()+1));
   await page.locator('#aniv-buscar').click();await page.waitForSelector('[data-aniv-whats="0"]');
-  assert(queries[0].includes('mes='));assert.equal(queries[0].includes('janela'),false);
+  assert(queries[0].includes('mes='));assert(queries[0].includes('compras=18'));assert.equal(await page.locator('#aniv-compras').inputValue(),'18');assert.equal(queries[0].includes('janela'),false);
   await page.locator('[data-aniv-whats="1"]').click();assert(await page.locator('#reat-consent-modal').evaluate(e=>e.classList.contains('open')));
   await page.locator('#reat-consent-cancelar').click();
   assert.equal(await page.locator('#aniv-cupom').inputValue(),'NIVER10');

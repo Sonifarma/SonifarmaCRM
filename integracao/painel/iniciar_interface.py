@@ -940,13 +940,15 @@ FROM public.pessoa p
 WHERE EXTRACT(MONTH FROM p.datanascimento)=%s
   AND EXISTS (SELECT 1 FROM public.venda v WHERE v.pessoaid=p.id AND v.status IN ('F','D')
       AND v.datahorafechamento IS NOT NULL
+      AND (NOT %s OR (v.datahorafechamento >= CURRENT_DATE - INTERVAL '18 months'
+           AND v.datahorafechamento < CURRENT_DATE + INTERVAL '1 day'))
       AND NOT EXISTS (SELECT 1 FROM public.estornovenda e WHERE e.vendaid=v.id))
 ORDER BY EXTRACT(DAY FROM p.datanascimento), p.nome, p.id
 LIMIT 51 OFFSET %s
 """
 
-def consultar_aniversariantes(mes, cursor):
-    rows=query(SQL_ANIVERSARIANTES,(mes,cursor),limit=51)
+def consultar_aniversariantes(mes, cursor, compras='18'):
+    rows=query(SQL_ANIVERSARIANTES,(mes,compras=='18',cursor),limit=51)
     ciclo=date(date.today().year,mes,1).isoformat()
     dados=[]
     with TASK_LOCK:
@@ -1500,11 +1502,12 @@ class Handler(SimpleHTTPRequestHandler):
             args=parse_qs(parsed.query)
             try:
                 mes=int(args.get('mes',[str(date.today().month)])[0]);cursor=int(args.get('cursor',['0'])[0])
-                if not 1<=mes<=12 or not 0<=cursor<=100000:raise ValueError()
-                resultado=consultar_aniversariantes(mes,cursor)
-                registrar(u['login'],'Consulta aniversariantes',detalhe=f'mes={mes};cursor={cursor}',ip=self.client_address[0])
+                compras=args.get('compras',['18'])[0]
+                if not 1<=mes<=12 or not 0<=cursor<=100000 or compras not in ('18','todos'):raise ValueError()
+                resultado=consultar_aniversariantes(mes,cursor,compras)
+                registrar(u['login'],'Consulta aniversariantes',detalhe=f'mes={mes};compras={compras};cursor={cursor}',ip=self.client_address[0])
                 return self.respond(200,resultado)
-            except ValueError:return self.respond(400,{'erro':'Mês ou posição inválidos.'})
+            except ValueError:return self.respond(400,{'erro':'Mês, período de compras ou posição inválidos.'})
             except Exception as e:
                 print('Falha aniversariantes:',repr(e))
                 return self.respond(503,{'erro':'Consulta de aniversariantes indisponível. Confira os logs.'})

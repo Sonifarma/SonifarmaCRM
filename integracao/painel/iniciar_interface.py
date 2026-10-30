@@ -930,6 +930,41 @@ def central_consultas_v4(f):
 
 # V20.5.5: reativação manual; última venda válida do cliente (não previsão por produto).
 # Paginação por pessoa evita carregar toda a base em memória; valores são candidatos.
+SQL_ANIVERSARIANTES = """
+SELECT p.id AS pessoaid, p.nome, p.datanascimento,
+       (SELECT MAX(v.datahorafechamento) FROM public.venda v
+        WHERE v.pessoaid=p.id AND v.status IN ('F','D')
+          AND v.datahorafechamento IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM public.estornovenda e WHERE e.vendaid=v.id)) AS ultima_compra
+FROM public.pessoa p
+WHERE EXTRACT(MONTH FROM p.datanascimento)=%s
+  AND EXISTS (SELECT 1 FROM public.venda v WHERE v.pessoaid=p.id AND v.status IN ('F','D')
+      AND v.datahorafechamento IS NOT NULL
+      AND NOT EXISTS (SELECT 1 FROM public.estornovenda e WHERE e.vendaid=v.id))
+ORDER BY EXTRACT(DAY FROM p.datanascimento), p.nome, p.id
+LIMIT 51 OFFSET %s
+"""
+
+def consultar_aniversariantes(mes, cursor):
+    rows=query(SQL_ANIVERSARIANTES,(mes,cursor),limit=51)
+    ciclo=date(date.today().year,mes,1).isoformat()
+    dados=[]
+    with TASK_LOCK:
+        with closing(agenda_conn()) as con:
+            with con:
+                for row in rows[:50]:
+                    cid=int(row['pessoaid'])
+                    pref=con.execute('SELECT status,origem FROM consentimento_comercial WHERE cliente_id=?',(cid,)).fetchone()
+                    ultimo=con.execute("SELECT id,status,criado_em,confirmado_em,confirmado_por FROM whatsapp_registros WHERE cliente_id=? AND tipo_aviso='aniversario' AND previsao=? ORDER BY id DESC LIMIT 1",(cid,ciclo)).fetchone()
+                    recente=con.execute("SELECT 1 FROM whatsapp_registros WHERE cliente_id=? AND status='Enviado confirmado' AND criado_em>=? LIMIT 1",(cid,(datetime.now()-timedelta(days=3)).isoformat(timespec='seconds'))).fetchone()
+                    dados.append(dict(pessoaid=cid,nome=row['nome'],aniversario=str(row['datanascimento'])[:10],
+                        ultima_compra=str(row['ultima_compra'])[:10] if row['ultima_compra'] else '',
+                        campanha='aniversario',ciclo=ciclo,consentimento=pref[0] if pref else 'nao_informado',
+                        consentimento_origem=pref[1] if pref else '',contato_recente=bool(recente),
+                        ultimo=dict(zip(('id','status','criado_em','confirmado_em','confirmado_por'),ultimo)) if ultimo else None))
+    return dict(clientes=dados,proximo_cursor=cursor+50 if len(rows)>50 else None)
+
+
 SQL_REATIVACAO = """
 WITH elegiveis AS (
  SELECT v.pessoaid, MAX(v.datahorafechamento) AS ultima_compra,
@@ -1276,16 +1311,16 @@ class Handler(SimpleHTTPRequestHandler):
                 if status!='WhatsApp aberto': raise ValueError()
                 ean=str(d.get('ean',''))[:18]; desc=str(d.get('produto_descricao',''))[:180]
                 tipo_aviso=str(d.get('tipo_aviso','recompra'))
-                if tipo_aviso not in ('recompra','popular_amanha','popular_hoje','popular_atrasado','reativacao'): raise ValueError('Tipo de aviso inválido')
+                if tipo_aviso not in ('recompra','popular_amanha','popular_hoje','popular_atrasado','reativacao','aniversario'): raise ValueError('Tipo de aviso inválido')
                 # V20.5.9: recusa registrada bloqueia todo contato comercial,
                 # inclusive recompra e avisos que possam conter dados sensíveis.
                 with agenda_conn() as ccons:
                     consent=ccons.execute('SELECT status FROM consentimento_comercial WHERE cliente_id=?',(cid,)).fetchone()
                 if consent and consent[0]=='recusado':
                     return self.respond(403,{'erro':'Cliente solicitou não receber mensagens. Contato bloqueado.'})
-                if tipo_aviso=='reativacao':
-                    if not consent or consent[0]!='autorizado':return self.respond(403,{'erro':'Reativação bloqueada: autorização comercial não registrada.'})
-                    ean='REATIVACAO';desc='Reativação de clientes'
+                if tipo_aviso in ('reativacao','aniversario'):
+                    if not consent or consent[0]!='autorizado':return self.respond(403,{'erro':'Contato bloqueado: autorização comercial não registrada.'})
+                    ean='ANIVERSARIO' if tipo_aviso=='aniversario' else 'REATIVACAO';desc='Aniversariantes do mês' if tipo_aviso=='aniversario' else 'Reativação de clientes'
                 if tipo_aviso.startswith('popular_'):
                     ean='FARMACIA_POPULAR';desc='Farmácia Popular — aviso de retirada'
                 previsao=str(d.get('previsao',''))[:12]; final=str(d.get('telefone_final',''))
@@ -1299,8 +1334,14 @@ class Handler(SimpleHTTPRequestHandler):
                 # permite contato em dias posteriores e lembretes distintos de Farmácia Popular.
                 if not previsao or not re.fullmatch(r'\d{4}-\d{2}-\d{2}',previsao):
                     raise ValueError('Previsão inválida')
+                if tipo_aviso=='aniversario':
+                    try: previsao=date.fromisoformat(previsao).replace(day=1).isoformat()
+                    except ValueError:raise ValueError('Mês de aniversário inválido')
+                    if date.fromisoformat(previsao).year!=date.today().year:raise ValueError('Ano de aniversário inválido')
                 with TASK_LOCK:
                     with agenda_conn() as con:
+                        if tipo_aviso=='aniversario' and con.execute("SELECT 1 FROM whatsapp_registros WHERE cliente_id=? AND tipo_aviso='aniversario' AND previsao=? AND status='Enviado confirmado' LIMIT 1",(cid,previsao)).fetchone():
+                            return self.respond(409,{'erro':'Mensagem de aniversário já confirmada neste mês e ano.'})
                         existente=con.execute("SELECT id FROM whatsapp_registros WHERE cliente_id=? AND ean=? AND previsao=? AND tipo_aviso=? AND substr(criado_em,1,10)=? LIMIT 1",
                             (cid,ean,previsao,tipo_aviso,date.today().isoformat())).fetchone()
                         if existente:
@@ -1308,7 +1349,7 @@ class Handler(SimpleHTTPRequestHandler):
                         if tipo_aviso=='recompra':
                             recente=con.execute("SELECT id,criado_em FROM whatsapp_registros WHERE cliente_id=? AND ean=? AND tipo_aviso='recompra' AND status='Enviado confirmado' AND criado_em>=? ORDER BY id DESC LIMIT 1",(cid,ean,(datetime.now()-timedelta(days=3)).isoformat(timespec='seconds'))).fetchone()
                             if recente:return self.respond(409,{'erro':'Recompra já confirmada nos últimos 3 dias ('+str(recente[1])+'). Novo contato bloqueado.'})
-                        if tipo_aviso=='reativacao':
+                        if tipo_aviso in ('reativacao','aniversario'):
                             recente=con.execute("SELECT id FROM whatsapp_registros WHERE cliente_id=? AND status='Enviado confirmado' AND criado_em>=? LIMIT 1",(cid,(datetime.now()-timedelta(days=3)).isoformat(timespec='seconds'))).fetchone()
                             if recente:return self.respond(409,{'erro':'Cliente com envio confirmado nos últimos 3 dias. Contato bloqueado.'})
                         cur=con.execute('INSERT INTO whatsapp_registros(cliente_id,ean,produto_descricao,previsao,telefone_final,status,criado_em,tipo_aviso,telefone_hash) VALUES(?,?,?,?,?,?,?,?,?)',
@@ -1325,8 +1366,12 @@ class Handler(SimpleHTTPRequestHandler):
                         if reg:
                             consent=con.execute('SELECT status FROM consentimento_comercial WHERE cliente_id=?',(reg[0],)).fetchone()
                             if consent and consent[0]=='recusado':return self.respond(403,{'erro':'Cliente solicitou não receber mensagens. Confirmação bloqueada.'})
-                            if reg[1]=='reativacao' and (not consent or consent[0]!='autorizado'):
+                            if reg[1] in ('reativacao','aniversario') and (not consent or consent[0]!='autorizado'):
                                 return self.respond(403,{'erro':'Autorização comercial ausente.'})
+                        if reg and reg[1]=='aniversario':
+                            ciclo=con.execute('SELECT previsao FROM whatsapp_registros WHERE id=?',(rid,)).fetchone()[0]
+                            if con.execute("SELECT 1 FROM whatsapp_registros WHERE cliente_id=? AND tipo_aviso='aniversario' AND previsao=? AND status='Enviado confirmado' AND id!=?",(reg[0],ciclo,rid)).fetchone():
+                                return self.respond(409,{'erro':'Aniversário já confirmado neste mês e ano.'})
                         agora=datetime.now().isoformat(timespec='seconds')
                         cur=con.execute("UPDATE whatsapp_registros SET status='Enviado confirmado',atualizado_em=?,confirmado_em=?,confirmado_por=? WHERE id=? AND status='WhatsApp aberto'",(agora,agora,u['login'],rid))
                         if cur.rowcount!=1:return self.respond(409,{'erro':'Registro não encontrado ou já confirmado'})
@@ -1450,6 +1495,19 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_error(404)
                 return
             return super().do_GET()
+        if parsed.path=='/api/aniversariantes':
+            if not DB:return self.respond(503,{'erro':'ERP não conectado. Reinicie com --erp.'})
+            args=parse_qs(parsed.query)
+            try:
+                mes=int(args.get('mes',[str(date.today().month)])[0]);cursor=int(args.get('cursor',['0'])[0])
+                if not 1<=mes<=12 or not 0<=cursor<=100000:raise ValueError()
+                resultado=consultar_aniversariantes(mes,cursor)
+                registrar(u['login'],'Consulta aniversariantes',detalhe=f'mes={mes};cursor={cursor}',ip=self.client_address[0])
+                return self.respond(200,resultado)
+            except ValueError:return self.respond(400,{'erro':'Mês ou posição inválidos.'})
+            except Exception as e:
+                print('Falha aniversariantes:',repr(e))
+                return self.respond(503,{'erro':'Consulta de aniversariantes indisponível. Confira os logs.'})
         if parsed.path=='/api/reativacao':
             args=parse_qs(parsed.query)
             try:

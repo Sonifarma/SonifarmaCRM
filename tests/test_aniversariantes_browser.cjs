@@ -30,6 +30,8 @@ const fs=require('fs'),path=require('path'),assert=require('assert/strict');
   assert(queries[0].includes('mes='));assert.equal(queries[0].includes('janela'),false);
   await page.locator('[data-aniv-whats="1"]').click();assert(await page.locator('#reat-consent-modal').evaluate(e=>e.classList.contains('open')));
   await page.locator('#reat-consent-cancelar').click();
+  assert.equal(await page.locator('#aniv-cupom').inputValue(),'NIVER10');
+  assert((await page.locator('#aniv-condicoes').inputValue()).includes('não transferível'));
   await page.locator('[data-aniv-whats="0"]').click();
   assert((await page.locator('#aniv-status').textContent()).includes('código do cupom'));
   await page.locator('#aniv-cupom').fill('CUPOM_TESTE');

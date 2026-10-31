@@ -145,3 +145,18 @@ Próximo cliente está disponível na ficha e no editor de aniversário/reativa�
 Validação: testes de preferências em tests/test_crm_preferencias.py e fluxo completo em tests/test_crm_workflow_browser.cjs.
 
 Os modelos opcionais de recompra e Farmácia Popular aceitam também `{produto}`, `{data}` e `{link}`. Em branco, mantêm a geração padrão existente. Os índices de status são criados apenas no SQLite local, sem alterar índices do ERP.
+
+
+## Responsável e próxima ação
+
+O botão Atendimento está na ficha e nos editores de mensagens. Permite assumir/liberar o cliente, registrar uma próxima ação com data/hora local e uma observação operacional. Os dados ficam em crm_atendimentos no banco agenda_posvenda.sqlite3 e entram no backup existente. O ERP continua somente para leitura.
+
+Abrir um contato atribui automaticamente clientes sem responsável ao usuário que registrou a abertura. Um atendente não pode abrir novo contato nem alterar atendimento atribuído a outro. Supervisores e MASTER podem reatribuir para usuários ativos. A abertura verifica o responsável novamente dentro da transação que grava o contato, evitando a disputa entre dois atendentes.
+
+Cada alteração usa uma revisão: quando outro usuário já salvou, a operação retorna conflito e o formulário mantém o rascunho. Atualizar carrega os dados atuais; copie alterações não salvas antes de atualizar. Operações são auditadas sem copiar a observação para o log.
+
+A tela Retornos possui filtros Meus retornos, Hoje, Atrasados e Todos da equipe, combinados com Pendentes/Concluídos/Todos. As páginas têm 50 registros em ordem de data/hora. O menu mostra os retornos atrasados ou de hoje do usuário, atualizado ao entrar, ao salvar e a cada minuto enquanto a página estiver visível. Não há notificação quando o navegador está fechado.
+
+Concluir ação mantém o histórico do último agendamento e o responsável; não confirma mensagem, compra ou resultado de campanha. Salvar uma nova ação reabre a pendência. Liberar deixa o cliente sem responsável, preservando o agendamento; ele pode ser encontrado em Todos da equipe. Os horários seguem o relógio local do servidor Windows.
+
+Testes: tests/test_crm_atendimento.py e tests/test_crm_atendimento_browser.cjs.

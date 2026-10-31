@@ -136,6 +136,12 @@ def telefone_whatsapp_hash(valor):
     return hashlib.sha256(numero.encode('ascii')).hexdigest()
 
 
+def atendimento_crm(con, cid):
+    cols=('cliente_id','cliente_nome','responsavel','acao','retorno_em','observacao','concluido','revisao','atualizado_em','atualizado_por')
+    row=con.execute('SELECT '+','.join(cols)+' FROM crm_atendimentos WHERE cliente_id=?',(cid,)).fetchone()
+    return dict(zip(cols,row)) if row else dict(cliente_id=cid,cliente_nome='',responsavel='',acao='',retorno_em='',observacao='',concluido=0,revisao=0,atualizado_em='',atualizado_por='')
+
+
 def status_contato_crm(con, cid, tipo=None, ciclo=None):
     pref=con.execute('SELECT status FROM consentimento_comercial WHERE cliente_id=?',(cid,)).fetchone()
     if pref and pref[0]=='recusado':return 'recusado'
@@ -220,6 +226,13 @@ def agenda_conn():
     con.execute("""CREATE TABLE IF NOT EXISTS crm_config (
         usuario TEXT NOT NULL, chave TEXT NOT NULL, valor TEXT NOT NULL,
         atualizado_em TEXT NOT NULL, PRIMARY KEY(usuario,chave))""")
+    con.execute("""CREATE TABLE IF NOT EXISTS crm_atendimentos (
+        cliente_id INTEGER PRIMARY KEY, cliente_nome TEXT NOT NULL DEFAULT '',
+        responsavel TEXT NOT NULL DEFAULT '', acao TEXT NOT NULL DEFAULT '',
+        retorno_em TEXT NOT NULL DEFAULT '', observacao TEXT NOT NULL DEFAULT '',
+        concluido INTEGER NOT NULL DEFAULT 0, revisao INTEGER NOT NULL DEFAULT 0,
+        atualizado_em TEXT NOT NULL DEFAULT '', atualizado_por TEXT NOT NULL DEFAULT '')""")
+    con.execute('CREATE INDEX IF NOT EXISTS idx_crm_retornos ON crm_atendimentos(concluido,retorno_em,cliente_id)')
     # V20: migração aditiva, sem modificar dados antigos.
     cols={r[1] for r in con.execute("PRAGMA table_info(whatsapp_registros)")}
     for campo in ('confirmado_em','confirmado_por'):
@@ -1240,13 +1253,13 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(raw)
     def do_POST(self):
-        if self.path not in ('/api/auth/setup','/api/auth/login','/api/auth/logout','/api/usuarios','/api/backup','/api/agenda','/api/posologia','/api/ajuste_previsao','/api/whatsapp-registros','/api/whatsapp-resultado','/api/whatsapp-confirmar','/api/whatsapp-sem-conta','/api/nome-comercial','/api/link-produto','/api/consentimento-comercial','/api/crm-config'): return self.respond(404,{'erro':'Rota inexistente'})
+        if self.path not in ('/api/auth/setup','/api/auth/login','/api/auth/logout','/api/usuarios','/api/backup','/api/agenda','/api/posologia','/api/ajuste_previsao','/api/whatsapp-registros','/api/whatsapp-resultado','/api/whatsapp-confirmar','/api/whatsapp-sem-conta','/api/nome-comercial','/api/link-produto','/api/consentimento-comercial','/api/crm-config','/api/crm-atendimento'): return self.respond(404,{'erro':'Rota inexistente'})
         origin=self.headers.get('Origin','')
         if not self.origem_valida():
             return self.respond(403,{'erro':'Origem não autorizada'})
         try:
             length=int(self.headers.get('Content-Length','0'))
-            if not 0 < length <= (262144 if self.path=='/api/crm-config' else 4096): return self.respond(400,{'erro':'Tamanho inválido'})
+            if not 0 < length <= (262144 if self.path=='/api/crm-config' else 16384 if self.path=='/api/crm-atendimento' else 4096): return self.respond(400,{'erro':'Tamanho inválido'})
             d=json.loads(self.rfile.read(length))
             if not isinstance(d,dict):raise ValueError()
             if self.path in ('/api/auth/setup','/api/auth/login'):
@@ -1255,6 +1268,45 @@ class Handler(SimpleHTTPRequestHandler):
             if not u:return
             if not hmac.compare_digest(self.headers.get('X-CSRF-Token',''),u['csrf']):return self.respond(403,{'erro':'Token de segurança inválido'})
             if self.path in ('/api/auth/logout','/api/usuarios','/api/backup'):return self.do_AUTH_POST(d)
+            if self.path=='/api/crm-atendimento':
+                cid=d.get('cliente_id');versao=d.get('revisao');operacao=d.get('operacao')
+                if not isinstance(cid,int) or isinstance(cid,bool) or not 0<cid<10**17 or not isinstance(versao,int) or isinstance(versao,bool) or versao<0 or operacao not in ('assumir','liberar','salvar','concluir'):
+                    raise ValueError('Atendimento inválido')
+                gestor=u.get('perfil') in ('master','supervisor')
+                with TASK_LOCK:
+                    with closing(agenda_conn()) as con:
+                        with con:
+                            atual=atendimento_crm(con,cid)
+                            if atual['revisao']!=versao:return self.respond(409,{'erro':'O atendimento foi alterado por outra pessoa. Atualize antes de salvar.'})
+                            outro=bool(atual['responsavel'] and atual['responsavel']!=u['login'])
+                            if outro and (operacao=='assumir' or not gestor):return self.respond(409,{'erro':'Cliente em atendimento por '+atual['responsavel']+'.'})
+                            novo=dict(atual)
+                            nome=d.get('cliente_nome',atual['cliente_nome'])
+                            if not isinstance(nome,str) or len(nome)>180:raise ValueError('Nome inválido')
+                            novo['cliente_nome']=nome.strip()
+                            if operacao=='assumir':novo['responsavel']=u['login']
+                            elif operacao=='liberar':novo['responsavel']=''
+                            elif operacao=='concluir':
+                                if not atual['acao']:raise ValueError('Nenhuma próxima ação registrada')
+                                novo['concluido']=1
+                            else:
+                                resp=d.get('responsavel',atual['responsavel'] or u['login'])
+                                acao=d.get('acao','');retorno=d.get('retorno_em','');obs=d.get('observacao','')
+                                if not all(isinstance(v,str) for v in (resp,acao,retorno,obs)) or len(resp)>80 or len(acao)>180 or len(obs)>1000:raise ValueError('Campos inválidos ou muito longos')
+                                if resp!=u['login'] and not gestor:raise ValueError('Somente supervisores podem atribuir outro responsável')
+                                if resp and resp!=u['login']:
+                                    with closing(auth_conn()) as auth:
+                                        if not auth.execute('SELECT 1 FROM usuarios WHERE login=? AND ativo=1',(resp,)).fetchone():raise ValueError('Responsável não está ativo')
+                                if retorno:
+                                    if not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}',retorno):raise ValueError('Data de retorno inválida')
+                                    try:datetime.fromisoformat(retorno)
+                                    except ValueError:raise ValueError('Data de retorno inválida')
+                                if bool(acao.strip())!=bool(retorno):raise ValueError('Informe a próxima ação e a data de retorno juntos')
+                                novo.update(responsavel=resp,acao=acao.strip(),retorno_em=retorno,observacao=obs.strip(),concluido=0)
+                            novo.update(revisao=versao+1,atualizado_em=datetime.now().isoformat(timespec='seconds'),atualizado_por=u['login'])
+                            con.execute('INSERT OR REPLACE INTO crm_atendimentos VALUES(?,?,?,?,?,?,?,?,?,?)',tuple(novo[k] for k in ('cliente_id','cliente_nome','responsavel','acao','retorno_em','observacao','concluido','revisao','atualizado_em','atualizado_por')))
+                self.log_operacao('Atendimento '+operacao,{'cliente_id':cid,'responsavel':novo['responsavel']})
+                return self.respond(200,{'atendimento':novo})
             if self.path=='/api/crm-config':
                 chave=d.get('chave');valor=d.get('valor')
                 if chave=='favoritos':
@@ -1361,6 +1413,9 @@ class Handler(SimpleHTTPRequestHandler):
                 # V20.5.9: recusa registrada bloqueia todo contato comercial,
                 # inclusive recompra e avisos que possam conter dados sensíveis.
                 with agenda_conn() as ccons:
+                    owner=ccons.execute('SELECT responsavel FROM crm_atendimentos WHERE cliente_id=?',(cid,)).fetchone()
+                    if owner and owner[0] and owner[0]!=u['login'] and u.get('perfil') not in ('master','supervisor'):
+                        return self.respond(409,{'erro':'Cliente em atendimento por '+owner[0]+'.'})
                     consent=ccons.execute('SELECT status FROM consentimento_comercial WHERE cliente_id=?',(cid,)).fetchone()
                 if consent and consent[0]=='recusado':
                     return self.respond(403,{'erro':'Cliente solicitou não receber mensagens. Contato bloqueado.'})
@@ -1398,6 +1453,12 @@ class Handler(SimpleHTTPRequestHandler):
                         if tipo_aviso in ('reativacao','aniversario'):
                             recente=con.execute("SELECT id FROM whatsapp_registros WHERE cliente_id=? AND status='Enviado confirmado' AND criado_em>=? LIMIT 1",(cid,(datetime.now()-timedelta(days=3)).isoformat(timespec='seconds'))).fetchone()
                             if recente:return self.respond(409,{'erro':'Cliente com envio confirmado nos últimos 3 dias. Contato bloqueado.'})
+                        atendimento=atendimento_crm(con,cid)
+                        if atendimento['responsavel'] and atendimento['responsavel']!=u['login'] and u.get('perfil') not in ('master','supervisor'):
+                            return self.respond(409,{'erro':'Cliente em atendimento por '+atendimento['responsavel']+'.'})
+                        if not atendimento['responsavel']:
+                            atendimento.update(cliente_nome=str(d.get('cliente_nome',''))[:180] or atendimento['cliente_nome'],responsavel=u['login'],revisao=atendimento['revisao']+1,atualizado_em=datetime.now().isoformat(timespec='seconds'),atualizado_por=u['login'])
+                            con.execute('INSERT OR REPLACE INTO crm_atendimentos VALUES(?,?,?,?,?,?,?,?,?,?)',tuple(atendimento[k] for k in ('cliente_id','cliente_nome','responsavel','acao','retorno_em','observacao','concluido','revisao','atualizado_em','atualizado_por')))
                         cur=con.execute('INSERT INTO whatsapp_registros(cliente_id,ean,produto_descricao,previsao,telefone_final,status,criado_em,tipo_aviso,telefone_hash) VALUES(?,?,?,?,?,?,?,?,?)',
                             (cid,ean,desc,previsao,final,status,datetime.now().isoformat(timespec='seconds'),tipo_aviso,digest))
                         registro_id=cur.lastrowid
@@ -1541,6 +1602,35 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_error(404)
                 return
             return super().do_GET()
+        if parsed.path=='/api/crm-atendimento':
+            args=parse_qs(parsed.query);cid=args.get('cliente_id',[''])[0]
+            if not re.fullmatch(r'[1-9][0-9]{0,16}',cid):return self.respond(400,{'erro':'Cliente inválido'})
+            with TASK_LOCK:
+                with closing(agenda_conn()) as con:
+                    with con:registro=atendimento_crm(con,int(cid))
+            with closing(auth_conn()) as auth:
+                with auth:usuarios=[x[0] for x in auth.execute('SELECT login FROM usuarios WHERE ativo=1 ORDER BY login')]
+            return self.respond(200,{'atendimento':registro,'usuarios':usuarios,'usuario':u['login'],'gestor':u.get('perfil') in ('master','supervisor')})
+        if parsed.path=='/api/crm-retornos-resumo':
+            hoje=date.today().isoformat();agora=datetime.now().isoformat(timespec='minutes')
+            with TASK_LOCK:
+                with closing(agenda_conn()) as con:
+                    with con:row=con.execute("SELECT COUNT(CASE WHEN retorno_em<? THEN 1 END),COUNT(CASE WHEN substr(retorno_em,1,10)=? THEN 1 END) FROM crm_atendimentos WHERE responsavel=? AND concluido=0 AND acao!='' AND retorno_em!=''",(agora,hoje,u['login'])).fetchone()
+            return self.respond(200,{'atrasados':row[0],'hoje':row[1]})
+        if parsed.path=='/api/crm-retornos':
+            args=parse_qs(parsed.query);filtro=args.get('filtro',['meus'])[0];estado=args.get('estado',['pendentes'])[0]
+            offset=args.get('offset',['0'])[0]
+            if filtro not in ('meus','todos','hoje','atrasados') or estado not in ('pendentes','concluidos','todos') or not offset.isdecimal() or int(offset)>100000:
+                return self.respond(400,{'erro':'Filtro de retornos inválido'})
+            where=["acao!=''","retorno_em!=''"];params=[]
+            if estado!='todos':where.append('concluido=?');params.append(1 if estado=='concluidos' else 0)
+            if filtro=='meus':where.append('responsavel=?');params.append(u['login'])
+            if filtro=='hoje':where.append('substr(retorno_em,1,10)=?');params.append(date.today().isoformat())
+            if filtro=='atrasados':where.append('retorno_em<?');params.append(datetime.now().isoformat(timespec='minutes'))
+            with TASK_LOCK:
+                with closing(agenda_conn()) as con:
+                    with con:ids=[r[0] for r in con.execute('SELECT cliente_id FROM crm_atendimentos WHERE '+' AND '.join(where)+' ORDER BY retorno_em,cliente_id LIMIT 51 OFFSET ?',params+[int(offset)])];registros=[atendimento_crm(con,cid) for cid in ids[:50]]
+            return self.respond(200,{'atendimentos':registros,'proximo_offset':int(offset)+50 if len(ids)>50 else None,'agora':datetime.now().isoformat(timespec='minutes')})
         if parsed.path=='/api/crm-config':
             with TASK_LOCK:
                 with closing(agenda_conn()) as con:

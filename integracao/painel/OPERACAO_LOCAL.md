@@ -167,3 +167,12 @@ Testes: tests/test_crm_atendimento.py e tests/test_crm_atendimento_browser.cjs.
 A integração opcional com a Cloud API está descrita em WHATSAPP_API.md. Não é habilitada por padrão. Use o .env local para credenciais e publique somente o webhook por HTTPS público. O modo manual permanece disponível. O botão Enviar pela API permite revisar modelos de texto aprovados e seus parâmetros antes de solicitar um envio individual. Aceitação da API não é entrega; delivered/read chegam pelo webhook assinado.
 
 O módulo whatsapp_meta.py precisa acompanhar iniciar_interface.py nesta primeira atualização. O atualizador novo o inclui na lista de código. Sem o módulo, o painel continua manual e informa a API como indisponível. Nenhuma mensagem real foi enviada nos testes automatizados.
+
+
+## Registro de autorização em lote
+
+Em Mensagens e cupons, MASTER e supervisores podem aplicar Autorização de contato em lote, informando a origem e a data em que os clientes já concederam a autorização. A data inicial 31/10/2026 e origem Balcão correspondem à confirmação fornecida pelo responsável nesta solicitação; revise os campos em operações futuras.
+
+A consulta abrange todos os clientes com compras válidas no ERP, sem os filtros da tela, em páginas de 1.000 IDs e sem limite total de clientes. Não grava no ERP. Antes de alterar as preferências locais, cria backup verificável dos bancos existentes em BACKUP_DESTINATION (ambiente ou .env), ou na pasta backups do painel. Se o backup ou a consulta falhar, não aplica uma lista parcial.
+
+A operação preserva recusas atuais e autorizações anteriores; modifica apenas registros não informados ou ausentes, com histórico individual de origem, data e operador. Repetir não duplica o histórico dos já autorizados. Novos clientes futuros não recebem autorização automática. Nenhum envio de WhatsApp é executado. A tela mostra os totais e o caminho do backup; listas já abertas podem precisar de nova consulta para atualizar todos os registros visíveis.

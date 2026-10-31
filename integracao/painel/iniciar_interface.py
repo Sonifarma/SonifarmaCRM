@@ -268,6 +268,57 @@ def meta_enviar(cfg,payload,request_id):
                 meta_aplicar_eventos(con)
 
 
+SQL_CLIENTES_AUTORIZACAO = """
+SELECT p.id AS pessoaid FROM public.pessoa p
+WHERE p.id>%s AND EXISTS (
+    SELECT 1 FROM public.venda v WHERE v.pessoaid=p.id
+    AND v.status IN ('F','D') AND v.datahorafechamento IS NOT NULL
+    AND NOT EXISTS (SELECT 1 FROM public.estornovenda e WHERE e.vendaid=v.id))
+ORDER BY p.id LIMIT 1000
+"""
+
+
+def backup_autorizacoes():
+    spec=importlib.util.spec_from_file_location('sonifarma_backup_autorizacoes',Path(__file__).with_name('manutencao.py'))
+    maintenance=importlib.util.module_from_spec(spec);spec.loader.exec_module(maintenance)
+    destination=os.environ.get('BACKUP_DESTINATION') or config().get('BACKUP_DESTINATION') or str(BASE/'backups')
+    # Initialize the local database before creating its consistent SQLite snapshot.
+    with closing(agenda_conn()) as con:
+        with con:pass
+    return maintenance.create_backup(BASE,destination)
+
+
+def autorizar_clientes_lote(origem,data_consentimento,usuario):
+    if not isinstance(origem,str) or not 5<=len(origem.strip())<=180:raise ValueError('Informe a origem da autorização já concedida')
+    if not isinstance(data_consentimento,str) or not re.fullmatch(r'[0-9]{4}-[0-9]{2}-[0-9]{2}',data_consentimento):raise ValueError('Data de autorização inválida')
+    try:dt=date.fromisoformat(data_consentimento)
+    except ValueError:raise ValueError('Data de autorização inválida')
+    if dt>date.today():raise ValueError('A autorização não pode ter data futura')
+    ids=[];cursor=0
+    while True:
+        rows=query(SQL_CLIENTES_AUTORIZACAO,(cursor,),limit=1000)
+        if not rows:break
+        batch=[int(r['pessoaid']) for r in rows]
+        if any(not cursor<i<10**17 for i in batch) or batch!=sorted(set(batch)):raise ValueError('Lista de clientes inválida; nenhuma autorização foi aplicada')
+        ids.extend(batch);cursor=batch[-1]
+        if len(rows)<1000:break
+    if not ids:return dict(total_clientes=0,atualizados=0,ja_autorizados=0,recusas_preservadas=0,backup=None)
+    backup=backup_autorizacoes()  # A failed backup prevents all local modifications.
+    agora=datetime.now().isoformat(timespec='seconds');atualizados=ja=recusas=0
+    with TASK_LOCK:
+        with closing(agenda_conn()) as con:
+            with con:
+                for cid in ids:
+                    row=con.execute('SELECT status FROM consentimento_comercial WHERE cliente_id=?',(cid,)).fetchone()
+                    anterior=row[0] if row else 'nao_informado'
+                    if anterior=='recusado':recusas+=1;continue
+                    if anterior=='autorizado':ja+=1;continue
+                    con.execute("INSERT OR REPLACE INTO consentimento_comercial(cliente_id,status,origem,data_consentimento,atualizado_em,usuario) VALUES(?,'autorizado',?,?,?,?)",(cid,origem.strip(),data_consentimento,agora,usuario))
+                    con.execute("INSERT INTO consentimento_historico(cliente_id,status_anterior,status_novo,origem,data_consentimento,atualizado_em,usuario) VALUES(?,?,'autorizado',?,?,?,?)",(cid,anterior,origem.strip(),data_consentimento,agora,usuario))
+                    atualizados+=1
+    return dict(total_clientes=len(ids),atualizados=atualizados,ja_autorizados=ja,recusas_preservadas=recusas,backup=str(backup))
+
+
 def atendimento_crm(con, cid):
     cols=('cliente_id','cliente_nome','responsavel','acao','retorno_em','observacao','concluido','revisao','atualizado_em','atualizado_por')
     row=con.execute('SELECT '+','.join(cols)+' FROM crm_atendimentos WHERE cliente_id=?',(cid,)).fetchone()
@@ -1407,13 +1458,13 @@ class Handler(SimpleHTTPRequestHandler):
                 meta_webhook_eventos(json.loads(raw),cfg)
                 return self.respond(200,{'ok':True})
             except (ValueError,TypeError,AttributeError,KeyError):return self.respond(400,{'erro':'Evento inválido'})
-        if self.path not in ('/api/auth/setup','/api/auth/login','/api/auth/logout','/api/usuarios','/api/backup','/api/agenda','/api/posologia','/api/ajuste_previsao','/api/whatsapp-registros','/api/whatsapp-resultado','/api/whatsapp-confirmar','/api/whatsapp-sem-conta','/api/nome-comercial','/api/link-produto','/api/consentimento-comercial','/api/crm-config','/api/crm-atendimento','/api/whatsapp-meta/enviar'): return self.respond(404,{'erro':'Rota inexistente'})
+        if self.path not in ('/api/auth/setup','/api/auth/login','/api/auth/logout','/api/usuarios','/api/backup','/api/agenda','/api/posologia','/api/ajuste_previsao','/api/whatsapp-registros','/api/whatsapp-resultado','/api/whatsapp-confirmar','/api/whatsapp-sem-conta','/api/nome-comercial','/api/link-produto','/api/consentimento-comercial','/api/crm-config','/api/crm-atendimento','/api/whatsapp-meta/enviar','/api/consentimento-comercial/lote'): return self.respond(404,{'erro':'Rota inexistente'})
         origin=self.headers.get('Origin','')
         if not self.origem_valida():
             return self.respond(403,{'erro':'Origem não autorizada'})
         try:
             length=int(self.headers.get('Content-Length','0'))
-            if not 0 < length <= (262144 if self.path=='/api/crm-config' else 16384 if self.path in ('/api/crm-atendimento','/api/whatsapp-meta/enviar') else 4096): return self.respond(400,{'erro':'Tamanho inválido'})
+            if not 0 < length <= (262144 if self.path=='/api/crm-config' else 16384 if self.path in ('/api/crm-atendimento','/api/whatsapp-meta/enviar','/api/consentimento-comercial/lote') else 4096): return self.respond(400,{'erro':'Tamanho inválido'})
             d=json.loads(self.rfile.read(length))
             if not isinstance(d,dict):raise ValueError()
             if self.path in ('/api/auth/setup','/api/auth/login'):
@@ -1501,6 +1552,26 @@ class Handler(SimpleHTTPRequestHandler):
                             con.execute('INSERT OR REPLACE INTO whatsapp_indisponivel VALUES(?,?,?,?)',(cid,digest,agora,u['login']))
                 self.log_operacao('Número sem WhatsApp',{'cliente_id':cid},rid)
                 return self.respond(200,{'ok':True})
+            if self.path=='/api/consentimento-comercial/lote':
+                if u.get('perfil') not in ('master','supervisor'):return self.respond(403,{'erro':'Somente MASTER ou supervisor pode registrar autorização em lote'})
+                if not DB:return self.respond(503,{'erro':'ERP não conectado. Reinicie com --erp.'})
+                exibidos=d.get('clientes_exibidos',[])
+                if not isinstance(exibidos,list) or len(exibidos)>200 or any(not isinstance(cid,int) or isinstance(cid,bool) or not 0<cid<10**17 for cid in exibidos):return self.respond(400,{'erro':'Lista de clientes exibidos inválida'})
+                try:resultado=autorizar_clientes_lote(d.get('origem'),d.get('data_consentimento'),u['login'])
+                except ValueError as e:return self.respond(400,{'erro':str(e)})
+                except Exception as e:
+                    print('Falha autorização lote:',type(e).__name__)
+                    return self.respond(503,{'erro':'Não foi possível aplicar o lote. Confira a conexão com o ERP, o backup e os logs.'})
+                with TASK_LOCK:
+                    with closing(agenda_conn()) as con:
+                        with con:
+                            prefs={}
+                            for cid in set(exibidos):
+                                row=con.execute('SELECT status,origem FROM consentimento_comercial WHERE cliente_id=?',(cid,)).fetchone()
+                                prefs[str(cid)]={'status':row[0] if row else 'nao_informado','origem':row[1] if row else ''}
+                resultado['preferencias']=prefs
+                self.log_operacao('Autorização comercial em lote',{'total':resultado['total_clientes'],'atualizados':resultado['atualizados'],'origem':d.get('origem'),'data_consentimento':d.get('data_consentimento')})
+                return self.respond(200,resultado)
             if self.path=='/api/consentimento-comercial':
                 cid=d.get('cliente_id'); status=str(d.get('status','')).strip()
                 origem=str(d.get('origem','')).strip()[:180]

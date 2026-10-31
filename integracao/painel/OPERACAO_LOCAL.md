@@ -130,3 +130,18 @@ O controle identifica o Python que atende a porta, inclusive quando ele é filho
 Se a confirmação falhar, consulte `sonifarma_servidor.log`, `sonifarma_erros.log` e os listeners da porta 8765. O endereço de rede esperado continua sendo `192.168.0.239`; a correção de identificação não resolve IP ausente, erro de conexão ao ERP ou certificado inválido.
 
 Regressão do controle: `pwsh -NoProfile -File tests/test_controle_windows.ps1` na raiz do repositório. Os testes simulam CIM e TCP e não substituem a validação na instalação Windows.
+
+
+## Favoritos, modelos e fila de atendimento
+
+A Central, a Reativação e os Aniversariantes possuem favoritos por usuário. Salvar favorito captura os campos e seleções; aplicar restaura os filtros e orienta clicar em Consultar. Aplicar não apaga a lista já carregada. Intervalos relativos recalculam suas datas; intervalos personalizados mantêm as datas salvas.
+
+Mensagens e cupons permite editar os modelos de aniversário e reativação e os dados do cupom. As variáveis são `{nome}`, `{cupom}`, `{beneficio}` e `{condicoes}`. Salvar modelos, ou Salvar cupom nos aniversariantes, persiste a configuração para a equipe na tabela crm_config do banco local agenda_posvenda.sqlite3, incluído nos backups existentes. Favoritos usam o login como proprietário. Configurações exigem autenticação e CSRF. Não há gravação no ERP.
+
+O filtro de status atua somente nos clientes já carregados, indicando visíveis e total. Enviados confirmados inclui os que aguardam resposta. Aguardando resposta corresponde a envio confirmado com resultado Aguardando resposta. A consulta do status considera a recusa de contato, o último registro da campanha e o número sem WhatsApp registrado. Reativação usa contatos de reativação; aniversariantes usam o mês/ano da campanha; a Central considera o último contato geral do cliente. Carregue mais para examinar outros clientes.
+
+Próximo cliente está disponível na ficha e no editor de aniversário/reativação. A fila respeita a ordem e o filtro visíveis no momento da abertura e preserva a lista consultada; ao chegar ao último, o botão fica desabilitado. Avançar não envia nem confirma mensagens. A paginação automática da Central não é acionada por trás de um modal aberto nem após alteração de filtros sem uma nova consulta.
+
+Validação: testes de preferências em tests/test_crm_preferencias.py e fluxo completo em tests/test_crm_workflow_browser.cjs.
+
+Os modelos opcionais de recompra e Farmácia Popular aceitam também `{produto}`, `{data}` e `{link}`. Em branco, mantêm a geração padrão existente. Os índices de status são criados apenas no SQLite local, sem alterar índices do ERP.

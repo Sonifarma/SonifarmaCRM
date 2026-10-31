@@ -136,6 +136,22 @@ def telefone_whatsapp_hash(valor):
     return hashlib.sha256(numero.encode('ascii')).hexdigest()
 
 
+def status_contato_crm(con, cid, tipo=None, ciclo=None):
+    pref=con.execute('SELECT status FROM consentimento_comercial WHERE cliente_id=?',(cid,)).fetchone()
+    if pref and pref[0]=='recusado':return 'recusado'
+    where='cliente_id=?';params=[cid]
+    if tipo:where+=' AND tipo_aviso=?';params.append(tipo)
+    if ciclo:where+=' AND previsao=?';params.append(ciclo)
+    row=con.execute('SELECT status,resultado,telefone_hash,criado_em FROM whatsapp_registros WHERE '+where+' ORDER BY id DESC LIMIT 1',params).fetchone()
+    if not row:return 'nao_enviado'
+    if row[0]=='Número sem WhatsApp':return 'sem_whatsapp'
+    if row[0]=='WhatsApp aberto':
+        marker=con.execute('SELECT registrado_em FROM whatsapp_indisponivel WHERE cliente_id=? AND telefone_hash=?',(cid,row[2])).fetchone()
+        return 'sem_whatsapp' if marker and marker[0]>=row[3] else 'aberto'
+    if row[0]=='Enviado confirmado':return 'aguardando' if row[1]=='Aguardando resposta' else 'confirmado'
+    return 'nao_enviado'
+
+
 def whatsapp_indisponivel(cliente_id, numero):
     digest=telefone_whatsapp_hash(numero)
     if not digest:return False
@@ -201,6 +217,9 @@ def agenda_conn():
         cliente_id INTEGER NOT NULL, telefone_hash TEXT NOT NULL,
         registrado_em TEXT NOT NULL, registrado_por TEXT NOT NULL,
         PRIMARY KEY(cliente_id, telefone_hash))""")
+    con.execute("""CREATE TABLE IF NOT EXISTS crm_config (
+        usuario TEXT NOT NULL, chave TEXT NOT NULL, valor TEXT NOT NULL,
+        atualizado_em TEXT NOT NULL, PRIMARY KEY(usuario,chave))""")
     # V20: migração aditiva, sem modificar dados antigos.
     cols={r[1] for r in con.execute("PRAGMA table_info(whatsapp_registros)")}
     for campo in ('confirmado_em','confirmado_por'):
@@ -221,6 +240,8 @@ def agenda_conn():
         status_novo TEXT NOT NULL, origem TEXT NOT NULL, data_consentimento TEXT,
         atualizado_em TEXT NOT NULL, usuario TEXT NOT NULL)""")
     con.execute("CREATE INDEX IF NOT EXISTS idx_whats_cliente_ean_previsao ON whatsapp_registros(cliente_id,ean,previsao)")
+    con.execute("CREATE INDEX IF NOT EXISTS idx_whats_cliente_id ON whatsapp_registros(cliente_id,id DESC)")
+    con.execute("CREATE INDEX IF NOT EXISTS idx_whats_cliente_tipo_id ON whatsapp_registros(cliente_id,tipo_aviso,id DESC)")
     return con
 
 
@@ -925,6 +946,10 @@ def central_consultas_v4(f):
     elif f['ordem']=='data': saida.sort(key=lambda x:(x['proxima_compra'],-x['escore']))
     elif f['ordem']=='frequencia': saida.sort(key=lambda x:(-max(p['compras_distintas'] for p in x['produtos']),-x['escore']))
     else: saida.sort(key=lambda x:(-x['escore'],x['proxima_compra']))
+    with TASK_LOCK:
+        with closing(agenda_conn()) as con:
+            with con:
+                for cliente in saida:cliente['status_contato']=status_contato_crm(con,cliente['pessoaid'])
     return {'clientes':saida,'candidatos_avaliados':len(ids),'proximo_cursor':proximo_cursor,
       'limite_itens':False,'observacao':'Página de até 60 clientes elegíveis. Ordenação por prioridade apenas nesta página; use Próxima página para continuar. A ausência de resultado nesta página não significa ausência na base.'}
 
@@ -961,7 +986,7 @@ def consultar_aniversariantes(mes, cursor, compras='18'):
                     recente=con.execute("SELECT 1 FROM whatsapp_registros WHERE cliente_id=? AND status='Enviado confirmado' AND criado_em>=? LIMIT 1",(cid,(datetime.now()-timedelta(days=3)).isoformat(timespec='seconds'))).fetchone()
                     dados.append(dict(pessoaid=cid,nome=row['nome'],aniversario=str(row['datanascimento'])[:10],
                         ultima_compra=str(row['ultima_compra'])[:10] if row['ultima_compra'] else '',
-                        campanha='aniversario',ciclo=ciclo,consentimento=pref[0] if pref else 'nao_informado',
+                        campanha='aniversario',ciclo=ciclo,status_contato=status_contato_crm(con,cid,'aniversario',ciclo),consentimento=pref[0] if pref else 'nao_informado',
                         consentimento_origem=pref[1] if pref else '',contato_recente=bool(recente),
                         ultimo=dict(zip(('id','status','criado_em','confirmado_em','confirmado_por'),ultimo)) if ultimo else None))
     return dict(clientes=dados,proximo_cursor=cursor+50 if len(rows)>50 else None)
@@ -999,7 +1024,7 @@ def consultar_reativacao(cursor,dias,perfil):
             notificacao=str(r.get('notificacao') or '').strip().upper()
             # Somente S é autorização registrada; confirmação humana continua obrigatória.
             dados.append({'pessoaid':pid,'nome':r['nome'],'ultima_compra':ultimo,'dias_sem_compra':dias_sem,
-                'total_compras':int(r['total_compras']),'notificacao':notificacao or 'Não informado',
+                'status_contato':status_contato_crm(con,pid,'reativacao'),'total_compras':int(r['total_compras']),'notificacao':notificacao or 'Não informado',
                 'contato_recente':bool(registros), 'status_recente':registros[0] if registros else '', 'consentimento':pref[0] if pref else 'nao_informado', 'consentimento_origem':pref[1] if pref else ''})
     return {'clientes':dados,'proximo_cursor':cursor+40 if mais else None,
       'observacao':'Consulta por última venda válida, sem considerar devoluções parciais ou compras fora do ERP. Contato somente com autorização verificada; consulte o cadastro antes de enviar.'}
@@ -1215,13 +1240,13 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(raw)
     def do_POST(self):
-        if self.path not in ('/api/auth/setup','/api/auth/login','/api/auth/logout','/api/usuarios','/api/backup','/api/agenda','/api/posologia','/api/ajuste_previsao','/api/whatsapp-registros','/api/whatsapp-resultado','/api/whatsapp-confirmar','/api/whatsapp-sem-conta','/api/nome-comercial','/api/link-produto','/api/consentimento-comercial'): return self.respond(404,{'erro':'Rota inexistente'})
+        if self.path not in ('/api/auth/setup','/api/auth/login','/api/auth/logout','/api/usuarios','/api/backup','/api/agenda','/api/posologia','/api/ajuste_previsao','/api/whatsapp-registros','/api/whatsapp-resultado','/api/whatsapp-confirmar','/api/whatsapp-sem-conta','/api/nome-comercial','/api/link-produto','/api/consentimento-comercial','/api/crm-config'): return self.respond(404,{'erro':'Rota inexistente'})
         origin=self.headers.get('Origin','')
         if not self.origem_valida():
             return self.respond(403,{'erro':'Origem não autorizada'})
         try:
             length=int(self.headers.get('Content-Length','0'))
-            if not 0 < length <= 4096: return self.respond(400,{'erro':'Tamanho inválido'})
+            if not 0 < length <= (262144 if self.path=='/api/crm-config' else 4096): return self.respond(400,{'erro':'Tamanho inválido'})
             d=json.loads(self.rfile.read(length))
             if not isinstance(d,dict):raise ValueError()
             if self.path in ('/api/auth/setup','/api/auth/login'):
@@ -1230,6 +1255,25 @@ class Handler(SimpleHTTPRequestHandler):
             if not u:return
             if not hmac.compare_digest(self.headers.get('X-CSRF-Token',''),u['csrf']):return self.respond(403,{'erro':'Token de segurança inválido'})
             if self.path in ('/api/auth/logout','/api/usuarios','/api/backup'):return self.do_AUTH_POST(d)
+            if self.path=='/api/crm-config':
+                chave=d.get('chave');valor=d.get('valor')
+                if chave=='favoritos':
+                    if not isinstance(valor,list):raise ValueError('Favoritos inválidos')
+                    for item in valor:
+                        if not isinstance(item,dict) or item.get('tela') not in ('central','aniv','reat') or not isinstance(item.get('nome'),str) or not 1<=len(item['nome'].strip())<=80 or not isinstance(item.get('filtros'),dict):
+                            raise ValueError('Favorito inválido')
+                    usuario=u['login']
+                elif chave=='modelos':
+                    if not isinstance(valor,dict) or set(valor)-{'cupom','beneficio','condicoes','aniversario','reativacao','recompra','popular_hoje','popular_amanha','popular_atrasado'}:raise ValueError('Modelos inválidos')
+                    limites={'cupom':60,'beneficio':150,'condicoes':300,'aniversario':6000,'reativacao':6000,'recompra':6000,'popular_hoje':6000,'popular_amanha':6000,'popular_atrasado':6000}
+                    if any(not isinstance(v,str) or len(v)>limites[k] for k,v in valor.items()):raise ValueError('Texto inválido ou muito longo')
+                    usuario='*'
+                else:raise ValueError('Configuração inválida')
+                with TASK_LOCK:
+                    with closing(agenda_conn()) as con:
+                        with con:con.execute('INSERT OR REPLACE INTO crm_config VALUES(?,?,?,?)',(usuario,chave,json.dumps(valor,ensure_ascii=False),datetime.now().isoformat(timespec='seconds')))
+                self.log_operacao('Configuração CRM salva',{'chave':chave})
+                return self.respond(200,{'ok':True})
             if self.path=='/api/whatsapp-sem-conta':
                 cid=d.get('cliente_id'); digest=telefone_whatsapp_hash(d.get('telefone',''))
                 if not isinstance(cid,int) or isinstance(cid,bool) or not 0<cid<10**17 or not digest:
@@ -1497,6 +1541,22 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_error(404)
                 return
             return super().do_GET()
+        if parsed.path=='/api/crm-config':
+            with TASK_LOCK:
+                with closing(agenda_conn()) as con:
+                    with con:
+                        favoritos=con.execute("SELECT valor FROM crm_config WHERE usuario=? AND chave='favoritos'",(u['login'],)).fetchone()
+                        modelos=con.execute("SELECT valor FROM crm_config WHERE usuario='*' AND chave='modelos'").fetchone()
+            return self.respond(200,{'favoritos':json.loads(favoritos[0]) if favoritos else [],'modelos':json.loads(modelos[0]) if modelos else {}})
+        if parsed.path=='/api/crm-status':
+            args=parse_qs(parsed.query);cid=args.get('cliente_id',[''])[0];ciclo=args.get('ciclo',[''])[0]
+            if not re.fullmatch(r'[1-9][0-9]{0,16}',cid):return self.respond(400,{'erro':'Cliente inválido'})
+            if ciclo and not re.fullmatch(r'\d{4}-\d{2}-01',ciclo):return self.respond(400,{'erro':'Ciclo inválido'})
+            with TASK_LOCK:
+                with closing(agenda_conn()) as con:
+                    with con:
+                        resultado={key:status_contato_crm(con,int(cid),tipo,ciclo if key=='aniv' else None) for key,tipo in [('central',None),('reat','reativacao'),('aniv','aniversario')]}
+            return self.respond(200,resultado)
         if parsed.path=='/api/aniversariantes':
             if not DB:return self.respond(503,{'erro':'ERP não conectado. Reinicie com --erp.'})
             args=parse_qs(parsed.query)

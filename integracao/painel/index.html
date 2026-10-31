@@ -225,7 +225,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 #whats-modal #whats-confirmar:not(:disabled),#reat-whats-modal #reat-whats-confirmar:not(:disabled){background:white!important;border:1px solid #008b91!important;color:#00757c!important}
 #whats-modal #whats-confirmar:disabled,#reat-whats-modal #reat-whats-confirmar:disabled{background:#f4f6f6!important;border-color:#e0e6e6!important;color:#8a989a!important;opacity:1}
 #whats-modal #whats-abrir,#reat-whats-modal #reat-whats-abrir{background:#00868c!important;border-color:#00868c!important;color:white!important}
-</style></head><body><div class="auth-overlay" id="auth-overlay"><div class="auth-box"><div class="sonifarma-marca auth-marca"><img class="sonifarma-logo" src="/sonifarma-logo.png" width="1942" height="809" decoding="async" alt="Sonifarma — Farmácia e Manipulação"></div><h2 id="auth-titulo">Sonifarma · Acesso</h2><p class="muted" id="auth-descricao">Informe suas credenciais para acessar o painel.</p><input id="auth-login" placeholder="Usuário" autocomplete="username"><input id="auth-senha" type="password" placeholder="Senha" autocomplete="current-password"><button class="primary" type="button" id="auth-entrar">Entrar</button><p id="auth-erro" class="auth-erro"></p></div></div><div class="shell"><aside class="sidebar"><div class="sonifarma-marca"><img class="sonifarma-logo" src="/sonifarma-logo.png" width="1942" height="809" decoding="async" alt="Sonifarma — Farmácia e Manipulação"></div><p>Inteligência de clientes</p><nav><button class="nav" data-tab="dashboard">▦ Dashboard</button><button class="nav active" data-tab="central-tab">⌕ Central de Consultas</button><button class="nav" data-tab="reativacao-tab">↺ Reativação</button><button class="nav" data-tab="aniversariantes-tab">Aniversariantes</button><button class="nav" data-tab="auditoria-tab" id="nav-auditoria" style="display:none">☷ Auditoria</button><button class="nav" data-tab="usuarios-tab" id="nav-usuarios" style="display:none">♙ Usuários</button></nav><p style="margin-top:30px" id="sessao-usuario">Aguardando login</p><button id="btn-sair" type="button" style="width:100%;display:none">Sair</button></aside><div class="workspace"><header><div><div class="brand">Inteligência de Clientes</div><div class="sub">Sonifarma · Histórico de compras e pós-venda</div></div><div class="tag">Painel local · Somente leitura</div></header><main><section class="tab" id="auditoria-tab"><h1>Auditoria e histórico de contatos</h1><p class="muted">Acesso exclusivo MASTER · Últimos 500 registros por consulta · Registros não podem ser alterados pela interface.</p>
+</style><style>.crm-toolbar{border-bottom:1px solid #e0ecec;padding-bottom:10px;margin-bottom:16px}.crm-toolbar .filterbar{gap:8px;flex-wrap:wrap}.crm-toolbar p{margin:6px 0;font-size:12px}.crm-toolbar select{max-width:100%}#ficha-posicao{font-size:12px;white-space:nowrap}</style></head><body><div class="auth-overlay" id="auth-overlay"><div class="auth-box"><div class="sonifarma-marca auth-marca"><img class="sonifarma-logo" src="/sonifarma-logo.png" width="1942" height="809" decoding="async" alt="Sonifarma — Farmácia e Manipulação"></div><h2 id="auth-titulo">Sonifarma · Acesso</h2><p class="muted" id="auth-descricao">Informe suas credenciais para acessar o painel.</p><input id="auth-login" placeholder="Usuário" autocomplete="username"><input id="auth-senha" type="password" placeholder="Senha" autocomplete="current-password"><button class="primary" type="button" id="auth-entrar">Entrar</button><p id="auth-erro" class="auth-erro"></p></div></div><div class="shell"><aside class="sidebar"><div class="sonifarma-marca"><img class="sonifarma-logo" src="/sonifarma-logo.png" width="1942" height="809" decoding="async" alt="Sonifarma — Farmácia e Manipulação"></div><p>Inteligência de clientes</p><nav><button class="nav" data-tab="dashboard">▦ Dashboard</button><button class="nav active" data-tab="central-tab">⌕ Central de Consultas</button><button class="nav" data-tab="reativacao-tab">↺ Reativação</button><button class="nav" data-tab="aniversariantes-tab">Aniversariantes</button><button class="nav" data-tab="modelos-tab">Mensagens e cupons</button><button class="nav" data-tab="auditoria-tab" id="nav-auditoria" style="display:none">☷ Auditoria</button><button class="nav" data-tab="usuarios-tab" id="nav-usuarios" style="display:none">♙ Usuários</button></nav><p style="margin-top:30px" id="sessao-usuario">Aguardando login</p><button id="btn-sair" type="button" style="width:100%;display:none">Sair</button></aside><div class="workspace"><header><div><div class="brand">Inteligência de Clientes</div><div class="sub">Sonifarma · Histórico de compras e pós-venda</div></div><div class="tag">Painel local · Somente leitura</div></header><main><section class="tab" id="auditoria-tab"><h1>Auditoria e histórico de contatos</h1><p class="muted">Acesso exclusivo MASTER · Últimos 500 registros por consulta · Registros não podem ser alterados pela interface.</p>
 <div class="panel"><div class="filterbar" style="align-items:end">
 <label>Data inicial<input type="date" id="audit-data-inicio" style="min-width:145px"></label>
 <label>Data final<input type="date" id="audit-data-fim" style="min-width:145px"></label>
@@ -247,7 +247,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 <div class="panel wide"><div class="row"><h2>Clientes e produtos previstos</h2><span id="central-total" class="status">Aguardando consulta</span></div><p id="central-aviso" class="warning">Carregamento progressivo de até 60 candidatos por lote. Previsão por produto: posologia confirmada ou ciclo comercial provisório de 30 dias; sem usar previsão do ERP. A posologia automática não é uma confirmação clínica. Na V18, a classificação global é preparada antes da exibição. Consultas amplas podem levar alguns minutos; refine os filtros se exceder os limites de segurança.</p><div id="central-resultados" class="central-results"><div class="empty">Selecione os filtros e clique em Consultar clientes.</div></div><div style="text-align:center;margin-top:12px"><button id="central-proxima" type="button" disabled style="display:none">Carregar mais resultados</button></div></div>
 </section>
 <section class="tab" id="clientes-tab"><h1>Consulta de clientes</h1><p class="muted">Pesquise por nome. Até 50 resultados por busca, com dados acessados em tempo real, sem exportação local.</p><div class="status" id="erp-status">Verificando conexão com ERP...</div><div class="filterbar"><input id="busca" type="search" placeholder="Digite pelo menos 3 letras do nome" maxlength="70"><button id="buscar">Pesquisar</button></div><div class="panel scroll"><table><thead><tr><th>Cliente</th><th>Última venda candidata</th><th class="num">Vendas candidatas</th><th></th></tr></thead><tbody id="lista-clientes"><tr><td colspan="4" class="muted">Faça uma pesquisa para consultar clientes.</td></tr></tbody></table></div><p class="warning">A lista mostra vendas candidatas por status. A validação líquida de cada item ocorre no Histórico. Dados individuais são confidenciais; não compartilhe capturas ou resultados fora da equipe autorizada.</p></section>
-<section class="tab" id="aniversariantes-tab"><h1>Aniversariantes do mês</h1><p class="muted">Clientes com compras registradas no ERP, independentemente da previsão de recompra. Mensagem manual, após autorização de contato.</p><div class="panel"><div class="filterbar"><label>Mês de aniversário<select id="aniv-mes"><option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option><option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option><option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select></label><label>Compras realizadas<select id="aniv-compras"><option value="18">Últimos 18 meses</option><option value="todos">Todo o histórico</option></select></label><button type="button" class="primary" id="aniv-buscar">Consultar aniversariantes</button></div><details style="margin:16px 0" open><summary style="cursor:pointer;font-weight:600">Cupom de aniversário</summary><div class="central-grid" style="margin-top:12px"><label>Código do cupom<input id="aniv-cupom" maxlength="60" value="NIVER10" placeholder="Código já cadastrado na loja" autocomplete="off"></label><label>Desconto / benefício<input id="aniv-beneficio" maxlength="150" placeholder="Informe o desconto oferecido"></label><label>Condições e validade<input id="aniv-condicoes" maxlength="300" value="Válido somente para manipulados da Sonifarma, com apresentação do documento e desta mensagem. Cupom não transferível." placeholder="Validade, compra mínima e demais condições"></label></div><p class="muted">Use um cupom já cadastrado na loja. Os dados abaixo entram na mensagem, sem vincular a produtos. O código NIVER10 e as condições são preenchidos por padrão. Alterações nesta tela precisam ser preenchidas novamente após recarregar a página.</p></details><p id="aniv-status" class="muted" aria-live="polite">Selecione o mês e consulte os clientes.</p><div class="scroll"><table><thead><tr><th><button class="ficha-sort-btn" type="button" data-aniv-sort="nome">Cliente ↕</button></th><th><button class="ficha-sort-btn" type="button" data-aniv-sort="aniversario">Aniversário ↑</button></th><th>Contato</th><th>Mensagem do mês</th><th>Ação</th></tr></thead><tbody id="aniv-lista"><tr><td colspan="5">Nenhuma consulta realizada.</td></tr></tbody></table></div><button type="button" id="aniv-mais" hidden>Carregar mais clientes</button></div></section><section class="tab" id="reativacao-tab"><h1>Reativação de clientes</h1><p class="muted">Clientes sem compras há mais de 40 dias. Ordenação padrão: última compra mais próxima de hoje (inativos mais recentes primeiro). Clique nos títulos para reorganizar os resultados carregados. Envio somente manual e após confirmar autorização de contato.</p>
+<section class="tab" id="modelos-tab"><h1>Mensagens e cupons</h1><div class="panel"><p class="muted">Modelos compartilhados pela equipe e salvos no servidor local. Use {nome}, {cupom}, {beneficio} e {condicoes}. Nenhuma mensagem é enviada ao salvar.</p><div class="central-grid"><label>Cupom<input id="modelo-cupom" maxlength="60"></label><label>Desconto / benefício<input id="modelo-beneficio" maxlength="150"></label><label>Condições e validade<input id="modelo-condicoes" maxlength="300"></label></div><label style="display:block;margin-top:16px">Aniversário<textarea id="modelo-aniversario" rows="10" maxlength="6000" style="width:100%"></textarea></label><label style="display:block;margin-top:16px">Reativação<textarea id="modelo-reativacao" rows="8" maxlength="6000" style="width:100%"></textarea></label><details style="margin:16px 0"><summary>Recompra e Farmácia Popular</summary><p class="muted">Deixe em branco para manter o texto padrão. Variáveis adicionais: {produto}, {data} e {link}.</p><label style="display:block;margin-top:12px">Recompra<textarea id="modelo-recompra" rows="6" maxlength="6000" style="width:100%"></textarea></label><label style="display:block;margin-top:12px">Farmácia Popular — hoje<textarea id="modelo-popular_hoje" rows="6" maxlength="6000" style="width:100%"></textarea></label><label style="display:block;margin-top:12px">Farmácia Popular — amanhã<textarea id="modelo-popular_amanha" rows="6" maxlength="6000" style="width:100%"></textarea></label><label style="display:block;margin-top:12px">Farmácia Popular — data passada<textarea id="modelo-popular_atrasado" rows="6" maxlength="6000" style="width:100%"></textarea></label></details><button type="button" id="modelos-salvar">Salvar modelos e cupom</button><p id="modelos-status" class="muted" aria-live="polite"></p></div></section><section class="tab" id="aniversariantes-tab"><h1>Aniversariantes do mês</h1><p class="muted">Clientes com compras registradas no ERP, independentemente da previsão de recompra. Mensagem manual, após autorização de contato.</p><div class="panel"><div class="filterbar"><label>Mês de aniversário<select id="aniv-mes"><option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option><option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option><option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select></label><label>Compras realizadas<select id="aniv-compras"><option value="18">Últimos 18 meses</option><option value="todos">Todo o histórico</option></select></label><button type="button" class="primary" id="aniv-buscar">Consultar aniversariantes</button></div><details style="margin:16px 0" open><summary style="cursor:pointer;font-weight:600">Cupom de aniversário</summary><div class="central-grid" style="margin-top:12px"><label>Código do cupom<input id="aniv-cupom" maxlength="60" value="NIVER10" placeholder="Código já cadastrado na loja" autocomplete="off"></label><label>Desconto / benefício<input id="aniv-beneficio" maxlength="150" placeholder="Informe o desconto oferecido"></label><label>Condições e validade<input id="aniv-condicoes" maxlength="300" value="Válido somente para manipulados da Sonifarma, com apresentação do documento e desta mensagem. Cupom não transferível." placeholder="Validade, compra mínima e demais condições"></label></div><p class="muted">Use um cupom já cadastrado na loja. Os dados abaixo entram na mensagem, sem vincular a produtos. O código NIVER10 e as condições são os padrões iniciais. Use Salvar cupom para manter as alterações no servidor.</p></details><button type="button" id="aniv-salvar-cupom">Salvar cupom</button><span id="aniv-cupom-status" class="muted" aria-live="polite"></span><p id="aniv-status" class="muted" aria-live="polite">Selecione o mês e consulte os clientes.</p><div class="scroll"><table><thead><tr><th><button class="ficha-sort-btn" type="button" data-aniv-sort="nome">Cliente ↕</button></th><th><button class="ficha-sort-btn" type="button" data-aniv-sort="aniversario">Aniversário ↑</button></th><th>Contato</th><th>Mensagem do mês</th><th>Ação</th></tr></thead><tbody id="aniv-lista"><tr><td colspan="5">Nenhuma consulta realizada.</td></tr></tbody></table></div><button type="button" id="aniv-mais" hidden>Carregar mais clientes</button></div></section><section class="tab" id="reativacao-tab"><h1>Reativação de clientes</h1><p class="muted">Clientes sem compras há mais de 40 dias. Ordenação padrão: última compra mais próxima de hoje (inativos mais recentes primeiro). Clique nos títulos para reorganizar os resultados carregados. Envio somente manual e após confirmar autorização de contato.</p>
 <div class="panel"><div class="filterbar" style="align-items:end"><label>Inatividade mínima<select id="reat-dias"><option value="40">Mais de 40 dias</option><option value="60">Mais de 60 dias</option><option value="90">Mais de 90 dias</option><option value="180">Mais de 180 dias</option></select></label><label>Perfil<select id="reat-perfil"><option value="recorrentes">Priorizar recorrentes (2+ compras)</option><option value="unicos">Primeira compra apenas</option><option value="todos">Todos</option></select></label><button class="primary" id="reat-buscar">Consultar clientes</button></div><p id="reat-status" class="muted">Clique em Consultar clientes para começar.</p><div class="scroll"><table class="reat-table"><thead><tr><th><button type="button" class="reat-sort" data-reat-sort="nome">Cliente <span class="reat-sort-icon">↕</span></button></th><th><button type="button" class="reat-sort" data-reat-sort="ultima_compra">Última compra <span class="reat-sort-icon">↓</span></button></th><th><button type="button" class="reat-sort" data-reat-sort="dias_sem_compra">Dias inativo <span class="reat-sort-icon">↕</span></button></th><th><button type="button" class="reat-sort" data-reat-sort="total_compras">Compras <span class="reat-sort-icon">↕</span></button></th><th><button type="button" class="reat-sort" data-reat-sort="contato">Contato <span class="reat-sort-icon">↕</span></button></th><th>Ação</th></tr></thead><tbody id="reat-lista"><tr><td colspan="6">Nenhuma consulta realizada.</td></tr></tbody></table></div><div class="actions" style="margin-top:14px"><button id="reat-mais" type="button" style="display:none">Carregar mais clientes</button></div></div>
 <p class="warning">Não enviar mensagens para quem não autorizou comunicações comerciais, solicitou exclusão ou recebeu contato recentemente. A consulta considera vendas candidatas válidas e pode exigir conciliação com devoluções e vendas externas. Não são realizados disparos automáticos. Nunca use informações de medicamentos para personalizar reativação promocional.</p></section>
 <section class="tab" id="historico-tab"><h1>Histórico de compras</h1><p class="muted" id="cliente-atual">Selecione um cliente na aba Clientes para consultar seus produtos.</p><div class="panel scroll"><table><thead><tr><th>Data</th><th>Venda</th><th>Produto</th><th class="num">Comprado</th><th class="num">Devolvido</th><th class="num">Saldo</th><th class="num">Valor estimado</th></tr></thead><tbody id="lista-historico"><tr><td colspan="7" class="muted">Nenhum cliente selecionado.</td></tr></tbody></table></div><p class="warning">Mostra até 100 grupos de venda e produto mais recentes, somando linhas repetidas da mesma venda. O valor líquido é estimado e as regras de devolução ainda devem ser conciliadas com o ERP antes de qualquer ação operacional.</p></section>
@@ -256,7 +256,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px soli
 <div class="panel"><div class="filterbar"><select id="recompra-janela"><option value="todos">Todos os produtos</option><option value="atrasadas">Previsão ultrapassada</option><option value="misto3">Hoje ± 3 dias</option><option value="anteriores7">Anteriores 7 dias</option><option value="anteriores15">Anteriores 15 dias</option><option value="anteriores30">Anteriores 30 dias</option><option value="7">Próximos 7 dias</option><option value="15">Próximos 15 dias</option><option value="30">Próximos 30 dias</option><option value="sem_previsao">Sem posologia confirmada</option></select><button id="recompra-atualizar">Consultar previsões</button></div>
 <div class="scroll"><table><thead><tr><th>Produto</th><th>Última compra</th><th>Compras em dias distintos</th><th>Qtd. Apres. / Tomar/dia</th><th>Duração / Próxima estimativa</th><th>Guia / apresentação</th></tr></thead><tbody id="recompra-lista"><tr><td colspan="6">Selecione um cliente para iniciar.</td></tr></tbody></table></div><p id="recompra-aviso" class="muted"></p></div>
 <p class="warning">Estimativa estatística por embalagem, baseada na mediana dos intervalos entre pelo menos três datas de compra distintas nos últimos 730 dias. Não é orientação de tratamento nem prova de que o cliente precisa comprar novamente. O guia pode conter duplicidades. Nenhuma mensagem é enviada automaticamente.</p></section>
-<section class="tab" id="posvenda-tab"><h1>Agenda de pós-venda</h1><div class="panel" id="whats-posvenda-painel"><h2>WhatsApp · produto selecionado</h2><p class="muted" id="whats-produto-aviso">Selecione o botão WhatsApp em um produto da Central de Recompras.</p><div id="whats-produto-resumo" style="font-weight:700;margin:10px 0"></div><div class="actions"><button type="button" id="whats-posvenda-preparar" disabled style="background:#167347;color:white">Preparar mensagem para revisão</button></div><p class="muted">O nome do medicamento é exibido apenas para o atendente. A mensagem externa não inclui medicamentos automaticamente.</p></div><p class="muted">Acompanhamentos internos. Sem envio de mensagens. Registros armazenados apenas no servidor local, fora do ERP.</p><div class="panel"><h2>Novo acompanhamento</h2><div class="filterbar"><input id="agenda-cliente" type="number" min="1" placeholder="Código do cliente no ERP"><input id="agenda-data" type="date"><select id="agenda-motivo"><option>Acompanhamento</option><option>Retorno solicitado</option><option>Conferir cadastro</option></select><button id="agenda-criar">Adicionar à agenda</button></div><p class="muted" id="agenda-aviso">Selecione um cliente na consulta para preencher automaticamente o código. Não registre medicamentos, diagnósticos ou informações de saúde nesta agenda.</p></div><div class="panel wide"><div class="row"><h2>Histórico WhatsApp</h2><button type="button" id="whats-historico-atualizar">Atualizar</button></div><div id="whats-indicadores" class="muted">Carregando indicadores...</div><div id="whats-historico">Nenhum envio confirmado nesta sessão.</div></div><div class="panel wide scroll"><div class="row"><h2>Atendimentos agendados</h2><button id="agenda-atualizar">↻ Atualizar</button></div><table><thead><tr><th>Data</th><th>Cliente (ID)</th><th>Motivo</th><th>Status</th><th>Ação</th></tr></thead><tbody id="agenda-lista"><tr><td colspan="5">Carregando...</td></tr></tbody></table></div><p class="warning">Agenda local em SQLite. Não há autenticação de usuários nem autorização individual; use apenas no próprio servidor, com acesso restrito. Para utilização em rede, será necessário implementar login, permissões, auditoria e política de retenção.</p></section></main></div></div><div class="client-modal" id="ficha-modal" role="dialog" aria-modal="true" aria-labelledby="ficha-titulo"><div class="client-dialog"><div class="modal-head"><div><h2 id="ficha-titulo">Ficha do cliente</h2><p class="muted" id="ficha-subtitulo">Carregando...</p></div><div class="ficha-acoes"><button type="button" id="ficha-limpar-filtros" title="Mostrar hoje ± 3 dias nesta ficha, preservando a lista e os filtros da Central">Limpar filtros da ficha</button><button type="button" id="ficha-atualizar" title="Recarregar dados e envios deste cliente">Atualizar ficha</button><button type="button" id="whats-ficha-btn" style="background:#167347;color:white">WhatsApp</button><button type="button" class="modal-close" id="ficha-fechar" aria-label="Fechar ficha">×</button></div></div><div id="ficha-cadastro" class="ficha-cadastro" aria-live="polite">Carregando resumo cadastral...</div><div class="modal-tabs"><button type="button" data-ficha-tab="produtos">Produtos comprados</button><button type="button" data-ficha-tab="previsoes" class="selected">Próximas compras</button><button type="button" data-ficha-tab="historico">Histórico de compras</button><button type="button" data-ficha-tab="resumo">Resumo</button><button type="button" data-ficha-tab="posvenda">Pós-venda</button></div><p class="modal-note" id="ficha-aviso">Carregando dados...</p><div class="modal-scroll" id="ficha-conteudo"></div><p class="muted">Dados confidenciais. Acompanhamentos são internos; estimativas de recompra não são orientação de uso. ERP somente leitura; ajustes de posologia são armazenados localmente.</p></div></div><div class="client-modal" id="emb-modal" role="dialog" aria-modal="true" aria-label="Selecionar embalagens"><div class="client-dialog" style="width:min(920px,100%);max-height:90vh">
+<section class="tab" id="posvenda-tab"><h1>Agenda de pós-venda</h1><div class="panel" id="whats-posvenda-painel"><h2>WhatsApp · produto selecionado</h2><p class="muted" id="whats-produto-aviso">Selecione o botão WhatsApp em um produto da Central de Recompras.</p><div id="whats-produto-resumo" style="font-weight:700;margin:10px 0"></div><div class="actions"><button type="button" id="whats-posvenda-preparar" disabled style="background:#167347;color:white">Preparar mensagem para revisão</button></div><p class="muted">O nome do medicamento é exibido apenas para o atendente. A mensagem externa não inclui medicamentos automaticamente.</p></div><p class="muted">Acompanhamentos internos. Sem envio de mensagens. Registros armazenados apenas no servidor local, fora do ERP.</p><div class="panel"><h2>Novo acompanhamento</h2><div class="filterbar"><input id="agenda-cliente" type="number" min="1" placeholder="Código do cliente no ERP"><input id="agenda-data" type="date"><select id="agenda-motivo"><option>Acompanhamento</option><option>Retorno solicitado</option><option>Conferir cadastro</option></select><button id="agenda-criar">Adicionar à agenda</button></div><p class="muted" id="agenda-aviso">Selecione um cliente na consulta para preencher automaticamente o código. Não registre medicamentos, diagnósticos ou informações de saúde nesta agenda.</p></div><div class="panel wide"><div class="row"><h2>Histórico WhatsApp</h2><button type="button" id="whats-historico-atualizar">Atualizar</button></div><div id="whats-indicadores" class="muted">Carregando indicadores...</div><div id="whats-historico">Nenhum envio confirmado nesta sessão.</div></div><div class="panel wide scroll"><div class="row"><h2>Atendimentos agendados</h2><button id="agenda-atualizar">↻ Atualizar</button></div><table><thead><tr><th>Data</th><th>Cliente (ID)</th><th>Motivo</th><th>Status</th><th>Ação</th></tr></thead><tbody id="agenda-lista"><tr><td colspan="5">Carregando...</td></tr></tbody></table></div><p class="warning">Agenda local em SQLite. Não há autenticação de usuários nem autorização individual; use apenas no próprio servidor, com acesso restrito. Para utilização em rede, será necessário implementar login, permissões, auditoria e política de retenção.</p></section></main></div></div><div class="client-modal" id="ficha-modal" role="dialog" aria-modal="true" aria-labelledby="ficha-titulo"><div class="client-dialog"><div class="modal-head"><div><h2 id="ficha-titulo">Ficha do cliente</h2><p class="muted" id="ficha-subtitulo">Carregando...</p></div><div class="ficha-acoes"><button type="button" id="ficha-limpar-filtros" title="Mostrar hoje ± 3 dias nesta ficha, preservando a lista e os filtros da Central">Limpar filtros da ficha</button><button type="button" id="ficha-proximo" disabled>Próximo cliente →</button><span id="ficha-posicao" class="muted"></span><button type="button" id="ficha-atualizar" title="Recarregar dados e envios deste cliente">Atualizar ficha</button><button type="button" id="whats-ficha-btn" style="background:#167347;color:white">WhatsApp</button><button type="button" class="modal-close" id="ficha-fechar" aria-label="Fechar ficha">×</button></div></div><div id="ficha-cadastro" class="ficha-cadastro" aria-live="polite">Carregando resumo cadastral...</div><div class="modal-tabs"><button type="button" data-ficha-tab="produtos">Produtos comprados</button><button type="button" data-ficha-tab="previsoes" class="selected">Próximas compras</button><button type="button" data-ficha-tab="historico">Histórico de compras</button><button type="button" data-ficha-tab="resumo">Resumo</button><button type="button" data-ficha-tab="posvenda">Pós-venda</button></div><p class="modal-note" id="ficha-aviso">Carregando dados...</p><div class="modal-scroll" id="ficha-conteudo"></div><p class="muted">Dados confidenciais. Acompanhamentos são internos; estimativas de recompra não são orientação de uso. ERP somente leitura; ajustes de posologia são armazenados localmente.</p></div></div><div class="client-modal" id="emb-modal" role="dialog" aria-modal="true" aria-label="Selecionar embalagens"><div class="client-dialog" style="width:min(920px,100%);max-height:90vh">
 <div class="modal-head"><div><h2>Filtro de embalagens</h2><p class="muted">Selecione uma ou várias embalagens. O filtro considera qualquer uma das selecionadas.</p></div><button type="button" id="emb-fechar" aria-label="Fechar">×</button></div>
 <div class="row" style="padding:12px 0;flex-wrap:wrap"><span id="emb-total" class="muted">Nenhuma embalagem selecionada</span><div class="actions"><button type="button" id="emb-limpar">Limpar</button><button type="button" id="emb-adicionar" title="Pesquisar e adicionar">＋</button><button type="button" id="emb-remover" title="Remover marcadas">−</button></div></div>
 <div id="emb-selecionadas" class="modal-scroll" style="min-height:140px"></div>
@@ -440,9 +440,10 @@ async function carregarCentral(proxima=false, manterPagina=false){
  $('central-total').textContent=centralLoaded+' de '+r.total+' cliente(s) · ordenação global';
  $('central-aviso').textContent='Ordenação global aplicada antes do carregamento: '+r.observacao;
  centralNext=r.proximo_cursor;$('central-proxima').disabled=centralNext===null;
- const novoHtml=r.clientes.map(c=>`<details data-next-date="${esc(c.proxima_compra)}" data-score="${c.escore}"><summary><span><button type="button" class="client-link" data-ficha-id="${c.pessoaid}" data-ficha-nome="${esc(c.nome)}">${esc(c.nome)}</button><div class="muted">${c.produtos.length} produto(s) previstos • previsão prioritária: ${dataBR(c.proxima_compra)}</div></span><span class="priority ${c.escore<50?'baixa':c.escore<75?'media':''}">${c.escore} pts · ${c.escore>=75?'Alta':c.escore>=50?'Média':'Baixa'}</span></summary><div class="items">${c.produtos.map(p=>`<div class="item"><div><strong>${esc(p.produto)}</strong><div class="muted">${resumoPrevisao(p)} · ${num(p.compras_distintas)} datas de compra</div>${editorPosologia(c.pessoaid,p)}<button type="button" class="whats-produto" data-wcid="${c.pessoaid}" data-wcnome="${esc(c.nome)}" data-wproduto="${esc(p.produto)}" data-wean="${esc(p.ean||'')}" data-wdata="${esc(p.proxima_compra||'')}" style="background:#167347;color:#fff;margin-top:7px">Preparar WhatsApp</button></div><div><strong>${dataBR(p.proxima_compra)}</strong><div class="muted">${p.escore} pontos · ${esc(p.prioridade)}</div></div></div>`).join('')}<button class="abrir-cliente" data-pid="${c.pessoaid}">Ver histórico completo →</button></div></details>`).join('');
+ const novoHtml=r.clientes.map(c=>`<details data-crm-status="${esc(c.status_contato||'nao_enviado')}" data-next-date="${esc(c.proxima_compra)}" data-score="${c.escore}"><summary><span><button type="button" class="client-link" data-ficha-id="${c.pessoaid}" data-ficha-nome="${esc(c.nome)}">${esc(c.nome)}</button><div class="muted">${c.produtos.length} produto(s) previstos • previsão prioritária: ${dataBR(c.proxima_compra)}</div></span><span class="priority ${c.escore<50?'baixa':c.escore<75?'media':''}">${c.escore} pts · ${c.escore>=75?'Alta':c.escore>=50?'Média':'Baixa'}</span></summary><div class="items">${c.produtos.map(p=>`<div class="item"><div><strong>${esc(p.produto)}</strong><div class="muted">${resumoPrevisao(p)} · ${num(p.compras_distintas)} datas de compra</div>${editorPosologia(c.pessoaid,p)}<button type="button" class="whats-produto" data-wcid="${c.pessoaid}" data-wcnome="${esc(c.nome)}" data-wproduto="${esc(p.produto)}" data-wean="${esc(p.ean||'')}" data-wdata="${esc(p.proxima_compra||'')}" style="background:#167347;color:#fff;margin-top:7px">Preparar WhatsApp</button></div><div><strong>${dataBR(p.proxima_compra)}</strong><div class="muted">${p.escore} pontos · ${esc(p.prioridade)}</div></div></div>`).join('')}<button class="abrir-cliente" data-pid="${c.pessoaid}">Ver histórico completo →</button></div></details>`).join('');
  if(proxima){if(novoHtml)area.insertAdjacentHTML('beforeend',novoHtml);}
  else area.innerHTML=novoHtml||'<div class="empty">Nenhum cliente nesta primeira busca. Continue rolando para consultar os demais.</div>';
+ crmFiltrarCentral();
  instalarEdicaoPosologia(area,()=>carregarCentral(false,true));
  area.querySelectorAll('[data-ficha-id]:not([data-central-bound])').forEach(b=>(b.dataset.centralBound='1',b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();abrirFichaCliente(Number(b.dataset.fichaId),b.dataset.fichaNome);})));
  area.querySelectorAll('[data-pid]:not([data-central-bound])').forEach(b=>(b.dataset.centralBound='1',b.addEventListener('click',()=>{const c=r.clientes.find(x=>x.pessoaid===Number(b.dataset.pid));if(c)abrirHistorico({pessoaid:c.pessoaid,nome:c.nome});})));
@@ -451,7 +452,7 @@ async function carregarCentral(proxima=false, manterPagina=false){
 }
 $('central-buscar').addEventListener('click',()=>carregarCentral(false));
 $('central-proxima').addEventListener('click',()=>carregarCentral(true));
-const centralObserver=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)&&centralNext!==null&&!centralLoading&&document.getElementById('central-tab').classList.contains('active'))carregarCentral(true);},{rootMargin:'400px'});
+const centralObserver=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)&&centralNext!==null&&!centralLoading&&!document.querySelector('.client-modal.open')&&centralSignature===JSON.stringify(centralFiltros())&&document.getElementById('central-tab').classList.contains('active'))carregarCentral(true);},{rootMargin:'400px'});
 centralObserver.observe($('central-proxima'));
 $('central-proxima').style.display='block';$('central-proxima').style.opacity='0.5';$('central-proxima').textContent='Role para carregar mais resultados';
 $('central-limpar').addEventListener('click',()=>{for(const id of ['central-nome','central-produto','central-dia','central-tipo','central-status'])$(id).value='';for(const [id,v] of Object.entries({'central-janela':'misto3','central-uso':'todos','central-ordem':'data_misto','central-mes':'0','central-notificacao':'todos'}))$(id).value=v;centralAtualizarDatas();embAplicadas=[];embAtualizarContagem();pbmApplied.clear();$('pbm-count').textContent='0';pessoaApplied.clear();pessoaUpdate();v16Applied.fabricante.clear();v16Applied.classificacao.clear();v164Refresh();centralCursor=0;centralNext=null;centralSignature='';centralJob='';$('central-proxima').disabled=true;$('central-total').textContent='Aguardando consulta';$('central-resultados').innerHTML='<div class="empty">Filtros limpos. Clique em Consultar clientes.</div>';});
@@ -489,9 +490,10 @@ async function abrirFichaCliente(id,nome,opcoes={}){
  fichaControle?.abort();const controle=new AbortController();fichaControle=controle;
  fichaEnviosSequencia++;fichaEnvios=null;fichaEnviosPendente=null;
  if(!$('ficha-modal').contains(document.activeElement))fichaAnteriorFoco=document.activeElement;
- fichaAtual={id,nome,origem:opcoes.origem||'central',periodo:opcoes.periodo||{janela:$('central-janela').value,inicio:$('central-inicio').value,fim:$('central-fim').value},pbms:opcoes.pbms??(opcoes.origem==='reativacao'?[]:[...pbmApplied.keys()]),classificacoes:opcoes.classificacoes??(opcoes.origem==='reativacao'?[]:[...v16Applied.classificacao.keys()])};
+ fichaAtual={id,nome,fila:opcoes.fila||crmFila(opcoes.origem||'central'),origem:opcoes.origem||'central',periodo:opcoes.periodo||{janela:$('central-janela').value,inicio:$('central-inicio').value,fim:$('central-fim').value},pbms:opcoes.pbms??(opcoes.origem==='reativacao'?[]:[...pbmApplied.keys()]),classificacoes:opcoes.classificacoes??(opcoes.origem==='reativacao'?[]:[...v16Applied.classificacao.keys()])};
  const dados={historico:null,previsoes:null,erros:[],previsoesCarregando:false,produtos:[],produtosTotal:null,produtosProximo:null};fichaDados=dados;
  fichaAba=fichaAtual.origem==='reativacao'?'produtos':'previsoes';fichaOrdem={produtos:{col:'ultima_compra',dir:'desc'},previsoes:{col:'proxima_compra',dir:'asc'},historico:{col:'data_compra',dir:'desc'},posvenda:{col:'data_prevista',dir:'desc'}};
+ crmPosicaoFicha();
  $('ficha-titulo').textContent=nome;$('ficha-subtitulo').textContent='Código ERP: '+id;
  $('whats-ficha-btn').disabled=false;$('whats-ficha-btn').textContent=fichaAtual.origem==='reativacao'?'Reativar por WhatsApp':'WhatsApp';
  whatsCadastro=null;$('ficha-cadastro').textContent='Carregando resumo cadastral...';
@@ -613,7 +615,7 @@ $('ficha-conteudo').addEventListener('click',e=>{if(e.target.closest('[data-fich
 $('ficha-atualizar').addEventListener('click',()=>{if(fichaAtual)abrirFichaCliente(fichaAtual.id,fichaAtual.nome,{...fichaAtual});});
 $('ficha-limpar-filtros').addEventListener('click',()=>{
  if(!fichaAtual)return;const {id,nome,origem}=fichaAtual;
- abrirFichaCliente(id,nome,{origem,periodo:{janela:'misto3',inicio:'',fim:''},pbms:[],classificacoes:[]});
+ abrirFichaCliente(id,nome,{origem,fila:fichaAtual.fila,periodo:{janela:'misto3',inicio:'',fim:''},pbms:[],classificacoes:[]});
 });
 function renderFicha(){
  if(!fichaAtual)return;
@@ -998,6 +1000,7 @@ async function whatsHistoricoAtualizar(){
  }catch(e){el.textContent='Histórico indisponível: '+e.message;}
  await atualizarFicha;
  pintarUltimosEnvios();
+ if(typeof crmAtualizarStatus==='function')await crmAtualizarStatus();
 }
 document.addEventListener('change',async e=>{if(!e.target.matches('.whats-resultado'))return;const b=e.target;b.disabled=true;try{const resp=await fetch('/api/whatsapp-resultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:Number(b.dataset.regid),resultado:b.value})});const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha ao atualizar');await whatsHistoricoAtualizar();}catch(err){alert('Não foi possível registrar a resposta: '+err.message);await whatsHistoricoAtualizar();}finally{b.disabled=false;}});
 $('whats-historico-atualizar').addEventListener('click',whatsHistoricoAtualizar);
@@ -1069,6 +1072,7 @@ function whatsTexto(){
  const nome=whatsPrimeiroNome(whatsContexto?.nome||fichaAtual?.nome);
  const produto=String(document.getElementById('whats-nome-comercial')?.value||whatsContexto?.descricao||whatsContexto?.produto||'').trim().replace(/\*/g,'');
  const tipo=$('whats-tipo-aviso')?.value||'recompra';
+ if(typeof crmModelos!=='undefined'&&crmModelos[tipo]?.trim())return crmPreencher(crmModelos[tipo],{nome,produto,data:dataBR(whatsContexto?.proximaCompra||''),link:$('whats-link')?.value||'',cupom:crmModelos.cupom||'',beneficio:crmModelos.beneficio||'',condicoes:crmModelos.condicoes||''});
  if(tipo.startsWith('popular_')){
   const lembrete=tipo==='popular_amanha'
    ?'📅 *Amanhã é a data prevista para sua próxima retirada pelo Farmácia Popular!*'
@@ -1157,7 +1161,7 @@ const request=async(url,opts)=>{const r=await fetch(url,opts);const d=await r.js
 const post=(url,data)=>request(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
 const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function showAuth(isSetup){setup=isSetup;get('auth-overlay').hidden=false;get('auth-titulo').textContent=isSetup?'Primeiro acesso · Criar MASTER':'Sonifarma · Entrar';get('auth-descricao').textContent=isSetup?'Crie a senha do admin (mínimo de 6 caracteres). Não há senha padrão.':'Entre com seu usuário e senha.';get('auth-login').style.display=isSetup?'none':'block';get('auth-senha').value='';get('auth-erro').textContent='';get('auth-entrar').textContent=isSetup?'Criar admin':'Entrar';}
-function logged(d){csrf=d.csrf;perfil=d.perfil;login=d.login;get('auth-overlay').hidden=true;get('sessao-usuario').textContent=login+' · '+perfil;get('btn-sair').style.display='block';get('nav-auditoria').style.display=perfil==='master'?'block':'none';get('nav-usuarios').style.display=perfil==='master'?'block':'none';if(typeof statusERP==='function')statusERP();}
+function logged(d){csrf=d.csrf;perfil=d.perfil;login=d.login;get('auth-overlay').hidden=true;get('sessao-usuario').textContent=login+' · '+perfil;get('btn-sair').style.display='block';get('nav-auditoria').style.display=perfil==='master'?'block':'none';get('nav-usuarios').style.display=perfil==='master'?'block':'none';if(typeof statusERP==='function')statusERP();if(typeof crmCarregar==='function')crmCarregar();}
 async function init(){try{const s=await request('/api/auth/status');if(s.autenticado)logged(s);else showAuth(!s.inicializado);}catch(e){showAuth(false);get('auth-erro').textContent='Servidor indisponível: '+e.message;}}
 get('auth-entrar').addEventListener('click',async()=>{get('auth-erro').textContent='';try{const senha=get('auth-senha').value;if(setup){await post('/api/auth/setup',{senha});showAuth(false);get('auth-login').value='admin';get('auth-erro').textContent='MASTER criado. Entre com sua senha.';}else{const d=await post('/api/auth/login',{login:get('auth-login').value,senha});logged(d);}}catch(e){get('auth-erro').textContent=e.message;}});
 get('auth-senha').addEventListener('keydown',e=>{if(e.key==='Enter')get('auth-entrar').click()});
@@ -1190,10 +1194,11 @@ function reatOrdenados(){
   else cmp=collator.compare(String(av||''),String(bv||''));
   return (reatSortDir==='asc'?cmp:-cmp)||a.idx-b.idx;
  });
- return dados;
+ return dados.filter(({c})=>crmCombina(c,'reat'));
 }
 function renderReativacao(){
- $('reat-lista').innerHTML=reatOrdenados().map(({c,idx})=>`<tr><td><button type="button" class="client-link" data-reat-ficha="${idx}">${esc(c.nome)}</button></td><td>${esc(dataBR(c.ultima_compra))}</td><td>${num(c.dias_sem_compra)}</td><td>${num(c.total_compras)}</td><td>${esc(reatContato(c))}</td><td><div class="row" style="gap:5px;flex-wrap:wrap"><button type="button" data-reat-consent="${idx}">Preferência</button><button type="button" data-reat-msg="${idx}" ${c.contato_recente||c.consentimento==='recusado'?'disabled title="Contato recente ou recusa registrada"':''}>✉ Enviar WhatsApp</button></div></td></tr>`).join('')||'<tr><td colspan="6">Nenhum cliente nesta consulta.</td></tr>';
+ if(typeof crmAtualizarContador==='function')crmAtualizarContador('reat');
+ $('reat-lista').innerHTML=reatOrdenados().map(({c,idx})=>`<tr><td><button type="button" class="client-link" data-reat-ficha="${idx}">${esc(c.nome)}</button></td><td>${esc(dataBR(c.ultima_compra))}</td><td>${num(c.dias_sem_compra)}</td><td>${num(c.total_compras)}</td><td>${esc(reatContato(c))}</td><td><div class="row" style="gap:5px;flex-wrap:wrap"><button type="button" data-reat-consent="${idx}">Preferência</button><button type="button" data-reat-msg="${idx}" ${c.contato_recente||c.consentimento==='recusado'?'disabled title="Contato recente ou recusa registrada"':''}>✉ Enviar WhatsApp</button></div></td></tr>`).join('')||'<tr><td colspan="6">Nenhum cliente corresponde ao filtro nos resultados carregados. Altere o status ou carregue mais clientes.</td></tr>';
  $('reat-lista').querySelectorAll('[data-reat-ficha]').forEach(b=>b.addEventListener('click',()=>{const c=reatRows[+b.dataset.reatFicha];abrirFichaCliente(c.pessoaid,c.nome,{origem:'reativacao'});}));
  $('reat-lista').querySelectorAll('[data-reat-consent]').forEach(b=>b.addEventListener('click',()=>abrirPreferencia(reatRows[+b.dataset.reatConsent])));
  $('reat-lista').querySelectorAll('[data-reat-msg]').forEach(b=>b.addEventListener('click',()=>abrirReativacaoWhats(reatRows[+b.dataset.reatMsg])));
@@ -1239,7 +1244,7 @@ $('reat-consent-salvar').addEventListener('click',async()=>{
  try{
   const resp=await fetch('/api/consentimento-comercial',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cliente_id:c.pessoaid,status,origem,data_consentimento:data})});
   const r=await resp.json();if(!resp.ok)throw Error(r.erro||'Falha ao salvar');
-  c.consentimento=status;c.consentimento_origem=origem;renderReativacao();renderAniversariantes();fecharPreferencia();
+  c.consentimento=status;c.consentimento_origem=origem;renderReativacao();renderAniversariantes();fecharPreferencia();await crmAtualizarStatus(c.pessoaid);
   if(fichaAtual&&String(fichaAtual.id)===String(c.pessoaid))await carregarReativacaoFicha(true);
   $(c.campanha==='aniversario'?'aniv-status':'reat-status').textContent='Preferência de contato registrada para '+c.nome+'.';
  }catch(e){$('reat-consent-aviso').textContent=e.message;}
@@ -1247,12 +1252,13 @@ $('reat-consent-salvar').addEventListener('click',async()=>{
 let anivRows=[],anivNext=null,anivBusy=false,anivMes=null,anivCompras='18',anivSort={col:'aniversario',dir:1};
 $('aniv-mes').value=String(new Date().getMonth()+1);
 function renderAniversariantes(){
- const rows=anivRows.map((c,i)=>({c,i})).sort((a,b)=>{
+ if(typeof crmAtualizarContador==='function')crmAtualizarContador('aniv');
+ const rows=anivRows.map((c,i)=>({c,i})).filter(({c})=>crmCombina(c,'aniv')).sort((a,b)=>{
   const key=c=>anivSort.col==='aniversario'?String(c.aniversario).slice(5):c.nome;
   return anivSort.dir*key(a.c).localeCompare(key(b.c),'pt-BR',{sensitivity:'base'})||a.i-b.i;
  });
- $('aniv-lista').innerHTML=rows.map(({c,i})=>`<tr><td><button type="button" class="client-link" data-aniv-ficha="${i}">${esc(c.nome)}</button></td><td>${esc(dataBR(c.aniversario).slice(0,5))}</td><td>${c.consentimento==='autorizado'?'Autorizado':c.consentimento==='recusado'?'Não deseja receber':'Sem autorização registrada'}</td><td>${c.ultimo?esc(c.ultimo.status)+(c.ultimo.confirmado_em?'<br>'+esc(dataHoraEnvio(c.ultimo.confirmado_em)):''):'Não enviada'}</td><td><div class="actions"><button type="button" data-aniv-pref="${i}">Preferência</button><button type="button" data-aniv-whats="${i}" ${c.ultimo?.status==='Enviado confirmado'?'disabled':''}>Mensagem de aniversário</button></div></td></tr>`).join('')||'<tr><td colspan="5">Nenhum aniversariante encontrado.</td></tr>';
- for(const [attr,acao] of [['ficha',c=>abrirFichaCliente(c.pessoaid,c.nome)],['pref',abrirPreferencia],['whats',abrirReativacaoWhats]]){
+ $('aniv-lista').innerHTML=rows.map(({c,i})=>`<tr><td><button type="button" class="client-link" data-aniv-ficha="${i}">${esc(c.nome)}</button></td><td>${esc(dataBR(c.aniversario).slice(0,5))}</td><td>${c.consentimento==='autorizado'?'Autorizado':c.consentimento==='recusado'?'Não deseja receber':'Sem autorização registrada'}</td><td>${c.ultimo?esc(c.ultimo.status)+(c.ultimo.confirmado_em?'<br>'+esc(dataHoraEnvio(c.ultimo.confirmado_em)):''):'Não enviada'}</td><td><div class="actions"><button type="button" data-aniv-pref="${i}">Preferência</button><button type="button" data-aniv-whats="${i}" ${c.ultimo?.status==='Enviado confirmado'?'disabled':''}>Mensagem de aniversário</button></div></td></tr>`).join('')||'<tr><td colspan="5">Nenhum cliente corresponde ao filtro nos resultados carregados. Altere o status ou carregue mais clientes.</td></tr>';
+ for(const [attr,acao] of [['ficha',c=>abrirFichaCliente(c.pessoaid,c.nome,{origem:'aniversario'})],['pref',abrirPreferencia],['whats',abrirReativacaoWhats]]){
   document.querySelectorAll('[data-aniv-'+attr+']').forEach(b=>b.addEventListener('click',()=>acao(anivRows[Number(b.getAttribute('data-aniv-'+attr))])));
  }
  document.querySelectorAll('[data-aniv-sort]').forEach(b=>{
@@ -1299,11 +1305,8 @@ async function reatChecarHistorico(c){
 function fecharReativacaoWhats(){$('reat-whats-modal').classList.remove('open');reatWhatsCliente=null;reatWhatsRegistro=null;if(fichaAtual)($('whats-ficha-btn').disabled?$('ficha-fechar'):$('whats-ficha-btn')).focus();}
 $('reat-whats-fechar').addEventListener('click',fecharReativacaoWhats);
 $('reat-whats-modal').addEventListener('click',e=>{if(e.target===$('reat-whats-modal'))fecharReativacaoWhats();});
-function textoAniversarioCupom(c){
- const primeiro=whatsPrimeiroNome(c.nome),codigo=$('aniv-cupom').value.trim().replace(/\*/g,''),beneficio=$('aniv-beneficio').value.trim(),condicoes=$('aniv-condicoes').value.trim();
- return `Olá, ${primeiro}! Tudo bem? 🎉\n\n💚 Aqui é da *Sonifarma!*\n\nNeste mês do seu aniversário, desejamos muita saúde, alegria e bons momentos! 🥳\n\n🎁 Para comemorar, preparamos um presente para você: *${beneficio}*.\n\n🎟️ Seu cupom: *${codigo}*\n${condicoes?'\n'+condicoes+'\n':''}\nResponda por aqui para saber como aproveitar seu cupom. Será um prazer atender você!\n\n*Sonifarma — A farmácia raiz que cuida de você!* 💚\n\nSe preferir não receber nossas mensagens, é só avisar.`;
-}
-async function abrirReativacaoWhats(c){
+function textoAniversarioCupom(c){return crmPreencher(crmModelos.aniversario,{nome:whatsPrimeiroNome(c.nome),cupom:$('aniv-cupom').value.trim(),beneficio:$('aniv-beneficio').value.trim(),condicoes:$('aniv-condicoes').value.trim()});}
+async function abrirReativacaoWhats(c,fila=null){
  if(c.consentimento!=='autorizado'){abrirPreferencia(c);$('reat-consent-aviso').textContent=c.consentimento==='recusado'?'Cliente solicitou não receber mensagens. Não envie ofertas.':'Para enviar ofertas, registre uma autorização comercial já concedida.';return;}if(c.contato_recente){$(c.campanha==='aniversario'?'aniv-status':'reat-status').textContent='Contato recente: aguarde o intervalo de segurança de 3 dias.';return;}
  if(c.campanha==='aniversario'&&(!$('aniv-cupom').value.trim()||!$('aniv-beneficio').value.trim())){
   $('aniv-status').textContent='Informe o código do cupom e o desconto / benefício antes de preparar a mensagem.';
@@ -1311,13 +1314,14 @@ async function abrirReativacaoWhats(c){
   (!$('aniv-cupom').value.trim()?$('aniv-cupom'):$('aniv-beneficio')).focus();return;
  }
  reatWhatsCliente=c;reatWhatsRegistro=null;
+ crmFilaMensagens=fila||crmCapturarFilaMensagens(c);crmPosicaoMensagem();
  document.querySelector('#reat-whats-modal h2').textContent=c.campanha==='aniversario'?'WhatsApp · aniversário':'WhatsApp · reativação';
  $('reat-whats-confirmar').disabled=true;$('reat-whats-abrir').disabled=true;
  $('reat-whats-historico').textContent='Consultando histórico de WhatsApp...';
  $('reat-whats-resumo').textContent=c.campanha==='aniversario'?c.nome+' · Aniversário: '+dataBR(c.aniversario).slice(0,5):c.nome+' · Última compra: '+dataBR(c.ultima_compra)+(Number.isFinite(c.dias_sem_compra)?' · '+c.dias_sem_compra+' dias sem comprar':'');
  $('reat-whats-numero').value='';atualizarAvisoWhatsApp('reat-whats-numero','reat-whats-validacao-numero');$('reat-whats-aviso').textContent='Consultando cadastro...';
  const primeiro=String(c.nome||'').trim().split(/\s+/)[0];
- $('reat-whats-texto').value=`Olá, ${primeiro}! Tudo bem? 😊\n\n💚 Aqui é da *Sonifarma!*\n\nFaz um tempinho que não vemos você por aqui! Temos novidades e ofertas para você conhecer.\n\n🛍️ https://www.sonifarma.com.br/\n\n👉 Se quiser conhecer as ofertas disponíveis, responda *SIM*!\n\nSe não quiser receber nossas mensagens, é só avisar.`;
+ $('reat-whats-texto').value=crmPreencher(crmModelos.reativacao,{nome:primeiro});
  if(c.campanha==='aniversario')$('reat-whats-texto').value=textoAniversarioCupom(c);
  $('reat-whats-modal').classList.add('open');
  try{const r=await api('/api/ficha-cadastro?id='+encodeURIComponent(c.pessoaid));if(reatWhatsCliente!==c)return;const d=r.cadastro||{};$('reat-whats-numero').value=d.celular||'';atualizarAvisoWhatsApp('reat-whats-numero','reat-whats-validacao-numero');$('reat-whats-aviso').textContent=d.celular?'Revise o celular, a mensagem e o consentimento antes de abrir.':'Nenhum celular cadastrado; informe um celular válido e autorizado.';$('reat-whats-abrir').disabled=false;}
@@ -1356,4 +1360,195 @@ document.querySelectorAll('#reativacao-tab [data-reat-sort]').forEach(b=>b.addEv
 }));
 $('reat-buscar').addEventListener('click',()=>consultarReativacao(false));
 $('reat-mais').addEventListener('click',()=>consultarReativacao(true));
+</script><script>
+// Preferences are stored on the local server, not in browser storage.
+const CRM_DEFAULT_ANIVERSARIO=`Olá, {nome}! Tudo bem? 🎉
+
+💚 Aqui é da *Sonifarma!*
+
+Neste mês do seu aniversário, desejamos muita saúde, alegria e bons momentos! 🥳
+
+🎁 Para comemorar, preparamos um presente para você: *{beneficio}*.
+
+🎟️ Seu cupom: *{cupom}*
+
+{condicoes}
+
+Responda por aqui para saber como aproveitar seu cupom. Será um prazer atender você!
+
+*Sonifarma — A farmácia raiz que cuida de você!* 💚
+
+Se preferir não receber nossas mensagens, é só avisar.`;
+const CRM_DEFAULT_REATIVACAO=`Olá, {nome}! Tudo bem? 😊
+
+💚 Aqui é da *Sonifarma!*
+
+Faz um tempinho que não vemos você por aqui! Temos novidades e ofertas para você conhecer.
+
+🛍️ https://www.sonifarma.com.br/
+
+👉 Se quiser conhecer as ofertas disponíveis, responda *SIM*!
+
+Se não quiser receber nossas mensagens, é só avisar.`;
+let crmLoadToken=0,crmFavoritos=[],crmReady=false,crmModelos={aniversario:CRM_DEFAULT_ANIVERSARIO,reativacao:CRM_DEFAULT_REATIVACAO};
+const crmCampos={central:['central-janela','central-inicio','central-fim','central-nome','central-uso','central-ordem','central-produto','central-mes','central-dia','central-notificacao','central-tipo','central-status'],aniv:['aniv-mes','aniv-compras'],reat:['reat-dias','reat-perfil']};
+function crmPreencher(texto,valores){return String(texto||'').replace(/\{(nome|cupom|beneficio|condicoes|produto|data|link)\}/g,(_,k)=>valores[k]||'');}
+function crmModelosNaTela(){
+ for(const k of ['cupom','beneficio','condicoes']){
+  const v=crmModelos[k]??$('aniv-'+k).value;crmModelos[k]=v;$('aniv-'+k).value=v;$('modelo-'+k).value=v;
+ }
+ $('modelo-aniversario').value=crmModelos.aniversario;$('modelo-reativacao').value=crmModelos.reativacao;
+ for(const k of ['recompra','popular_hoje','popular_amanha','popular_atrasado'])$('modelo-'+k).value=crmModelos[k]||'';
+}
+async function crmPost(chave,valor){
+ if(!crmReady)throw Error('Aguarde o carregamento das preferências ou entre novamente no painel.');
+ const r=await fetch('/api/crm-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chave,valor})});
+ const d=await r.json();if(!r.ok)throw Error(d.erro||'Falha ao salvar');return d;
+}
+async function crmCarregar(){
+ const seq=++crmLoadToken;crmReady=false;crmFavoritos=[];crmRenderFavoritos();
+ try{
+  const r=await api('/api/crm-config');if(seq!==crmLoadToken)return;crmFavoritos=Array.isArray(r.favoritos)?r.favoritos:[];
+  crmModelos={...crmModelos,...(r.modelos||{})};crmModelosNaTela();crmReady=true;crmRenderFavoritos();
+  $('modelos-status').textContent='Modelos carregados do servidor local.';
+ }catch(e){$('modelos-status').textContent='Não foi possível carregar: '+e.message;}
+}
+async function crmSalvarModelos(cupom=false){
+ const aviso=$(cupom?'aniv-cupom-status':'modelos-status');
+ const valores={};for(const k of ['cupom','beneficio','condicoes'])valores[k]=$(cupom?'aniv-'+k:'modelo-'+k).value.trim();
+ valores.aniversario=$('modelo-aniversario').value;valores.reativacao=$('modelo-reativacao').value;
+ for(const k of ['recompra','popular_hoje','popular_amanha','popular_atrasado'])valores[k]=$('modelo-'+k).value;
+ try{await crmPost('modelos',valores);crmModelos=valores;crmModelosNaTela();aviso.textContent='Salvo no servidor para toda a equipe.';}
+ catch(e){aviso.textContent='Não foi possível salvar: '+e.message;}
+}
+$('modelos-salvar').addEventListener('click',()=>crmSalvarModelos());
+$('aniv-salvar-cupom').addEventListener('click',()=>crmSalvarModelos(true));
+crmModelosNaTela();
+function crmEstado(c){
+ if(c.consentimento==='recusado')return 'recusado';
+ if(c.status_contato)return c.status_contato;
+ const r=c.ultimo;if(r?.status==='Número sem WhatsApp')return 'sem_whatsapp';
+ if(r?.status==='WhatsApp aberto')return 'aberto';
+ return r?.status==='Enviado confirmado'?'confirmado':'nao_enviado';
+}
+function crmMatch(estado,filtro){return filtro==='todos'||estado===filtro||(filtro==='confirmado'&&estado==='aguardando');}
+function crmCombina(c,tela){return crmMatch(crmEstado(c),$('crm-'+tela+'-status')?.value||'todos');}
+function crmFiltrarCentral(){
+ const filtro=$('crm-central-status')?.value||'todos';let total=0,visiveis=0;
+ document.querySelectorAll('#central-resultados>details').forEach(el=>{total++;el.hidden=!crmMatch(el.dataset.crmStatus||'nao_enviado',filtro);if(!el.hidden)visiveis++;});
+ if($('crm-central-info'))$('crm-central-info').textContent=visiveis+' de '+total+' clientes carregados visíveis.';
+}
+function crmAtualizarContador(tela){
+ const base=tela==='aniv'?anivRows:reatRows,el=$('crm-'+tela+'-info');
+ if(el)el.textContent=base.filter(c=>crmCombina(c,tela)).length+' de '+base.length+' clientes carregados visíveis.';
+}
+function crmRenderStatus(tela){
+ if(tela==='central')crmFiltrarCentral();else if(tela==='aniv')renderAniversariantes();else renderReativacao();
+ if(tela!=='central'){
+  const total=tela==='aniv'?anivRows.length:reatRows.length;
+  const visible=(tela==='aniv'?anivRows:reatRows).filter(c=>crmCombina(c,tela)).length;
+  $('crm-'+tela+'-info').textContent=visible+' de '+total+' clientes carregados visíveis.';
+ }
+}
+function crmMontarBarras(){
+ const options=[['todos','Todos'],['nao_enviado','Não enviados'],['aberto','Aguardando confirmação'],['confirmado','Enviados confirmados'],['aguardando','Aguardando resposta'],['sem_whatsapp','Sem WhatsApp'],['recusado','Não deseja receber']];
+ for(const [tela,id] of [['central','central-tab'],['aniv','aniversariantes-tab'],['reat','reativacao-tab']]){
+  const box=document.createElement('div');box.className='crm-toolbar';
+  box.innerHTML=`<div class="filterbar"><label>Filtros favoritos<select id="crm-${tela}-favoritos"><option value="">Selecione um favorito</option></select></label><button type="button" id="crm-${tela}-aplicar">Aplicar</button><button type="button" id="crm-${tela}-salvar">Salvar favorito</button><button type="button" id="crm-${tela}-excluir">Excluir favorito</button><label>Status nos resultados carregados<select id="crm-${tela}-status">${options.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></label></div><p id="crm-${tela}-info" class="muted" aria-live="polite"></p><p id="crm-${tela}-aviso" class="muted" aria-live="polite"></p>`;
+  $(id).querySelector('.panel').prepend(box);
+  $('crm-'+tela+'-status').addEventListener('change',()=>crmRenderStatus(tela));
+  $('crm-'+tela+'-salvar').addEventListener('click',()=>crmSalvarFavorito(tela));
+  $('crm-'+tela+'-aplicar').addEventListener('click',()=>crmAplicarFavorito(tela));
+  $('crm-'+tela+'-excluir').addEventListener('click',()=>crmExcluirFavorito(tela));
+ }
+}
+function crmCapturar(tela){
+ const campos=Object.fromEntries(crmCampos[tela].map(id=>[id,$(id).value]));
+ const filtros={campos,status:$('crm-'+tela+'-status').value};
+ if(tela==='central')Object.assign(filtros,{pessoas:[...pessoaApplied],pbms:[...pbmApplied],embalagens:embAplicadas.map(x=>({...x})),v16:Object.fromEntries(Object.entries(v16Applied).map(([k,v])=>[k,[...v]]))});
+ return filtros;
+}
+function crmRenderFavoritos(){
+ for(const tela of ['central','aniv','reat']){
+  const el=$('crm-'+tela+'-favoritos'),prev=el.value;
+  el.innerHTML='<option value="">Selecione um favorito</option>'+crmFavoritos.map((f,i)=>f.tela===tela?`<option value="${i}">${esc(f.nome)}</option>`:'').join('');
+  if([...el.options].some(o=>o.value===prev))el.value=prev;
+ }
+}
+async function crmSalvarFavorito(tela){
+ const nome=window.prompt('Nome do filtro favorito:');if(!nome?.trim())return;
+ const favorito={tela,nome:nome.trim(),filtros:crmCapturar(tela)};
+ const novos=crmFavoritos.filter(f=>f.tela!==tela||f.nome!==favorito.nome).concat(favorito);
+ try{await crmPost('favoritos',novos);crmFavoritos=novos;crmRenderFavoritos();$('crm-'+tela+'-favoritos').value=String(novos.length-1);$('crm-'+tela+'-aviso').textContent='Favorito salvo para seu usuário.';}
+ catch(e){$('crm-'+tela+'-aviso').textContent=e.message;}
+}
+function crmSelecionado(tela){const v=$('crm-'+tela+'-favoritos').value;return v===''?null:crmFavoritos[Number(v)];}
+function crmAplicarFavorito(tela){
+ const f=crmSelecionado(tela);if(!f||f.tela!==tela)return;
+ const filtros=f.filtros;
+ try{
+  for(const id of crmCampos[tela])if(typeof filtros.campos?.[id]==='string')$(id).value=filtros.campos[id];
+  $('crm-'+tela+'-status').value=filtros.status||'todos';
+  if(tela==='central'){
+   const restaurar=(map,pares)=>{map.clear();for(const [id,v] of pares||[])map.set(id,v)};
+   restaurar(pessoaApplied,filtros.pessoas);restaurar(pbmApplied,filtros.pbms);
+   embAplicadas=(filtros.embalagens||[]).map(x=>({...x}));embAtualizarContagem();pessoaUpdate();$('pbm-count').textContent=pbmApplied.size;
+   for(const k of Object.keys(v16Applied))restaurar(v16Applied[k],filtros.v16?.[k]);
+   v164Refresh();centralAtualizarDatas();centralCursor=0;centralNext=null;centralJob='';centralSignature='';
+  }
+  crmRenderStatus(tela);$('crm-'+tela+'-aviso').textContent='Favorito aplicado. Clique em Consultar para atualizar os resultados do ERP.';
+ }catch(e){$('crm-'+tela+'-aviso').textContent='Não foi possível aplicar o favorito: '+e.message;}
+}
+async function crmExcluirFavorito(tela){
+ const f=crmSelecionado(tela);if(!f)return;
+ const novos=crmFavoritos.filter(x=>x!==f);
+ try{await crmPost('favoritos',novos);crmFavoritos=novos;crmRenderFavoritos();$('crm-'+tela+'-aviso').textContent='Favorito excluído.';}
+ catch(e){$('crm-'+tela+'-aviso').textContent=e.message;}
+}
+function crmFila(origem){
+ if(origem==='reativacao')return [...document.querySelectorAll('[data-reat-ficha]')].map(b=>{const c=reatRows[Number(b.dataset.reatFicha)];return {id:c.pessoaid,nome:c.nome}});
+ if(origem==='aniversario')return [...document.querySelectorAll('[data-aniv-ficha]')].map(b=>{const c=anivRows[Number(b.dataset.anivFicha)];return {id:c.pessoaid,nome:c.nome}});
+ return [...document.querySelectorAll('#central-resultados [data-ficha-id]')].filter(b=>!b.closest('details')?.hidden).map(b=>({id:Number(b.dataset.fichaId),nome:b.dataset.fichaNome}));
+}
+function crmPosicaoFicha(){
+ const fila=fichaAtual?.fila||[],i=fila.findIndex(c=>c.id===fichaAtual?.id);
+ $('ficha-proximo').disabled=i<0||i>=fila.length-1;
+ $('ficha-posicao').textContent=i<0?'':`${i+1} de ${fila.length}`;
+}
+$('ficha-proximo').addEventListener('click',()=>{
+ if(!fichaAtual)return;
+ const opcoes={...fichaAtual},fila=opcoes.fila||[],i=fila.findIndex(c=>c.id===opcoes.id),proximo=fila[i+1];
+ if(i>=0&&proximo)abrirFichaCliente(proximo.id,proximo.nome,opcoes);
+});
+async function crmAtualizarStatus(clienteId){
+ const cid=clienteId||reatWhatsCliente?.pessoaid||whatsContexto?.clienteId||fichaAtual?.id;if(!cid)return;
+ const c=anivRows.find(x=>String(x.pessoaid)===String(cid));
+ try{
+  const r=await api('/api/crm-status?'+new URLSearchParams({cliente_id:String(cid),ciclo:c?.ciclo||''}));
+  for(const row of anivRows)if(String(row.pessoaid)===String(cid)&&r.aniv)row.status_contato=r.aniv;
+  for(const row of reatRows)if(String(row.pessoaid)===String(cid)&&r.reat)row.status_contato=r.reat;
+  document.querySelectorAll('#central-resultados [data-ficha-id]').forEach(b=>{if(String(b.dataset.fichaId)===String(cid)&&r.central)b.closest('details').dataset.crmStatus=r.central;});
+  for(const tela of ['central','aniv','reat'])crmRenderStatus(tela);
+ }catch(e){/* Existing lists stay visible if a status refresh fails. */}
+}
+let crmFilaMensagens=[];
+function crmCapturarFilaMensagens(c){
+ const aniversario=c.campanha==='aniversario',base=aniversario?anivRows:reatRows;
+ return [...document.querySelectorAll(aniversario?'[data-aniv-whats]':'[data-reat-msg]')].map(b=>base[Number(b.getAttribute(aniversario?'data-aniv-whats':'data-reat-msg'))]);
+}
+function crmPosicaoMensagem(){
+ const i=crmFilaMensagens.findIndex(c=>c.pessoaid===reatWhatsCliente?.pessoaid);
+ $('reat-whats-proximo').disabled=i<0||i>=crmFilaMensagens.length-1;
+ $('reat-whats-proximo').title=i<0?'':`${i+1} de ${crmFilaMensagens.length} clientes`;
+}
+const crmNextMessage=document.createElement('button');crmNextMessage.type='button';crmNextMessage.id='reat-whats-proximo';crmNextMessage.textContent='Próximo cliente →';crmNextMessage.disabled=true;
+$('reat-whats-fechar').before(crmNextMessage);
+crmNextMessage.addEventListener('click',()=>{
+ const fila=crmFilaMensagens,i=fila.findIndex(c=>c.pessoaid===reatWhatsCliente?.pessoaid),proximo=fila[i+1];
+ if(i>=0&&proximo){fecharReativacaoWhats();abrirReativacaoWhats(proximo,fila);}
+});
+crmMontarBarras();
+$('central-limpar').addEventListener('click',()=>{$('crm-central-status').value='todos';crmFiltrarCentral()});
+if($('auth-overlay').hidden)crmCarregar();
+
 </script></body></html>

@@ -160,3 +160,10 @@ A tela Retornos possui filtros Meus retornos, Hoje, Atrasados e Todos da equipe,
 Concluir ação mantém o histórico do último agendamento e o responsável; não confirma mensagem, compra ou resultado de campanha. Salvar uma nova ação reabre a pendência. Liberar deixa o cliente sem responsável, preservando o agendamento; ele pode ser encontrado em Todos da equipe. Os horários seguem o relógio local do servidor Windows.
 
 Testes: tests/test_crm_atendimento.py e tests/test_crm_atendimento_browser.cjs.
+
+
+## API oficial do WhatsApp
+
+A integração opcional com a Cloud API está descrita em WHATSAPP_API.md. Não é habilitada por padrão. Use o .env local para credenciais e publique somente o webhook por HTTPS público. O modo manual permanece disponível. O botão Enviar pela API permite revisar modelos de texto aprovados e seus parâmetros antes de solicitar um envio individual. Aceitação da API não é entrega; delivered/read chegam pelo webhook assinado.
+
+O módulo whatsapp_meta.py precisa acompanhar iniciar_interface.py nesta primeira atualização. O atualizador novo o inclui na lista de código. Sem o módulo, o painel continua manual e informa a API como indisponível. Nenhuma mensagem real foi enviada nos testes automatizados.

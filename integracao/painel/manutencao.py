@@ -15,7 +15,7 @@ import urllib.request
 DATABASES = ('agenda_posvenda.sqlite3', 'posologias_confirmadas.sqlite3',
              'acesso_auditoria.sqlite3', 'nomes_comerciais.sqlite3')
 # A atualização nunca copia configurações, credenciais, certificados ou bancos.
-CODE_FILES = ('iniciar_interface.py', 'index.html', 'manutencao.py', 'sonifarma-logo.png',
+CODE_FILES = ('whatsapp_meta.py', 'iniciar_interface.py', 'index.html', 'manutencao.py', 'sonifarma-logo.png',
               'SONIFARMA_CONTROLE.ps1', 'SONIFARMA_AUTOMATICO.ps1',
               'START_SONIFARMA.bat', 'STOP_SONIFARMA.bat',
               'RESTART_SONIFARMA.bat', 'STATUS_SONIFARMA.bat')
@@ -75,7 +75,7 @@ def update_code(base, source, backup_dir):
     if base == source:
         raise ValueError('Origem e instalação devem ser diferentes')
     # O controle Windows interrompe o painel antes desta operação.
-    for required in ('index.html', 'iniciar_interface.py', 'manutencao.py'):
+    for required in ('index.html', 'iniciar_interface.py', 'manutencao.py', 'whatsapp_meta.py'):
         if not (source / required).is_file():
             raise ValueError('Pacote incompleto: ' + required)
     import ast

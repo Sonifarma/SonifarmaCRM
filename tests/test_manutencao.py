@@ -48,7 +48,7 @@ class MaintenanceTests(unittest.TestCase):
     def test_update_preserves_data_credentials_and_old_code(self):
         source = self.root / 'release'
         source.mkdir()
-        for name in ('index.html', 'iniciar_interface.py', 'manutencao.py'):
+        for name in ('index.html', 'iniciar_interface.py', 'manutencao.py', 'whatsapp_meta.py'):
             (source / name).write_text('# new')
         (source / '.env').write_text('do not copy')
         (source / self.db.name).write_bytes(b'do not copy')
@@ -125,7 +125,7 @@ class MaintenanceTests(unittest.TestCase):
     def test_failed_copy_rolls_back_code(self):
         source = self.root / 'release'
         source.mkdir()
-        for name in ('index.html', 'iniciar_interface.py', 'manutencao.py'):
+        for name in ('index.html', 'iniciar_interface.py', 'manutencao.py', 'whatsapp_meta.py'):
             (source / name).write_text('# new')
             (self.base / name).write_text('# old')
         original_copy = m.shutil.copyfile
@@ -136,7 +136,7 @@ class MaintenanceTests(unittest.TestCase):
         with patch.object(m.shutil, 'copyfile', side_effect=failing_copy):
             with self.assertRaises(OSError):
                 m.update_code(self.base, source, self.root / 'backups')
-        for name in ('index.html', 'iniciar_interface.py', 'manutencao.py'):
+        for name in ('index.html', 'iniciar_interface.py', 'manutencao.py', 'whatsapp_meta.py'):
             self.assertEqual((self.base / name).read_text(), '# old')
 
 

@@ -1,5 +1,6 @@
 """Painel unificado Sonifarma. HTTP local, PostgreSQL somente leitura, sem gravar dados pessoais."""
 import argparse
+import importlib.util
 from contextlib import closing
 import getpass
 import json
@@ -29,6 +30,25 @@ from urllib.parse import urlparse, parse_qs
 
 BASE = Path(__file__).resolve().parent
 os.chdir(BASE)
+if (BASE/'whatsapp_meta.py').is_file():
+    _meta_spec=importlib.util.spec_from_file_location('sonifarma_whatsapp_meta', BASE/'whatsapp_meta.py')
+    meta=importlib.util.module_from_spec(_meta_spec)
+    _meta_spec.loader.exec_module(meta)
+else:
+    # Atualizadores anteriores não copiavam o módulo novo. O modo manual continua disponível.
+    class _MetaAusente:
+        class MetaError(Exception):
+            code='';uncertain=False
+        @staticmethod
+        def settings(values):return {}
+        @staticmethod
+        def readiness(cfg):return dict(configurado=False,habilitado=False,faltantes=['whatsapp_meta.py — aplique a atualização completa'],webhook_configurado=False)
+        @staticmethod
+        def valid_signature(*args):return False
+    meta=_MetaAusente()
+
+META_CACHE={}
+META_CACHE_LOCK=threading.Lock()
 DB = None
 TASK_DB = BASE / "agenda_posvenda.sqlite3"
 TASK_LOCK = threading.Lock()
@@ -128,12 +148,124 @@ def nomes_conn():
     con.execute("CREATE TABLE IF NOT EXISTS links_produtos (chave TEXT PRIMARY KEY, url TEXT NOT NULL, atualizado_em TEXT NOT NULL, usuario TEXT NOT NULL)")
     return con
 
-def telefone_whatsapp_hash(valor):
+def normalizar_telefone_whatsapp(valor):
     numero=re.sub(r'[^0-9]','',str(valor or ''))
     if numero.startswith('00'):numero=numero[2:]
     if len(numero) in (10,11):numero='55'+numero
-    if not re.fullmatch(r'55[0-9]{10,11}',numero):return ''
-    return hashlib.sha256(numero.encode('ascii')).hexdigest()
+    return numero if re.fullmatch(r'55[0-9]{10,11}',numero) else ''
+
+
+def telefone_whatsapp_hash(valor):
+    numero=normalizar_telefone_whatsapp(valor)
+    return hashlib.sha256(numero.encode('ascii')).hexdigest() if numero else ''
+
+
+def meta_config():
+    return meta.settings({**config(),**os.environ})
+
+
+def meta_modelos(cfg):
+    ready=meta.readiness(cfg)
+    if not ready['configurado'] or not ready['habilitado']:raise meta.MetaError('Configure e habilite a API no servidor antes de consultar os modelos.')
+    key=(cfg.get('WABA_ID'),cfg.get('GRAPH_VERSION'),hashlib.sha256(cfg.get('ACCESS_TOKEN','').encode()).hexdigest())
+    with META_CACHE_LOCK:
+        cached=META_CACHE.get(key)
+        if cached and time.monotonic()-cached[0]<300:return cached[1]
+    rows=meta.templates(cfg)
+    with META_CACHE_LOCK:
+        META_CACHE.clear();META_CACHE[key]=(time.monotonic(),rows)
+    return rows
+
+
+def meta_preparar(d):
+    rid=d.get('request_id');nome=d.get('template_name');idioma=d.get('template_language')
+    if not isinstance(rid,str) or not re.fullmatch(r'[A-Za-z0-9_-]{16,80}',rid):raise ValueError('Identificador do envio inválido')
+    cfg=meta_config()
+    ready=meta.readiness(cfg)
+    if not ready['configurado'] or not ready['habilitado']:raise meta.MetaError('Configure e habilite a API no servidor antes de continuar.')
+    modelo=next((m for m in meta_modelos(cfg) if m['name']==nome and m['language']==idioma),None)
+    if not modelo:raise ValueError('Escolha um modelo de texto aprovado na Meta')
+    telefone=normalizar_telefone_whatsapp(d.get('telefone',''))
+    if not telefone:raise ValueError('Telefone inválido')
+    payload=meta.template_payload(modelo,d.get('template_parameters',{}),telefone,rid)
+    return cfg,payload
+
+
+def meta_aplicar_eventos(con):
+    ordem={'processando':0,'aceito':1,'sent':2,'incerto':1,'erro':3,'failed':3,'delivered':4,'read':5}
+    eventos=con.execute('SELECT evento_id,wamid,status,telefone_hash,request_id,momento,erro_codigo FROM whatsapp_meta_eventos WHERE aplicado=0 ORDER BY momento,evento_id').fetchall()
+    for eid,wamid,status,digest,request_id,momento,codigo in eventos:
+        envio=con.execute('SELECT request_id,registro_id,estado,cliente_id,telefone_hash,wamid FROM whatsapp_meta_envios WHERE wamid=? OR request_id=?',(wamid,request_id)).fetchone()
+        if not envio or envio[4]!=digest or (envio[5] and envio[5]!=wamid):continue
+        if ordem.get(status,-1)>=ordem.get(envio[2],0):
+            con.execute('UPDATE whatsapp_meta_envios SET wamid=?,estado=?,erro_codigo=?,atualizado_em=? WHERE request_id=?',(wamid,status,codigo,momento,envio[0]))
+            if status in ('delivered','read'):
+                con.execute("UPDATE whatsapp_registros SET status='Enviado confirmado',confirmado_em=COALESCE(confirmado_em,?),confirmado_por='WhatsApp API',atualizado_em=? WHERE id=?",(momento,momento,envio[1]))
+                con.execute('DELETE FROM whatsapp_indisponivel WHERE cliente_id=? AND telefone_hash=?',(envio[3],digest))
+            elif status=='failed':con.execute("UPDATE whatsapp_registros SET status='Falha na API',atualizado_em=? WHERE id=?",(momento,envio[1]))
+            elif status=='sent':con.execute("UPDATE whatsapp_registros SET status='Enviado pela API',atualizado_em=? WHERE id=?",(momento,envio[1]))
+        con.execute('UPDATE whatsapp_meta_eventos SET aplicado=1 WHERE evento_id=?',(eid,))
+
+
+def meta_webhook_eventos(data,cfg):
+    recebidos=0
+    if not isinstance(data,dict) or data.get('object')!='whatsapp_business_account':return 0
+    with TASK_LOCK:
+        with closing(agenda_conn()) as con:
+            with con:
+                for entry in data.get('entry',[]):
+                    for change in entry.get('changes',[]):
+                        value=change.get('value',{})
+                        if str(value.get('metadata',{}).get('phone_number_id',''))!=cfg['PHONE_NUMBER_ID']:continue
+                        for event in value.get('statuses',[]):
+                            status=event.get('status');wamid=event.get('id');opaque=event.get('biz_opaque_callback_data','')
+                            digest=telefone_whatsapp_hash(event.get('recipient_id',''))
+                            if status not in ('sent','delivered','read','failed') or not isinstance(wamid,str) or not 1<=len(wamid)<=2048 or not digest:continue
+                            if not isinstance(opaque,str) or len(opaque)>80:opaque=''
+                            try:momento=datetime.fromtimestamp(int(event['timestamp'])).isoformat(timespec='seconds')
+                            except (ValueError,TypeError,KeyError,OverflowError,OSError):continue
+                            errors=event.get('errors') or []
+                            codigo=str(errors[0].get('code','')) if errors and isinstance(errors[0],dict) else ''
+                            codigo=codigo if codigo.isdecimal() else ''
+                            local=con.execute('SELECT telefone_hash FROM whatsapp_meta_envios WHERE wamid=? OR request_id=?',(wamid,opaque)).fetchone()
+                            if not local or local[0]!=digest:continue
+                            eid=hashlib.sha256(json.dumps([wamid,status,momento,digest],ensure_ascii=True).encode()).hexdigest()
+                            con.execute('INSERT OR IGNORE INTO whatsapp_meta_eventos(evento_id,wamid,status,telefone_hash,request_id,momento,erro_codigo) VALUES(?,?,?,?,?,?,?)',(eid,wamid,status,digest,opaque,momento,codigo));recebidos+=1
+                meta_aplicar_eventos(con)
+    return recebidos
+
+
+def meta_resultado(request_id,usuario,esperado=None):
+    if not isinstance(request_id,str) or not re.fullmatch(r'[A-Za-z0-9_-]{16,80}',request_id):raise ValueError('Identificador de envio inválido')
+    with TASK_LOCK:
+        with closing(agenda_conn()) as con:
+            with con:
+                row=con.execute('SELECT request_id,registro_id,estado,erro_codigo,usuario,cliente_id,telefone_hash FROM whatsapp_meta_envios WHERE request_id=?',(request_id,)).fetchone()
+    if not row:return None
+    if row[4]!=usuario:raise ValueError('Identificador de envio já utilizado por outro usuário')
+    if esperado and (str(row[5])!=str(esperado.get('cliente_id')) or row[6]!=telefone_whatsapp_hash(esperado.get('telefone',''))):raise ValueError('Não reutilize o identificador para outro cliente ou telefone')
+    return dict(request_id=row[0],id=row[1],estado=row[2],erro_codigo=row[3],retry_safe=row[2] in ('erro','failed'))
+
+
+def meta_enviar(cfg,payload,request_id):
+    estado='aceito';codigo='';wamid=None
+    try:
+        data=meta.graph(cfg,cfg['PHONE_NUMBER_ID']+'/messages',payload)
+        messages=data.get('messages') if isinstance(data,dict) else None
+        wamid=messages[0].get('id') if isinstance(messages,list) and messages and isinstance(messages[0],dict) else None
+        if not isinstance(wamid,str) or not 1<=len(wamid)<=2048:raise meta.MetaError('A Meta não confirmou o identificador da mensagem.',uncertain=True)
+    except meta.MetaError as e:
+        estado='incerto' if e.uncertain else 'erro';codigo=e.code
+    agora=datetime.now().isoformat(timespec='seconds')
+    with TASK_LOCK:
+        with closing(agenda_conn()) as con:
+            with con:
+                row=con.execute('SELECT registro_id,estado FROM whatsapp_meta_envios WHERE request_id=?',(request_id,)).fetchone()
+                if row and row[1]=='processando':
+                    con.execute('UPDATE whatsapp_meta_envios SET wamid=?,estado=?,erro_codigo=?,atualizado_em=? WHERE request_id=?',(wamid,estado,codigo,agora,request_id))
+                    texto={'aceito':'Aceito pela API','incerto':'API — resultado incerto','erro':'Falha na API'}[estado]
+                    con.execute('UPDATE whatsapp_registros SET status=?,atualizado_em=? WHERE id=?',(texto,agora,row[0]))
+                meta_aplicar_eventos(con)
 
 
 def atendimento_crm(con, cid):
@@ -151,6 +283,8 @@ def status_contato_crm(con, cid, tipo=None, ciclo=None):
     row=con.execute('SELECT status,resultado,telefone_hash,criado_em FROM whatsapp_registros WHERE '+where+' ORDER BY id DESC LIMIT 1',params).fetchone()
     if not row:return 'nao_enviado'
     if row[0]=='Número sem WhatsApp':return 'sem_whatsapp'
+    if row[0]=='Falha na API':return 'falha_api'
+    if row[0] in ('Enviando via API','Aceito pela API','Enviado pela API','API — resultado incerto'):return 'aberto'
     if row[0]=='WhatsApp aberto':
         marker=con.execute('SELECT registrado_em FROM whatsapp_indisponivel WHERE cliente_id=? AND telefone_hash=?',(cid,row[2])).fetchone()
         return 'sem_whatsapp' if marker and marker[0]>=row[3] else 'aberto'
@@ -233,6 +367,15 @@ def agenda_conn():
         concluido INTEGER NOT NULL DEFAULT 0, revisao INTEGER NOT NULL DEFAULT 0,
         atualizado_em TEXT NOT NULL DEFAULT '', atualizado_por TEXT NOT NULL DEFAULT '')""")
     con.execute('CREATE INDEX IF NOT EXISTS idx_crm_retornos ON crm_atendimentos(concluido,retorno_em,cliente_id)')
+    con.execute("""CREATE TABLE IF NOT EXISTS whatsapp_meta_envios (
+        request_id TEXT PRIMARY KEY, registro_id INTEGER NOT NULL UNIQUE,
+        cliente_id INTEGER NOT NULL, telefone_hash TEXT NOT NULL, usuario TEXT NOT NULL,
+        wamid TEXT UNIQUE, estado TEXT NOT NULL, erro_codigo TEXT NOT NULL DEFAULT '',
+        atualizado_em TEXT NOT NULL)""")
+    con.execute("""CREATE TABLE IF NOT EXISTS whatsapp_meta_eventos (
+        evento_id TEXT PRIMARY KEY, wamid TEXT NOT NULL, status TEXT NOT NULL,
+        telefone_hash TEXT NOT NULL, request_id TEXT NOT NULL, momento TEXT NOT NULL,
+        erro_codigo TEXT NOT NULL, aplicado INTEGER NOT NULL DEFAULT 0)""")
     # V20: migração aditiva, sem modificar dados antigos.
     cols={r[1] for r in con.execute("PRAGMA table_info(whatsapp_registros)")}
     for campo in ('confirmado_em','confirmado_por'):
@@ -1253,13 +1396,24 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(raw)
     def do_POST(self):
-        if self.path not in ('/api/auth/setup','/api/auth/login','/api/auth/logout','/api/usuarios','/api/backup','/api/agenda','/api/posologia','/api/ajuste_previsao','/api/whatsapp-registros','/api/whatsapp-resultado','/api/whatsapp-confirmar','/api/whatsapp-sem-conta','/api/nome-comercial','/api/link-produto','/api/consentimento-comercial','/api/crm-config','/api/crm-atendimento'): return self.respond(404,{'erro':'Rota inexistente'})
+        if self.path=='/api/whatsapp-meta/webhook':
+            cfg=meta_config()
+            try:
+                length=int(self.headers.get('Content-Length','0'))
+                if not 0<length<=1048576:return self.respond(400,{'erro':'Tamanho inválido'})
+                raw=self.rfile.read(length)
+                if not meta.valid_signature(cfg.get('APP_SECRET',''),raw,self.headers.get('X-Hub-Signature-256','')):
+                    return self.respond(403,{'erro':'Assinatura inválida'})
+                meta_webhook_eventos(json.loads(raw),cfg)
+                return self.respond(200,{'ok':True})
+            except (ValueError,TypeError,AttributeError,KeyError):return self.respond(400,{'erro':'Evento inválido'})
+        if self.path not in ('/api/auth/setup','/api/auth/login','/api/auth/logout','/api/usuarios','/api/backup','/api/agenda','/api/posologia','/api/ajuste_previsao','/api/whatsapp-registros','/api/whatsapp-resultado','/api/whatsapp-confirmar','/api/whatsapp-sem-conta','/api/nome-comercial','/api/link-produto','/api/consentimento-comercial','/api/crm-config','/api/crm-atendimento','/api/whatsapp-meta/enviar'): return self.respond(404,{'erro':'Rota inexistente'})
         origin=self.headers.get('Origin','')
         if not self.origem_valida():
             return self.respond(403,{'erro':'Origem não autorizada'})
         try:
             length=int(self.headers.get('Content-Length','0'))
-            if not 0 < length <= (262144 if self.path=='/api/crm-config' else 16384 if self.path=='/api/crm-atendimento' else 4096): return self.respond(400,{'erro':'Tamanho inválido'})
+            if not 0 < length <= (262144 if self.path=='/api/crm-config' else 16384 if self.path in ('/api/crm-atendimento','/api/whatsapp-meta/enviar') else 4096): return self.respond(400,{'erro':'Tamanho inválido'})
             d=json.loads(self.rfile.read(length))
             if not isinstance(d,dict):raise ValueError()
             if self.path in ('/api/auth/setup','/api/auth/login'):
@@ -1402,7 +1556,15 @@ class Handler(SimpleHTTPRequestHandler):
                         if cur.rowcount!=1:return self.respond(404,{'erro':'Registro não encontrado'})
                 self.log_operacao('Resultado WhatsApp atualizado',d,rid)
                 return self.respond(200,{'ok':True})
-            if self.path=='/api/whatsapp-registros':
+            if self.path in ('/api/whatsapp-registros','/api/whatsapp-meta/enviar'):
+                meta_envio=self.path=='/api/whatsapp-meta/enviar'
+                preparado=None
+                if meta_envio:
+                    existente=meta_resultado(d.get('request_id',''),u['login'],d)
+                    if existente:return self.respond(200,existente)
+                    try:preparado=meta_preparar(d)
+                    except meta.MetaError as e:return self.respond(503,{'erro':str(e),'retry_safe':True})
+
                 cid=d.get('cliente_id'); status=d.get('status')
                 if isinstance(cid,str) and cid.isdecimal(): cid=int(cid)
                 if not isinstance(cid,int) or isinstance(cid,bool) or not 0<cid<10**17: raise ValueError()
@@ -1419,7 +1581,7 @@ class Handler(SimpleHTTPRequestHandler):
                     consent=ccons.execute('SELECT status FROM consentimento_comercial WHERE cliente_id=?',(cid,)).fetchone()
                 if consent and consent[0]=='recusado':
                     return self.respond(403,{'erro':'Cliente solicitou não receber mensagens. Contato bloqueado.'})
-                if tipo_aviso in ('reativacao','aniversario'):
+                if tipo_aviso in ('reativacao','aniversario') or meta_envio:
                     if not consent or consent[0]!='autorizado':return self.respond(403,{'erro':'Contato bloqueado: autorização comercial não registrada.'})
                     ean='ANIVERSARIO' if tipo_aviso=='aniversario' else 'REATIVACAO';desc='Aniversariantes do mês' if tipo_aviso=='aniversario' else 'Reativação de clientes'
                 if tipo_aviso.startswith('popular_'):
@@ -1441,9 +1603,14 @@ class Handler(SimpleHTTPRequestHandler):
                     if date.fromisoformat(previsao).year!=date.today().year:raise ValueError('Ano de aniversário inválido')
                 with TASK_LOCK:
                     with agenda_conn() as con:
+                        if meta_envio:
+                            anterior=con.execute('SELECT usuario FROM whatsapp_meta_envios WHERE request_id=?',(d['request_id'],)).fetchone()
+                            if anterior:return self.respond(409,{'erro':'Envio já em processamento. Consulte o status.','retry_safe':False})
+                        pendente=con.execute("SELECT m.request_id,m.usuario FROM whatsapp_meta_envios m JOIN whatsapp_registros w ON w.id=m.registro_id WHERE w.cliente_id=? AND w.tipo_aviso=? AND w.previsao=? AND m.estado IN ('processando','aceito','sent','incerto') LIMIT 1",(cid,tipo_aviso,previsao)).fetchone()
+                        if pendente:return self.respond(409,{'erro':'Há um envio pela API aguardando confirmação. Não repita o contato.','retry_safe':False,'request_id':pendente[0] if pendente[1]==u['login'] else None})
                         if tipo_aviso=='aniversario' and con.execute("SELECT 1 FROM whatsapp_registros WHERE cliente_id=? AND tipo_aviso='aniversario' AND previsao=? AND status='Enviado confirmado' LIMIT 1",(cid,previsao)).fetchone():
                             return self.respond(409,{'erro':'Mensagem de aniversário já confirmada neste mês e ano.'})
-                        existente=con.execute("SELECT id FROM whatsapp_registros WHERE cliente_id=? AND ean=? AND previsao=? AND tipo_aviso=? AND substr(criado_em,1,10)=? LIMIT 1",
+                        existente=con.execute("SELECT id FROM whatsapp_registros WHERE cliente_id=? AND ean=? AND previsao=? AND tipo_aviso=? AND substr(criado_em,1,10)=? AND status!='Falha na API' LIMIT 1",
                             (cid,ean,previsao,tipo_aviso,date.today().isoformat())).fetchone()
                         if existente:
                             return self.respond(409,{'erro':'Já existe contato deste tipo para este cliente e data hoje. Consulte o Pós-venda.'})
@@ -1453,6 +1620,9 @@ class Handler(SimpleHTTPRequestHandler):
                         if tipo_aviso in ('reativacao','aniversario'):
                             recente=con.execute("SELECT id FROM whatsapp_registros WHERE cliente_id=? AND status='Enviado confirmado' AND criado_em>=? LIMIT 1",(cid,(datetime.now()-timedelta(days=3)).isoformat(timespec='seconds'))).fetchone()
                             if recente:return self.respond(409,{'erro':'Cliente com envio confirmado nos últimos 3 dias. Contato bloqueado.'})
+                        consent_atual=con.execute('SELECT status FROM consentimento_comercial WHERE cliente_id=?',(cid,)).fetchone()
+                        if consent_atual and consent_atual[0]=='recusado':return self.respond(403,{'erro':'Cliente solicitou não receber mensagens.'})
+                        if meta_envio and (not consent_atual or consent_atual[0]!='autorizado'):return self.respond(403,{'erro':'Autorização de contato não registrada.'})
                         atendimento=atendimento_crm(con,cid)
                         if atendimento['responsavel'] and atendimento['responsavel']!=u['login'] and u.get('perfil') not in ('master','supervisor'):
                             return self.respond(409,{'erro':'Cliente em atendimento por '+atendimento['responsavel']+'.'})
@@ -1460,8 +1630,13 @@ class Handler(SimpleHTTPRequestHandler):
                             atendimento.update(cliente_nome=str(d.get('cliente_nome',''))[:180] or atendimento['cliente_nome'],responsavel=u['login'],revisao=atendimento['revisao']+1,atualizado_em=datetime.now().isoformat(timespec='seconds'),atualizado_por=u['login'])
                             con.execute('INSERT OR REPLACE INTO crm_atendimentos VALUES(?,?,?,?,?,?,?,?,?,?)',tuple(atendimento[k] for k in ('cliente_id','cliente_nome','responsavel','acao','retorno_em','observacao','concluido','revisao','atualizado_em','atualizado_por')))
                         cur=con.execute('INSERT INTO whatsapp_registros(cliente_id,ean,produto_descricao,previsao,telefone_final,status,criado_em,tipo_aviso,telefone_hash) VALUES(?,?,?,?,?,?,?,?,?)',
-                            (cid,ean,desc,previsao,final,status,datetime.now().isoformat(timespec='seconds'),tipo_aviso,digest))
+                            (cid,ean,desc,previsao,final,'Enviando via API' if meta_envio else status,datetime.now().isoformat(timespec='seconds'),tipo_aviso,digest))
                         registro_id=cur.lastrowid
+                        if meta_envio:con.execute("INSERT INTO whatsapp_meta_envios(request_id,registro_id,cliente_id,telefone_hash,usuario,estado,atualizado_em) VALUES(?,?,?,?,?,'processando',?)",(d['request_id'],registro_id,cid,digest,u['login'],datetime.now().isoformat(timespec='seconds')))
+                if meta_envio:
+                    meta_enviar(preparado[0],preparado[1],d['request_id'])
+                    self.log_operacao('Envio solicitado à API',{'cliente_id':cid},registro_id)
+                    return self.respond(200,meta_resultado(d['request_id'],u['login']))
                 registrar(self.identidade(),'WhatsApp aberto',cid,registro_id,str(d.get('cliente_nome',''))[:100],self.client_address[0])
                 return self.respond(200,{'ok':True,'id':registro_id,'status':status})
             if self.path=='/api/whatsapp-confirmar':
@@ -1559,6 +1734,12 @@ class Handler(SimpleHTTPRequestHandler):
             return self.respond(503,{'erro':'Agenda indisponível'})
 
     def do_GET(self):
+        if urlparse(self.path).path=='/api/whatsapp-meta/webhook':
+            args=parse_qs(urlparse(self.path).query);cfg=meta_config()
+            token=args.get('hub.verify_token',[''])[0];challenge=args.get('hub.challenge',[''])[0]
+            if cfg.get('WEBHOOK_VERIFY_TOKEN') and args.get('hub.mode',[''])[0]=='subscribe' and hmac.compare_digest(token,cfg['WEBHOOK_VERIFY_TOKEN']) and re.fullmatch(r'[0-9]{1,100}',challenge):
+                raw=challenge.encode();self.send_response(200);self.send_header('Content-Type','text/plain');self.send_header('Content-Length',str(len(raw)));self.end_headers();self.wfile.write(raw);return
+            return self.respond(403,{'erro':'Verificação inválida'})
         parsed=urlparse(self.path)
         if parsed.path=='/api/auth/status':
             with AUTH_LOCK:
@@ -1631,6 +1812,16 @@ class Handler(SimpleHTTPRequestHandler):
                 with closing(agenda_conn()) as con:
                     with con:ids=[r[0] for r in con.execute('SELECT cliente_id FROM crm_atendimentos WHERE '+' AND '.join(where)+' ORDER BY retorno_em,cliente_id LIMIT 51 OFFSET ?',params+[int(offset)])];registros=[atendimento_crm(con,cid) for cid in ids[:50]]
             return self.respond(200,{'atendimentos':registros,'proximo_offset':int(offset)+50 if len(ids)>50 else None,'agora':datetime.now().isoformat(timespec='minutes')})
+        if parsed.path=='/api/whatsapp-meta/status':
+            return self.respond(200,meta.readiness(meta_config()))
+        if parsed.path=='/api/whatsapp-meta/modelos':
+            try:return self.respond(200,{'modelos':meta_modelos(meta_config())})
+            except meta.MetaError as e:return self.respond(503,{'erro':str(e)})
+        if parsed.path=='/api/whatsapp-meta/envio':
+            rid=parse_qs(parsed.query).get('request_id',[''])[0]
+            try:result=meta_resultado(rid,u['login'])
+            except ValueError:return self.respond(403,{'erro':'Envio não pertence a este usuário'})
+            return self.respond(200,result) if result else self.respond(404,{'erro':'Envio não encontrado'})
         if parsed.path=='/api/crm-config':
             with TASK_LOCK:
                 with closing(agenda_conn()) as con:
@@ -1704,13 +1895,13 @@ class Handler(SimpleHTTPRequestHandler):
             if cid is not None and (not cid.isdecimal() or not 0<int(cid)<10**17): return self.respond(400,{'erro':'Cliente inválido'})
             with TASK_LOCK:
                 with agenda_conn() as con:
-                    colunas="id,cliente_id,ean,produto_descricao,previsao,telefone_final,CASE WHEN status='WhatsApp aberto' AND EXISTS (SELECT 1 FROM whatsapp_indisponivel wi WHERE wi.cliente_id=wr.cliente_id AND wi.telefone_hash=wr.telefone_hash AND wi.registrado_em>=wr.criado_em) THEN 'Número sem WhatsApp' ELSE status END,criado_em,resultado,atualizado_em,tipo_aviso,(telefone_hash!='' AND status='Enviado confirmado'),confirmado_em,confirmado_por"
+                    colunas="id,cliente_id,ean,produto_descricao,previsao,telefone_final,CASE WHEN status='WhatsApp aberto' AND EXISTS (SELECT 1 FROM whatsapp_indisponivel wi WHERE wi.cliente_id=wr.cliente_id AND wi.telefone_hash=wr.telefone_hash AND wi.registrado_em>=wr.criado_em) THEN 'Número sem WhatsApp' ELSE status END,criado_em,resultado,atualizado_em,tipo_aviso,(telefone_hash!='' AND status='Enviado confirmado'),confirmado_em,confirmado_por,(SELECT estado FROM whatsapp_meta_envios WHERE registro_id=wr.id),(SELECT erro_codigo FROM whatsapp_meta_envios WHERE registro_id=wr.id)"
                     if filtros.get('resumo',[''])[0]=='1':
                         if cid is None:return self.respond(400,{'erro':'Informe o cliente'})
                         rows=con.execute('SELECT '+colunas+" FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY ean,CASE WHEN ean='' THEN produto_descricao ELSE '' END,previsao,tipo_aviso ORDER BY id DESC) AS ordem FROM whatsapp_registros WHERE cliente_id=?) AS wr WHERE ordem=1 ORDER BY id DESC",(int(cid),)).fetchall()
                     elif cid is None: rows=con.execute('SELECT '+colunas+' FROM whatsapp_registros AS wr ORDER BY id DESC LIMIT 200').fetchall()
                     else: rows=con.execute('SELECT '+colunas+' FROM whatsapp_registros AS wr WHERE cliente_id=? ORDER BY id DESC LIMIT 200',(int(cid),)).fetchall()
-            registros=[dict(zip(('id','cliente_id','ean','produto_descricao','previsao','telefone_final','status','criado_em','resultado','atualizado_em','tipo_aviso','whatsapp_validado','confirmado_em','confirmado_por'),r)) for r in rows]
+            registros=[dict(zip(('id','cliente_id','ean','produto_descricao','previsao','telefone_final','status','criado_em','resultado','atualizado_em','tipo_aviso','whatsapp_validado','confirmado_em','confirmado_por','api_estado','api_erro_codigo'),r)) for r in rows]
             return self.respond(200,{'registros':completar_datas_confirmacao(registros)})
         if parsed.path=='/api/agenda':
             filtros=parse_qs(parsed.query)

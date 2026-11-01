@@ -201,3 +201,9 @@ O contador total vem do ERP e considera o mês e o filtro de compras escolhido, 
 ## Inicialização sem navegador
 
 O controle PowerShell e o servidor Python não abrem mais o navegador por padrão. Abra o endereço do painel manualmente. A abertura opcional usa `SONIFARMA_CONTROLE.ps1 start -AbrirNavegador` ou `iniciar_interface.py --abrir-navegador`. A opção antiga `-SemNavegador` continua compatível. As verificações do servidor e do HTTPS permanecem obrigatórias.
+
+## Apresentação dos aniversariantes e datas brasileiras
+
+Os históricos de WhatsApp da ficha e da janela de mensagem exibem data/hora em DD/MM/AAAA às HH:mm, sem conversão de fuso dos registros locais. Previsões usam DD/MM/AAAA ou MM/AAAA para ciclos mensais. Os valores armazenados e enviados à API permanecem no formato original.
+
+Nos aniversariantes, mês, compras e status ficam juntos. Favoritos e edição do cupom ficam recolhidos; abra seus títulos para acessar as opções. Salvar cupom fica dentro da edição. O seletor de ocultação mantém o funcionamento anterior. Botões secundários usam contorno discreto, com destaque para Consultar. A ficha também usa ações mais compactas.

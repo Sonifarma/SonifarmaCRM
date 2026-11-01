@@ -20,9 +20,9 @@ const fs=require('fs'),path=require('path'),assert=require('assert/strict');
   let n=0;const sql=source.match(/SQL_ANIVERSARIANTES = """([\s\S]*?)"""/)[1].replace(/%s/g,()=>'$'+(++n));
   const month=(await db.query('SELECT EXTRACT(MONTH FROM CURRENT_DATE)::int AS mes')).rows[0].mes;
   const ids=async recent=>(await db.query(sql,[month,recent,0])).rows.map(r=>r.pessoaid);
-  assert.deepEqual(await ids(true),[1,3]);
-  assert.deepEqual(await ids(false),[1,2,3,6]);
-  assert.equal((await db.query(sql,[month,true,1])).rows[0].pessoaid,3);
+  assert.deepEqual(await ids(true),[3,1]);
+  assert.deepEqual(await ids(false),[6,3,1,2]);
+  assert.equal((await db.query(sql,[month,true,1])).rows[0].pessoaid,1);
   console.log('PASS: calendar 18-month boundary included, older/future/cancelled/reversed sales excluded, all-history option, offset');
  }finally{await db.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

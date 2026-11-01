@@ -185,3 +185,8 @@ Atendimento IA adiciona uma caixa de entrada local de mensagens recebidas pelo w
 O motor será escolhido depois: não há geração por modelo, treinamento, compartilhamento com provedor de IA ou envio automático nesta etapa. Consultar referências faz uma busca local; a equipe redige o rascunho. As situações de atenção são sinalizadas para revisão humana. Salvar revisão não confirma envio no WhatsApp.
 
 Os dados ficam nas tabelas ia_mensagens e ia_base do banco local de agenda e entram nos backups existentes. A primeira atualização precisa copiar ia_atendimento.py antes de iniciar o painel; o atualizador novo já inclui esse arquivo.
+
+
+## Última compra nos aniversariantes
+
+A lista mostra a data da última compra válida do cliente. A consulta ao ERP ordena por última compra decrescente antes de paginar, com desempate por dia de aniversário, nome e ID. Cada nova consulta restaura esse padrão. Os títulos Cliente, Aniversário, Última compra, Contato e Mensagem do mês alternam crescente/decrescente para os clientes carregados, preservando a associação dos botões ao cliente. Ao carregar mais, a ordenação escolhida é reaplicada. Datas ausentes ficam ao final.

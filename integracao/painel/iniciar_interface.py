@@ -1259,7 +1259,7 @@ WHERE EXTRACT(MONTH FROM p.datanascimento)=%s
       AND (NOT %s OR (v.datahorafechamento >= CURRENT_DATE - INTERVAL '18 months'
            AND v.datahorafechamento < CURRENT_DATE + INTERVAL '1 day'))
       AND NOT EXISTS (SELECT 1 FROM public.estornovenda e WHERE e.vendaid=v.id))
-ORDER BY EXTRACT(DAY FROM p.datanascimento), p.nome, p.id
+ORDER BY ultima_compra DESC NULLS LAST, EXTRACT(DAY FROM p.datanascimento), p.nome, p.id
 LIMIT 51 OFFSET %s
 """
 

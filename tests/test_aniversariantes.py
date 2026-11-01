@@ -49,6 +49,17 @@ class BirthdayTests(unittest.TestCase):
         self.assertTrue(record['confirmado_em'])
         self.assertTrue(record['confirmado_por'])
 
+    def test_reopen_pending_manual_attempt_reuses_record_and_checks_phone_and_refusal(self):
+        status,first=self.open_birthday()
+        self.assertEqual(status,200,first)
+        status,again=self.open_birthday()
+        self.assertEqual(status,200,again)
+        self.assertEqual(again['id'],first['id'])
+        self.assertTrue(again['reaberto'])
+        self.assertEqual(self.open_birthday(telefone='5519999995678',telefone_final='5678')[0],409)
+        self.request('/api/consentimento-comercial',dict(cliente_id=1,status='recusado',origem='Pedido no balcão'))
+        self.assertEqual(self.open_birthday()[0],403)
+
     def test_two_pending_attempts_cannot_both_be_confirmed_for_same_month(self):
         self.authorize()
         status,first=self.open_birthday()

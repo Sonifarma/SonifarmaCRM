@@ -16,13 +16,13 @@ const fs=require('fs'),path=require('path'),assert=require('assert/strict');
    }
    if(url.pathname==='/api/ficha-cadastro')data={cadastro:{celular:'(19) 99999-1234'}};
    if(url.pathname==='/api/whatsapp-registros'){
-    if(route.request().method()==='POST'){posted=route.request().postDataJSON();data={id:9};}
+    if(route.request().method()==='POST'){const reaberto=!!posted;posted=route.request().postDataJSON();data={id:9,reaberto};}
     else data={registros:posted?[record()]:[]};
    }
    if(url.pathname==='/api/whatsapp-confirmar'){confirmed=true;data={ok:true};}
    return route.fulfill({contentType:'application/json',body:JSON.stringify(data)});
   });
-  const setup=()=>page.evaluate(()=>{document.getElementById('auth-overlay').hidden=true;document.getElementById('aniv-ocultar-enviados').checked=false;window.open=()=>({close(){},location:{replace(){}}});});
+  const setup=()=>page.evaluate(()=>{document.getElementById('auth-overlay').hidden=true;document.getElementById('aniv-ocultar-enviados').checked=false;window.open=()=>({close(){},location:{replace(url){window.lastWhatsUrl=url;}}});});
   await page.goto('http://panel.test/');await setup();
   await page.locator('[data-tab=aniversariantes-tab]').click();
   assert.equal(await page.locator('#aniv-mes').inputValue(),String(new Date().getMonth()+1));
@@ -43,6 +43,15 @@ const fs=require('fs'),path=require('path'),assert=require('assert/strict');
   assert((await page.locator('#reat-whats-modal h2').textContent()).includes('aniversário'));
   await page.locator('#reat-whats-abrir').click();await page.waitForFunction(()=>!document.getElementById('reat-whats-confirmar').disabled);
   assert.equal(posted.tipo_aviso,'aniversario');assert.equal(posted.previsao,ciclo);assert.equal(posted.ean,'ANIVERSARIO');assert.equal(confirmed,false);
+  assert((await page.evaluate(()=>window.lastWhatsUrl)).startsWith('https://web.whatsapp.com/send?phone=5519999991234'));
+  await page.locator('#reat-whats-fechar').click();
+  await page.locator('[data-aniv-whats="0"]').click();
+  await page.waitForFunction(()=>!document.getElementById('reat-whats-abrir').disabled);
+  await page.waitForFunction(()=>document.getElementById('reat-whats-historico').textContent.includes('Último atendimento'));
+  assert(!/\d{4}-\d{2}-\d{2}T/.test(await page.locator('#reat-whats-historico').textContent()));
+  await page.locator('#reat-whats-abrir').click();
+  await page.waitForFunction(()=>document.getElementById('reat-whats-aviso').textContent.includes('reaberto'));
+  assert.equal(await page.locator('#reat-whats-confirmar').isDisabled(),false);
   await page.locator('#reat-whats-confirmar').click();
   await page.waitForFunction(()=>document.querySelector('[data-aniv-whats="0"]').disabled);
   assert((await page.locator('#aniv-lista tr').first().textContent()).includes('Enviado confirmado'));

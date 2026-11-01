@@ -211,3 +211,9 @@ Nos aniversariantes, mês, compras e status ficam juntos. Favoritos e edição d
 ## Envio manual sem preferência cadastrada
 
 O envio manual de aniversário e reativação permite abrir e confirmar mensagens quando a preferência comercial não foi informada. Isso não cria autorização, origem ou data na base. A interface mostra Preferência não informada. Recusas explícitas, contatos recentes e duplicidade de aniversário continuam bloqueados. O envio pela API oficial da Meta continua exigindo autorização registrada. Esta regra substitui a exigência anterior para o fluxo manual.
+
+## Reabertura de tentativa manual
+
+Aniversário e reativação permitem reabrir a tentativa manual do mesmo dia que ainda está em WhatsApp aberto, reutilizando o ID quando cliente, campanha, previsão e hash do telefone coincidem. A reabertura é auditada e não confirma envio. Recusas, responsabilidade do atendimento, contatos confirmados recentes, duplicidade mensal e envios pendentes pela API são verificados antes de reutilizar. Outro telefone ou outro status mantém o bloqueio existente.
+
+Após registrar ou reutilizar a tentativa, a janela é direcionada ao WhatsApp antes da atualização auxiliar da ficha. Falha nessa atualização não fecha o WhatsApp. O histórico da janela de aniversário/reativação usa DD/MM/AAAA às HH:mm, preservando o horário local registrado.

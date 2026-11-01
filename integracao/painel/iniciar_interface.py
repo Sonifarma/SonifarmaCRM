@@ -1824,10 +1824,8 @@ class Handler(SimpleHTTPRequestHandler):
                         if pendente:return self.respond(409,{'erro':'Há um envio pela API aguardando confirmação. Não repita o contato.','retry_safe':False,'request_id':pendente[0] if pendente[1]==u['login'] else None})
                         if tipo_aviso=='aniversario' and con.execute("SELECT 1 FROM whatsapp_registros WHERE cliente_id=? AND tipo_aviso='aniversario' AND previsao=? AND status='Enviado confirmado' LIMIT 1",(cid,previsao)).fetchone():
                             return self.respond(409,{'erro':'Mensagem de aniversário já confirmada neste mês e ano.'})
-                        existente=con.execute("SELECT id FROM whatsapp_registros WHERE cliente_id=? AND ean=? AND previsao=? AND tipo_aviso=? AND substr(criado_em,1,10)=? AND status!='Falha na API' LIMIT 1",
+                        existente=con.execute("SELECT id,status,telefone_hash FROM whatsapp_registros WHERE cliente_id=? AND ean=? AND previsao=? AND tipo_aviso=? AND substr(criado_em,1,10)=? AND status!='Falha na API' LIMIT 1",
                             (cid,ean,previsao,tipo_aviso,date.today().isoformat())).fetchone()
-                        if existente:
-                            return self.respond(409,{'erro':'Já existe contato deste tipo para este cliente e data hoje. Consulte o Pós-venda.'})
                         if tipo_aviso=='recompra':
                             recente=con.execute("SELECT id,criado_em FROM whatsapp_registros WHERE cliente_id=? AND ean=? AND tipo_aviso='recompra' AND status='Enviado confirmado' AND criado_em>=? ORDER BY id DESC LIMIT 1",(cid,ean,(datetime.now()-timedelta(days=3)).isoformat(timespec='seconds'))).fetchone()
                             if recente:return self.respond(409,{'erro':'Recompra já confirmada nos últimos 3 dias ('+str(recente[1])+'). Novo contato bloqueado.'})
@@ -1840,6 +1838,11 @@ class Handler(SimpleHTTPRequestHandler):
                         atendimento=atendimento_crm(con,cid)
                         if atendimento['responsavel'] and atendimento['responsavel']!=u['login'] and u.get('perfil') not in ('master','supervisor'):
                             return self.respond(409,{'erro':'Cliente em atendimento por '+atendimento['responsavel']+'.'})
+                        if existente:
+                            if not meta_envio and tipo_aviso in ('reativacao','aniversario') and existente[1]=='WhatsApp aberto' and digest and existente[2]==digest:
+                                registrar(self.identidade(),'WhatsApp reaberto',cid,existente[0],str(d.get('cliente_nome',''))[:100],self.client_address[0])
+                                return self.respond(200,{'ok':True,'id':existente[0],'status':'WhatsApp aberto','reaberto':True})
+                            return self.respond(409,{'erro':'Já existe contato deste tipo para este cliente e data hoje. Consulte o Pós-venda.'})
                         if not atendimento['responsavel']:
                             atendimento.update(cliente_nome=str(d.get('cliente_nome',''))[:180] or atendimento['cliente_nome'],responsavel=u['login'],revisao=atendimento['revisao']+1,atualizado_em=datetime.now().isoformat(timespec='seconds'),atualizado_por=u['login'])
                             con.execute('INSERT OR REPLACE INTO crm_atendimentos VALUES(?,?,?,?,?,?,?,?,?,?)',tuple(atendimento[k] for k in ('cliente_id','cliente_nome','responsavel','acao','retorno_em','observacao','concluido','revisao','atualizado_em','atualizado_por')))

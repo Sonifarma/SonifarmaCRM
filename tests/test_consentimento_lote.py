@@ -41,6 +41,18 @@ class BulkConsentTests(unittest.TestCase):
             self.assertEqual(con.execute('SELECT COUNT(*) FROM whatsapp_registros').fetchone()[0],0)
             self.assertIsNone(con.execute('SELECT status FROM consentimento_comercial WHERE cliente_id=99').fetchone())
 
+    def test_explicit_metadata_update_updates_existing_authorizations_but_not_refusals(self):
+        self.request('/api/consentimento-comercial',dict(cliente_id=1,status='autorizado',origem='Autorização anterior',data_consentimento='2019-01-01'))
+        self.request('/api/consentimento-comercial',dict(cliente_id=2,status='recusado',origem='Pedido do cliente'))
+        self.admin()
+        with patch.object(panel,'query',return_value=[{'pessoaid':1},{'pessoaid':2}]):
+            status,r=self.post(atualizar_existentes=True)
+            self.assertEqual(status,200,r);self.assertEqual(r['atualizados'],1);self.assertEqual(r['recusas_preservadas'],1)
+            self.assertEqual(self.post(atualizar_existentes=True)[1]['atualizados'],0)
+        with panel.agenda_conn() as con:
+            self.assertEqual(con.execute('SELECT origem,data_consentimento FROM consentimento_comercial WHERE cliente_id=1').fetchone(),('Balcão','2020-01-01'))
+            self.assertEqual(con.execute('SELECT COUNT(*) FROM consentimento_historico WHERE cliente_id=1').fetchone()[0],2)
+
     def test_requires_admin_and_valid_date(self):
         with patch.object(panel,'query') as query:
             self.assertEqual(self.post()[0],403);query.assert_not_called()

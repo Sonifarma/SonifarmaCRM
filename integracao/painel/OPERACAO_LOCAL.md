@@ -171,11 +171,11 @@ O módulo whatsapp_meta.py precisa acompanhar iniciar_interface.py nesta primeir
 
 ## Registro de autorização em lote
 
-Em Mensagens e cupons, MASTER e supervisores podem aplicar Autorização de contato em lote, informando a origem e a data em que os clientes já concederam a autorização. A data inicial 31/10/2026 e origem Balcão correspondem à confirmação fornecida pelo responsável nesta solicitação; revise os campos em operações futuras.
+Em Mensagens e cupons, MASTER e supervisores podem aplicar Autorização de contato em lote, informando a origem e a data em que os clientes já concederam a autorização. A data inicial 01/11/2026 e origem Balcão correspondem à confirmação fornecida pelo responsável nesta solicitação; revise os campos em operações futuras.
 
 A consulta abrange todos os clientes com compras válidas no ERP, sem os filtros da tela, em páginas de 1.000 IDs e sem limite total de clientes. Não grava no ERP. Antes de alterar as preferências locais, cria backup verificável dos bancos existentes em BACKUP_DESTINATION (ambiente ou .env), ou na pasta backups do painel. Se o backup ou a consulta falhar, não aplica uma lista parcial.
 
-A operação preserva recusas atuais e autorizações anteriores; modifica apenas registros não informados ou ausentes, com histórico individual de origem, data e operador. Repetir não duplica o histórico dos já autorizados. Novos clientes futuros não recebem autorização automática. Nenhum envio de WhatsApp é executado. A tela mostra os totais e o caminho do backup; listas já abertas podem precisar de nova consulta para atualizar todos os registros visíveis.
+A operação sempre preserva recusas atuais. A opção marcada “Atualizar origem e data também dos já autorizados” atualiza os metadados das autorizações anteriores para Balcão e 01/11/2026, mantendo o histórico individual de origem, data e operador. Desmarcada, modifica apenas registros não informados ou ausentes. Repetir com a mesma origem e data não duplica o histórico. Novos clientes futuros não recebem autorização automática. Nenhum envio de WhatsApp é executado. A tela mostra os totais e o caminho do backup; listas já abertas podem precisar de nova consulta para atualizar todos os registros visíveis.
 
 
 ## Preparação do atendimento com IA
@@ -190,3 +190,14 @@ Os dados ficam nas tabelas ia_mensagens e ia_base do banco local de agenda e ent
 ## Última compra nos aniversariantes
 
 A lista mostra a data da última compra válida do cliente. A consulta ao ERP ordena por última compra decrescente antes de paginar, com desempate por dia de aniversário, nome e ID. Cada nova consulta restaura esse padrão. Os títulos Cliente, Aniversário, Última compra, Contato e Mensagem do mês alternam crescente/decrescente para os clientes carregados, preservando a associação dos botões ao cliente. Ao carregar mais, a ordenação escolhida é reaplicada. Datas ausentes ficam ao final.
+
+
+## Contador e ocultação dos aniversariantes enviados
+
+“Ocultar enviados confirmados” vem marcado e pode ser desmarcado para consultar os envios. A ocultação e os filtros de status atuam sobre os clientes carregados; use Carregar mais para consultar as páginas seguintes. Confirmar um envio atualiza a lista e os contadores. Aceitação da API ainda sem confirmação não é ocultada como envio confirmado.
+
+O contador total vem do ERP e considera o mês e o filtro de compras escolhido, antes da paginação e da ocultação. Os contadores de carregados, confirmados e visíveis referem-se às páginas já carregadas. O total não representa apenas clientes pendentes de envio.
+
+## Inicialização sem navegador
+
+O controle PowerShell e o servidor Python não abrem mais o navegador por padrão. Abra o endereço do painel manualmente. A abertura opcional usa `SONIFARMA_CONTROLE.ps1 start -AbrirNavegador` ou `iniciar_interface.py --abrir-navegador`. A opção antiga `-SemNavegador` continua compatível. As verificações do servidor e do HTTPS permanecem obrigatórias.

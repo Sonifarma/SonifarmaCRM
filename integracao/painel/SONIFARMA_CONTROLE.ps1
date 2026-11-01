@@ -2,6 +2,7 @@
  [ValidateSet('start','stop','restart','status','backup','verify','update')][string]$Acao='status',
  [switch]$SemInteracao,
  [switch]$SemNavegador,
+ [switch]$AbrirNavegador,
  [string]$Origem,
  [string]$Destino,
  [string]$Arquivo
@@ -121,7 +122,7 @@ function Start-Sonifarma {
  & (Get-Python) (Join-Path $Pasta 'manutencao.py') health --url $Url --certificate (Join-Path $Pasta 'sonifarma_tls.crt')
  if($LASTEXITCODE -ne 0){throw 'Painel iniciou, mas a resposta HTTPS nao foi validada. Verifique certificado e logs.'}
  Write-Host "Sonifarma HTTPS iniciada no IP $($listener[0].LocalAddress):8765. PID: $($atual.ProcessId)"
- if(-not $SemNavegador){Start-Process ('https://'+$listener[0].LocalAddress+':8765')}
+ if($AbrirNavegador -and -not $SemNavegador){Start-Process ('https://'+$listener[0].LocalAddress+':8765')}
 }
 function Stop-Sonifarma {
  $p=Get-SonifarmaProcess

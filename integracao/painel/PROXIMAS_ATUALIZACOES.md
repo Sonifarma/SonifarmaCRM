@@ -1,12 +1,9 @@
 # Próximas atualizações
 
-## Pendente — iniciar sem abrir o navegador automaticamente
+## Implementado — iniciar sem abrir o navegador automaticamente
 
-Solicitado em 01/11/2026 para a próxima atualização.
+Solicitado em 01/11/2026 e implementado nesta atualização.
 
-- Ao iniciar ou reiniciar o servidor do painel, manter o processo em segundo plano e não abrir o navegador automaticamente (referido como Explorer pelo usuário).
-- Aplicar o comportamento aos comandos de controle, atalhos e inicialização automática que disparem a abertura da página.
-- Manter as verificações de inicialização e HTTPS e a possibilidade de abrir o painel manualmente.
-- Conferir também a abertura pelo servidor Python para evitar uma segunda origem de abertura automática.
+O controle PowerShell e o servidor Python iniciam sem abrir o navegador por padrão, inclusive quando acionados por atalhos e tarefas que usam esses pontos de entrada. As verificações de inicialização e HTTPS foram mantidas.
 
-Status: registrado, ainda não implementado. Não é necessária atualização da instalação para este registro.
+Abra o painel manualmente. Para abertura opcional, use `SONIFARMA_CONTROLE.ps1 start -AbrirNavegador` ou a opção Python `--abrir-navegador`. A opção antiga `-SemNavegador` permanece compatível.

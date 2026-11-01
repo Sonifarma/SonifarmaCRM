@@ -11,7 +11,7 @@ const fs=require('fs'),path=require('path'),assert=require('assert/strict');
   });
   await page.goto('http://crm.test/');
   await page.evaluate(()=>{
-   document.getElementById('auth-overlay').hidden=true;showTab('aniversariantes-tab');
+   document.getElementById('auth-overlay').hidden=true;document.getElementById('aniv-ocultar-enviados').checked=false;showTab('aniversariantes-tab');
    anivRows=[{pessoaid:1,nome:'Zélia',aniversario:'1980-11-02',ultima_compra:'2026-09-01',consentimento:'autorizado'},{pessoaid:2,nome:'Ana',aniversario:'1980-11-03',ultima_compra:'2026-10-15',consentimento:'autorizado',ultimo:{status:'Enviado confirmado'}},{pessoaid:3,nome:'Bruno',aniversario:'1980-11-01',ultima_compra:'2025-01-01',consentimento:'recusado'},{pessoaid:4,nome:'Sem data',aniversario:'1980-11-04',ultima_compra:null,consentimento:'nao_informado'}];renderAniversariantes();
   });
   const ids=()=>page.locator('[data-aniv-ficha]').evaluateAll(es=>es.map(e=>e.dataset.anivFicha));

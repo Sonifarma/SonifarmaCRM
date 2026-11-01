@@ -21,6 +21,7 @@ const fs=require('fs'),path=require('path'),assert=require('assert/strict');
   const month=(await db.query('SELECT EXTRACT(MONTH FROM CURRENT_DATE)::int AS mes')).rows[0].mes;
   const ids=async recent=>(await db.query(sql,[month,recent,0])).rows.map(r=>r.pessoaid);
   assert.deepEqual(await ids(true),[3,1]);
+  assert.equal((await db.query(sql,[month,true,1])).rows[0].total_aniversariantes,2);
   assert.deepEqual(await ids(false),[6,3,1,2]);
   assert.equal((await db.query(sql,[month,true,1])).rows[0].pessoaid,1);
   console.log('PASS: calendar 18-month boundary included, older/future/cancelled/reversed sales excluded, all-history option, offset');

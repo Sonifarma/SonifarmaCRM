@@ -18,11 +18,12 @@ class BirthdayTests(unittest.TestCase):
         return self.request('/api/whatsapp-registros',data)
 
     def test_month_pagination_and_local_contact_state(self):
-        rows=[dict(pessoaid=i+1,nome=f'Cliente {i}',datanascimento='1990-02-15',ultima_compra='2020-01-01') for i in range(51)]
+        rows=[dict(pessoaid=i+1,nome=f'Cliente {i}',total_aniversariantes=123,datanascimento='1990-02-15',ultima_compra='2020-01-01') for i in range(51)]
         with patch.object(panel,'DB',{'fixture':True}),patch.object(panel,'query',return_value=rows) as query,patch.object(panel,'registrar'):
             status,result=self.request('/api/aniversariantes?mes=2&cursor=0')
             self.assertEqual(status,200,result)
             self.assertEqual(len(result['clientes']),50)
+            self.assertEqual(result['total'],123)
             self.assertEqual(result['proximo_cursor'],50)
             self.assertEqual(query.call_args.args[1],(2,True,0))
             self.assertEqual(result['clientes'][0]['campanha'],'aniversario')

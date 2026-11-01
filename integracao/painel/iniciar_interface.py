@@ -358,7 +358,8 @@ def backup_autorizacoes():
     return maintenance.create_backup(BASE,destination)
 
 
-def autorizar_clientes_lote(origem,data_consentimento,usuario):
+def autorizar_clientes_lote(origem,data_consentimento,usuario,atualizar_existentes=False):
+    if not isinstance(atualizar_existentes,bool):raise ValueError('Opção de atualização inválida')
     if not isinstance(origem,str) or not 5<=len(origem.strip())<=180:raise ValueError('Informe a origem da autorização já concedida')
     if not isinstance(data_consentimento,str) or not re.fullmatch(r'[0-9]{4}-[0-9]{2}-[0-9]{2}',data_consentimento):raise ValueError('Data de autorização inválida')
     try:dt=date.fromisoformat(data_consentimento)
@@ -379,10 +380,10 @@ def autorizar_clientes_lote(origem,data_consentimento,usuario):
         with closing(agenda_conn()) as con:
             with con:
                 for cid in ids:
-                    row=con.execute('SELECT status FROM consentimento_comercial WHERE cliente_id=?',(cid,)).fetchone()
+                    row=con.execute('SELECT status,origem,data_consentimento FROM consentimento_comercial WHERE cliente_id=?',(cid,)).fetchone()
                     anterior=row[0] if row else 'nao_informado'
                     if anterior=='recusado':recusas+=1;continue
-                    if anterior=='autorizado':ja+=1;continue
+                    if anterior=='autorizado' and (not atualizar_existentes or (row[1]==origem.strip() and row[2]==data_consentimento)):ja+=1;continue
                     con.execute("INSERT OR REPLACE INTO consentimento_comercial(cliente_id,status,origem,data_consentimento,atualizado_em,usuario) VALUES(?,'autorizado',?,?,?,?)",(cid,origem.strip(),data_consentimento,agora,usuario))
                     con.execute("INSERT INTO consentimento_historico(cliente_id,status_anterior,status_novo,origem,data_consentimento,atualizado_em,usuario) VALUES(?,?,'autorizado',?,?,?,?)",(cid,anterior,origem.strip(),data_consentimento,agora,usuario))
                     atualizados+=1
@@ -1247,7 +1248,7 @@ def central_consultas_v4(f):
 # V20.5.5: reativação manual; última venda válida do cliente (não previsão por produto).
 # Paginação por pessoa evita carregar toda a base em memória; valores são candidatos.
 SQL_ANIVERSARIANTES = """
-SELECT p.id AS pessoaid, p.nome, p.datanascimento,
+SELECT p.id AS pessoaid, p.nome, p.datanascimento, COUNT(*) OVER() AS total_aniversariantes,
        (SELECT MAX(v.datahorafechamento) FROM public.venda v
         WHERE v.pessoaid=p.id AND v.status IN ('F','D')
           AND v.datahorafechamento IS NOT NULL
@@ -1273,14 +1274,15 @@ def consultar_aniversariantes(mes, cursor, compras='18'):
                 for row in rows[:50]:
                     cid=int(row['pessoaid'])
                     pref=con.execute('SELECT status,origem FROM consentimento_comercial WHERE cliente_id=?',(cid,)).fetchone()
-                    ultimo=con.execute("SELECT id,status,criado_em,confirmado_em,confirmado_por FROM whatsapp_registros WHERE cliente_id=? AND tipo_aviso='aniversario' AND previsao=? ORDER BY id DESC LIMIT 1",(cid,ciclo)).fetchone()
+                    ultimo=con.execute("SELECT id,status,criado_em,confirmado_em,confirmado_por FROM whatsapp_registros WHERE cliente_id=? AND tipo_aviso='aniversario' AND previsao=? ORDER BY (status='Enviado confirmado') DESC,id DESC LIMIT 1",(cid,ciclo)).fetchone()
                     recente=con.execute("SELECT 1 FROM whatsapp_registros WHERE cliente_id=? AND status='Enviado confirmado' AND criado_em>=? LIMIT 1",(cid,(datetime.now()-timedelta(days=3)).isoformat(timespec='seconds'))).fetchone()
                     dados.append(dict(pessoaid=cid,nome=row['nome'],aniversario=str(row['datanascimento'])[:10],
                         ultima_compra=str(row['ultima_compra'])[:10] if row['ultima_compra'] else '',
                         campanha='aniversario',ciclo=ciclo,status_contato=status_contato_crm(con,cid,'aniversario',ciclo),consentimento=pref[0] if pref else 'nao_informado',
                         consentimento_origem=pref[1] if pref else '',contato_recente=bool(recente),
                         ultimo=dict(zip(('id','status','criado_em','confirmado_em','confirmado_por'),ultimo)) if ultimo else None))
-    return dict(clientes=dados,proximo_cursor=cursor+50 if len(rows)>50 else None)
+    total=int(rows[0]['total_aniversariantes']) if rows and rows[0].get('total_aniversariantes') is not None else 0 if not rows and cursor==0 else None
+    return dict(clientes=dados,total=total,proximo_cursor=cursor+50 if len(rows)>50 else None)
 
 
 SQL_REATIVACAO = """
@@ -1698,7 +1700,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if not DB:return self.respond(503,{'erro':'ERP não conectado. Reinicie com --erp.'})
                 exibidos=d.get('clientes_exibidos',[])
                 if not isinstance(exibidos,list) or len(exibidos)>200 or any(not isinstance(cid,int) or isinstance(cid,bool) or not 0<cid<10**17 for cid in exibidos):return self.respond(400,{'erro':'Lista de clientes exibidos inválida'})
-                try:resultado=autorizar_clientes_lote(d.get('origem'),d.get('data_consentimento'),u['login'])
+                try:resultado=autorizar_clientes_lote(d.get('origem'),d.get('data_consentimento'),u['login'],d.get('atualizar_existentes',False))
                 except ValueError as e:return self.respond(400,{'erro':str(e)})
                 except Exception as e:
                     print('Falha autorização lote:',type(e).__name__)
@@ -2270,6 +2272,7 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--erp',action='store_true',help='Habilitar consulta ao PostgreSQL')
     parser.add_argument('--lan',action='store_true',help='Ativar HTTPS na rede interna')
+    parser.add_argument('--abrir-navegador',action='store_true',help='Abrir o navegador ao iniciar (opcional)')
     a=parser.parse_args()
     if a.erp:
         import psycopg2
@@ -2311,7 +2314,7 @@ def main():
     print('Painel unificado:',endereco)
     print('ERP:', 'conectado em modo leitura' if DB else 'desconectado (somente dashboard)')
     print('Ctrl+C para encerrar.')
-    webbrowser.open(endereco)
+    if a.abrir_navegador:webbrowser.open(endereco)
     try: server.serve_forever()
     except KeyboardInterrupt: pass
     finally: server.server_close()

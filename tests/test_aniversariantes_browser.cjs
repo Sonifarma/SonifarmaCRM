@@ -22,7 +22,7 @@ const fs=require('fs'),path=require('path'),assert=require('assert/strict');
    if(url.pathname==='/api/whatsapp-confirmar'){confirmed=true;data={ok:true};}
    return route.fulfill({contentType:'application/json',body:JSON.stringify(data)});
   });
-  const setup=()=>page.evaluate(()=>{document.getElementById('auth-overlay').hidden=true;window.open=()=>({close(){},location:{replace(){}}});});
+  const setup=()=>page.evaluate(()=>{document.getElementById('auth-overlay').hidden=true;document.getElementById('aniv-ocultar-enviados').checked=false;window.open=()=>({close(){},location:{replace(){}}});});
   await page.goto('http://panel.test/');await setup();
   await page.locator('[data-tab=aniversariantes-tab]').click();
   assert.equal(await page.locator('#aniv-mes').inputValue(),String(new Date().getMonth()+1));

@@ -1796,7 +1796,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if consent and consent[0]=='recusado':
                     return self.respond(403,{'erro':'Cliente solicitou não receber mensagens. Contato bloqueado.'})
                 if tipo_aviso in ('reativacao','aniversario') or meta_envio:
-                    if not consent or consent[0]!='autorizado':return self.respond(403,{'erro':'Contato bloqueado: autorização comercial não registrada.'})
+                    if meta_envio and (not consent or consent[0]!='autorizado'):return self.respond(403,{'erro':'API Meta: autorização comercial não registrada.'})
                     ean='ANIVERSARIO' if tipo_aviso=='aniversario' else 'REATIVACAO';desc='Aniversariantes do mês' if tipo_aviso=='aniversario' else 'Reativação de clientes'
                 if tipo_aviso.startswith('popular_'):
                     ean='FARMACIA_POPULAR';desc='Farmácia Popular — aviso de retirada'
@@ -1862,8 +1862,6 @@ class Handler(SimpleHTTPRequestHandler):
                         if reg:
                             consent=con.execute('SELECT status FROM consentimento_comercial WHERE cliente_id=?',(reg[0],)).fetchone()
                             if consent and consent[0]=='recusado':return self.respond(403,{'erro':'Cliente solicitou não receber mensagens. Confirmação bloqueada.'})
-                            if reg[1] in ('reativacao','aniversario') and (not consent or consent[0]!='autorizado'):
-                                return self.respond(403,{'erro':'Autorização comercial ausente.'})
                         if reg and reg[1]=='aniversario':
                             ciclo=con.execute('SELECT previsao FROM whatsapp_registros WHERE id=?',(rid,)).fetchone()[0]
                             if con.execute("SELECT 1 FROM whatsapp_registros WHERE cliente_id=? AND tipo_aviso='aniversario' AND previsao=? AND status='Enviado confirmado' AND id!=?",(reg[0],ciclo,rid)).fetchone():

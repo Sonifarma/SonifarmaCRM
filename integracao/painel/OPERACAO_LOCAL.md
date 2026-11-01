@@ -207,3 +207,7 @@ O controle PowerShell e o servidor Python não abrem mais o navegador por padrã
 Os históricos de WhatsApp da ficha e da janela de mensagem exibem data/hora em DD/MM/AAAA às HH:mm, sem conversão de fuso dos registros locais. Previsões usam DD/MM/AAAA ou MM/AAAA para ciclos mensais. Os valores armazenados e enviados à API permanecem no formato original.
 
 Nos aniversariantes, mês, compras e status ficam juntos. Favoritos e edição do cupom ficam recolhidos; abra seus títulos para acessar as opções. Salvar cupom fica dentro da edição. O seletor de ocultação mantém o funcionamento anterior. Botões secundários usam contorno discreto, com destaque para Consultar. A ficha também usa ações mais compactas.
+
+## Envio manual sem preferência cadastrada
+
+O envio manual de aniversário e reativação permite abrir e confirmar mensagens quando a preferência comercial não foi informada. Isso não cria autorização, origem ou data na base. A interface mostra Preferência não informada. Recusas explícitas, contatos recentes e duplicidade de aniversário continuam bloqueados. O envio pela API oficial da Meta continua exigindo autorização registrada. Esta regra substitui a exigência anterior para o fluxo manual.

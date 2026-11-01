@@ -35,8 +35,6 @@ class BirthdayTests(unittest.TestCase):
                 self.assertEqual(self.request('/api/aniversariantes?'+params)[0],400)
 
     def test_authorization_confirmation_and_monthly_duplicate(self):
-        self.assertEqual(self.open_birthday()[0],403)
-        self.assertEqual(self.authorize()[0],200)
         status,r=self.open_birthday()
         self.assertEqual(status,200,r)
         rid=r['id']

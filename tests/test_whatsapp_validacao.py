@@ -234,16 +234,16 @@ class ValidationTests(unittest.TestCase):
         self.assertIsNone(other['ultimo'])
         self.assertFalse(other['contato_recente'])
 
-    def test_reactivation_requires_consent_and_respects_contacts_from_other_modules(self):
+    def test_manual_reactivation_allows_unknown_preference_and_respects_refusal_and_recent_contacts(self):
         payload = dict(cliente_id=1, tipo_aviso='reativacao', status='WhatsApp aberto',
                        previsao='2026-10-20', telefone_final='1234', telefone='5519999991234')
-        self.assertEqual(self.request('/api/whatsapp-registros', payload)[0], 403)
+        self.assertEqual(self.request('/api/whatsapp-registros', payload)[0], 200)
         self.authorize_reactivation()
         rid = self.opened(tipo_aviso='popular_hoje')
         self.assertEqual(self.request('/api/whatsapp-confirmar', {'id': rid})[0], 200)
         state = self.request('/api/reativacao-contato?cliente_id=1')[1]
         self.assertTrue(state['contato_recente'])
-        self.assertIsNone(state['ultimo'])
+        self.assertEqual(state['ultimo']['tipo_aviso'], 'reativacao')
         self.assertEqual(self.request('/api/whatsapp-registros', payload)[0], 409)
         self.authorize_reactivation('recusado')
         self.assertEqual(self.request('/api/whatsapp-registros', payload)[0], 403)

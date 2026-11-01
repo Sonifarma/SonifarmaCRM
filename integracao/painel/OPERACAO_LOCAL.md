@@ -176,3 +176,12 @@ Em Mensagens e cupons, MASTER e supervisores podem aplicar Autorização de cont
 A consulta abrange todos os clientes com compras válidas no ERP, sem os filtros da tela, em páginas de 1.000 IDs e sem limite total de clientes. Não grava no ERP. Antes de alterar as preferências locais, cria backup verificável dos bancos existentes em BACKUP_DESTINATION (ambiente ou .env), ou na pasta backups do painel. Se o backup ou a consulta falhar, não aplica uma lista parcial.
 
 A operação preserva recusas atuais e autorizações anteriores; modifica apenas registros não informados ou ausentes, com histórico individual de origem, data e operador. Repetir não duplica o histórico dos já autorizados. Novos clientes futuros não recebem autorização automática. Nenhum envio de WhatsApp é executado. A tela mostra os totais e o caminho do backup; listas já abertas podem precisar de nova consulta para atualizar todos os registros visíveis.
+
+
+## Preparação do atendimento com IA
+
+Atendimento IA adiciona uma caixa de entrada local de mensagens recebidas pelo webhook assinado da Meta e a importação de exemplos de conversas individuais exportadas do WhatsApp Business. Consulte ATENDIMENTO_IA.md. MASTER e supervisores revisam e aprovam exemplos e políticas. Os importados não são aprovados automaticamente e a importação repetida não duplica o mesmo par.
+
+O motor será escolhido depois: não há geração por modelo, treinamento, compartilhamento com provedor de IA ou envio automático nesta etapa. Consultar referências faz uma busca local; a equipe redige o rascunho. As situações de atenção são sinalizadas para revisão humana. Salvar revisão não confirma envio no WhatsApp.
+
+Os dados ficam nas tabelas ia_mensagens e ia_base do banco local de agenda e entram nos backups existentes. A primeira atualização precisa copiar ia_atendimento.py antes de iniciar o painel; o atualizador novo já inclui esse arquivo.

@@ -1,4 +1,4 @@
-"""Painel unificado Sonifarma. HTTP local, PostgreSQL somente leitura, sem gravar dados pessoais."""
+"""Painel local Sonifarma. ERP somente leitura; atendimentos nos bancos locais."""
 import argparse
 import importlib.util
 from contextlib import closing
@@ -217,6 +217,7 @@ def meta_webhook_eventos(data,cfg):
                     for change in entry.get('changes',[]):
                         value=change.get('value',{})
                         if str(value.get('metadata',{}).get('phone_number_id',''))!=cfg['PHONE_NUMBER_ID']:continue
+                        ia_receber(con,value)
                         for event in value.get('statuses',[]):
                             status=event.get('status');wamid=event.get('id');opaque=event.get('biz_opaque_callback_data','')
                             digest=telefone_whatsapp_hash(event.get('recipient_id',''))
@@ -266,6 +267,75 @@ def meta_enviar(cfg,payload,request_id):
                     texto={'aceito':'Aceito pela API','incerto':'API — resultado incerto','erro':'Falha na API'}[estado]
                     con.execute('UPDATE whatsapp_registros SET status=?,atualizado_em=? WHERE id=?',(texto,agora,row[0]))
                 meta_aplicar_eventos(con)
+
+
+IA_MODULE=None
+
+
+def ia_modulo():
+    global IA_MODULE
+    if IA_MODULE is None:
+        path=Path(__file__).with_name('ia_atendimento.py')
+        if not path.is_file():raise ValueError('Módulo de IA ausente. Aplique a atualização completa')
+        spec=importlib.util.spec_from_file_location('sonifarma_ia',path)
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);IA_MODULE=module
+    return IA_MODULE
+
+
+def ia_receber(con,value):
+    nomes={}
+    contacts=value.get('contacts') or []
+    for c in contacts if isinstance(contacts,list) else []:
+        if not isinstance(c,dict):continue
+        profile=c.get('profile') or {}
+        if isinstance(profile,dict):nomes[c.get('wa_id')]=str(profile.get('name') or '').strip()[:180]
+    messages=value.get('messages') or []
+    for msg in messages if isinstance(messages,list) else []:
+        if not isinstance(msg,dict):continue
+        wamid=msg.get('id');phone=str(msg.get('from',''));tipo=msg.get('type','')
+        if not re.fullmatch(r'[1-9][0-9]{6,14}',phone):continue
+        if not isinstance(tipo,str) or len(tipo)>40:continue
+        if not isinstance(wamid,str) or not 1<=len(wamid)<=2048 or not phone:continue
+        textdata=msg.get('text') or {}
+        if tipo=='text' and (not isinstance(textdata,dict) or not isinstance(textdata.get('body'),str)):continue
+        texto=textdata['body'][:12000] if tipo=='text' else '[Mensagem '+str(tipo)[:40]+' recebida — revisão humana]'
+        if not texto.strip():continue
+        try:momento=datetime.fromtimestamp(int(msg['timestamp'])).isoformat(timespec='seconds')
+        except (ValueError,KeyError,TypeError,OverflowError,OSError):continue
+        digest=hashlib.sha256(phone.encode('ascii')).hexdigest()
+        ids=con.execute('SELECT DISTINCT cliente_id FROM whatsapp_registros WHERE telefone_hash=? LIMIT 2',(digest,)).fetchall()
+        cid=ids[0][0] if len(ids)==1 else None
+        try:triagem=ia_modulo().triagem(texto) if tipo=='text' else 'farmaceutico'
+        except ValueError:triagem='farmaceutico'
+        con.execute('INSERT OR IGNORE INTO ia_mensagens(wamid,telefone_hash,telefone_final,nome,tipo,texto,recebida_em,cliente_id,triagem,atualizado_em) VALUES(?,?,?,?,?,?,?,?,?,?)',(wamid,digest,phone[-4:],nomes.get(msg.get('from'),''),tipo,texto,momento,cid,triagem,momento))
+
+
+def ia_ler_mensagem(con,mid):
+    con.row_factory=sqlite3.Row
+    row=con.execute('SELECT id,nome,telefone_final,tipo,texto,recebida_em,cliente_id,triagem,estado,rascunho,revisao,atualizado_em,operador FROM ia_mensagens WHERE id=?',(mid,)).fetchone()
+    return dict(row) if row else None
+
+
+def ia_consultar_referencias(mid,revisao,u):
+    ia=ia_modulo()
+    with TASK_LOCK:
+        with closing(agenda_conn()) as con:
+            with con:
+                msg=ia_ler_mensagem(con,mid)
+                if not msg:raise ValueError('Mensagem não encontrada')
+                if msg['revisao']!=revisao:raise ValueError('Mensagem alterada. Atualize a caixa de entrada')
+                if msg['cliente_id']:
+                    owner=atendimento_crm(con,msg['cliente_id'])['responsavel']
+                    if owner and owner!=u['login'] and u.get('perfil') not in ('master','supervisor'):raise ValueError('Cliente em atendimento por '+owner)
+                if msg['triagem']!='operacional':
+                    resposta=ia.resposta_encaminhamento(msg['triagem'])
+                    con.execute("UPDATE ia_mensagens SET estado='humano',rascunho=?,revisao=revisao+1,atualizado_em=?,operador=? WHERE id=?",(resposta,datetime.now().isoformat(timespec='seconds'),u['login'],mid))
+                    return {'mensagem':ia_ler_mensagem(con,mid),'referencias':[]}
+                rows=[dict(r) for r in con.execute('SELECT id,tipo,pergunta,resposta FROM ia_base WHERE aprovado=1')]
+                texto=ia.anonimizar(msg['texto'],[msg['nome']])
+                politicas=[r for r in rows if r['tipo']=='politica']
+                exemplos=ia.selecionar_exemplos(texto,rows)
+                return {'mensagem':msg,'referencias':politicas+exemplos}
 
 
 SQL_CLIENTES_AUTORIZACAO = """
@@ -427,6 +497,20 @@ def agenda_conn():
         evento_id TEXT PRIMARY KEY, wamid TEXT NOT NULL, status TEXT NOT NULL,
         telefone_hash TEXT NOT NULL, request_id TEXT NOT NULL, momento TEXT NOT NULL,
         erro_codigo TEXT NOT NULL, aplicado INTEGER NOT NULL DEFAULT 0)""")
+    con.execute("""CREATE TABLE IF NOT EXISTS ia_mensagens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, wamid TEXT NOT NULL UNIQUE,
+        telefone_hash TEXT NOT NULL, telefone_final TEXT NOT NULL, nome TEXT NOT NULL,
+        tipo TEXT NOT NULL, texto TEXT NOT NULL, recebida_em TEXT NOT NULL,
+        cliente_id INTEGER, triagem TEXT NOT NULL, estado TEXT NOT NULL DEFAULT 'novo',
+        rascunho TEXT NOT NULL DEFAULT '', revisao INTEGER NOT NULL DEFAULT 0,
+        atualizado_em TEXT NOT NULL, operador TEXT NOT NULL DEFAULT '')""")
+    con.execute('CREATE INDEX IF NOT EXISTS idx_ia_msg_estado ON ia_mensagens(estado,id DESC)')
+    con.execute("""CREATE TABLE IF NOT EXISTS ia_base (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, digest TEXT NOT NULL UNIQUE,
+        tipo TEXT NOT NULL, pergunta TEXT NOT NULL, resposta TEXT NOT NULL,
+        aprovado INTEGER NOT NULL DEFAULT 0, origem TEXT NOT NULL,
+        usuario TEXT NOT NULL, atualizado_em TEXT NOT NULL)""")
+    con.execute('CREATE INDEX IF NOT EXISTS idx_ia_base_aprovado ON ia_base(aprovado,tipo,id DESC)')
     # V20: migração aditiva, sem modificar dados antigos.
     cols={r[1] for r in con.execute("PRAGMA table_info(whatsapp_registros)")}
     for campo in ('confirmado_em','confirmado_por'):
@@ -1458,13 +1542,13 @@ class Handler(SimpleHTTPRequestHandler):
                 meta_webhook_eventos(json.loads(raw),cfg)
                 return self.respond(200,{'ok':True})
             except (ValueError,TypeError,AttributeError,KeyError):return self.respond(400,{'erro':'Evento inválido'})
-        if self.path not in ('/api/auth/setup','/api/auth/login','/api/auth/logout','/api/usuarios','/api/backup','/api/agenda','/api/posologia','/api/ajuste_previsao','/api/whatsapp-registros','/api/whatsapp-resultado','/api/whatsapp-confirmar','/api/whatsapp-sem-conta','/api/nome-comercial','/api/link-produto','/api/consentimento-comercial','/api/crm-config','/api/crm-atendimento','/api/whatsapp-meta/enviar','/api/consentimento-comercial/lote'): return self.respond(404,{'erro':'Rota inexistente'})
+        if self.path not in ('/api/auth/setup','/api/auth/login','/api/auth/logout','/api/usuarios','/api/backup','/api/agenda','/api/posologia','/api/ajuste_previsao','/api/whatsapp-registros','/api/whatsapp-resultado','/api/whatsapp-confirmar','/api/whatsapp-sem-conta','/api/nome-comercial','/api/link-produto','/api/consentimento-comercial','/api/crm-config','/api/crm-atendimento','/api/whatsapp-meta/enviar','/api/consentimento-comercial/lote','/api/ia/importar','/api/ia/base','/api/ia/referencias','/api/ia/revisar'): return self.respond(404,{'erro':'Rota inexistente'})
         origin=self.headers.get('Origin','')
         if not self.origem_valida():
             return self.respond(403,{'erro':'Origem não autorizada'})
         try:
             length=int(self.headers.get('Content-Length','0'))
-            if not 0 < length <= (262144 if self.path=='/api/crm-config' else 16384 if self.path in ('/api/crm-atendimento','/api/whatsapp-meta/enviar','/api/consentimento-comercial/lote') else 4096): return self.respond(400,{'erro':'Tamanho inválido'})
+            if not 0 < length <= (16777216 if self.path=='/api/ia/importar' else 262144 if self.path=='/api/crm-config' else 16384 if self.path in ('/api/crm-atendimento','/api/whatsapp-meta/enviar','/api/consentimento-comercial/lote','/api/ia/base','/api/ia/revisar') else 4096): return self.respond(400,{'erro':'Tamanho inválido'})
             d=json.loads(self.rfile.read(length))
             if not isinstance(d,dict):raise ValueError()
             if self.path in ('/api/auth/setup','/api/auth/login'):
@@ -1512,6 +1596,63 @@ class Handler(SimpleHTTPRequestHandler):
                             con.execute('INSERT OR REPLACE INTO crm_atendimentos VALUES(?,?,?,?,?,?,?,?,?,?)',tuple(novo[k] for k in ('cliente_id','cliente_nome','responsavel','acao','retorno_em','observacao','concluido','revisao','atualizado_em','atualizado_por')))
                 self.log_operacao('Atendimento '+operacao,{'cliente_id':cid,'responsavel':novo['responsavel']})
                 return self.respond(200,{'atendimento':novo})
+            if self.path=='/api/ia/importar':
+                if u.get('perfil') not in ('master','supervisor'):return self.respond(403,{'erro':'Importação disponível para MASTER e supervisor'})
+                texto=d.get('texto');nomes=d.get('atendentes')
+                if not isinstance(texto,str) or len(texto.encode('utf-8'))>4194304 or not isinstance(nomes,list) or len(nomes)>50:raise ValueError('Arquivo ou atendentes inválidos')
+                candidatos=ia_modulo().importar_txt(texto,nomes);novos=0
+                with TASK_LOCK:
+                    with closing(agenda_conn()) as con:
+                        with con:
+                            for c in candidatos:
+                                cur=con.execute("INSERT OR IGNORE INTO ia_base(digest,tipo,pergunta,resposta,aprovado,origem,usuario,atualizado_em) VALUES(?,'estilo',?,?,0,'WhatsApp exportado',?,?)",(c['digest'],c['pergunta'],c['resposta'],u['login'],datetime.now().isoformat(timespec='seconds')));novos+=cur.rowcount
+                self.log_operacao('Histórico importado para revisão',{'novos':novos})
+                return self.respond(200,{'novos':novos,'candidatos':len(candidatos)})
+            if self.path=='/api/ia/base':
+                if u.get('perfil') not in ('master','supervisor'):return self.respond(403,{'erro':'Somente MASTER ou supervisor pode aprovar a base'})
+                operacao=d.get('operacao');agora=datetime.now().isoformat(timespec='seconds');base_id=None
+                with TASK_LOCK:
+                    with closing(agenda_conn()) as con:
+                        with con:
+                            if operacao=='criar':
+                                tipo=d.get('tipo');q=d.get('pergunta');a=d.get('resposta')
+                                if tipo not in ('estilo','politica') or not isinstance(q,str) or not 1<=len(q.strip())<=2000 or not isinstance(a,str) or not 1<=len(a.strip())<=4000:raise ValueError('Exemplo ou política inválidos')
+                                q=ia_modulo().anonimizar(q) if tipo=='estilo' else q.strip();a=ia_modulo().anonimizar(a) if tipo=='estilo' else a.strip();digest=hashlib.sha256((tipo+'\n'+q+'\n'+a).encode()).hexdigest()
+                                con.execute('INSERT OR IGNORE INTO ia_base(digest,tipo,pergunta,resposta,origem,usuario,atualizado_em) VALUES(?,?,?,?,?,?,?)',(digest,tipo,q,a,'Cadastro manual',u['login'],agora))
+                                base_id=con.execute('SELECT id FROM ia_base WHERE digest=?',(digest,)).fetchone()[0]
+                            elif operacao in ('aprovar','desativar'):
+                                rid=d.get('id');base_id=rid
+                                if not isinstance(rid,int) or isinstance(rid,bool) or rid<=0:raise ValueError('Registro inválido')
+                                if operacao=='aprovar':
+                                    row=con.execute('SELECT pergunta,resposta,tipo FROM ia_base WHERE id=?',(rid,)).fetchone()
+                                    if not row:raise ValueError('Registro não encontrado')
+                                    if row[2]=='estilo' and (ia_modulo().triagem(row[0])!='operacional' or ia_modulo().triagem(row[1])!='operacional'):raise ValueError('Exemplos clínicos devem ficar fora da base automática')
+                                con.execute('UPDATE ia_base SET aprovado=?,usuario=?,atualizado_em=? WHERE id=?',(1 if operacao=='aprovar' else 0,u['login'],agora,rid))
+                            else:raise ValueError('Operação inválida')
+                self.log_operacao('Base IA '+operacao,{},base_id)
+                return self.respond(200,{'ok':True})
+            if self.path in ('/api/ia/referencias','/api/ia/revisar'):
+                mid=d.get('id');versao=d.get('revisao')
+                if not isinstance(mid,int) or isinstance(mid,bool) or mid<=0 or not isinstance(versao,int) or isinstance(versao,bool) or versao<0:raise ValueError('Mensagem inválida')
+                if self.path=='/api/ia/referencias':
+                    try:referencias=ia_consultar_referencias(mid,versao,u);msg=referencias['mensagem']
+                    except ValueError as e:return self.respond(409,{'erro':str(e)})
+                    except Exception:return self.respond(503,{'erro':'Não foi possível gerar o rascunho. Verifique a configuração da IA. Nenhuma resposta foi enviada.'})
+                else:
+                    referencias={}
+                    texto=d.get('rascunho');estado=d.get('estado')
+                    if estado not in ('revisado','humano') or not isinstance(texto,str) or len(texto)>6000 or (estado=='revisado' and not texto.strip()):raise ValueError('Revisão inválida')
+                    with TASK_LOCK:
+                        with closing(agenda_conn()) as con:
+                            with con:
+                                msg=ia_ler_mensagem(con,mid)
+                                if not msg or msg['revisao']!=versao or msg['estado']=='gerando':return self.respond(409,{'erro':'Mensagem alterada. Atualize a caixa de entrada'})
+                                if msg['cliente_id']:
+                                    owner=atendimento_crm(con,msg['cliente_id'])['responsavel']
+                                    if owner and owner!=u['login'] and u.get('perfil') not in ('master','supervisor'):return self.respond(409,{'erro':'Cliente em atendimento por '+owner})
+                                con.execute('UPDATE ia_mensagens SET rascunho=?,estado=?,revisao=revisao+1,operador=?,atualizado_em=? WHERE id=?',(texto,estado,u['login'],datetime.now().isoformat(timespec='seconds'),mid));msg=ia_ler_mensagem(con,mid)
+                self.log_operacao('Referências de atendimento consultadas' if self.path=='/api/ia/referencias' else 'Rascunho de atendimento revisado',{'cliente_id':msg.get('cliente_id')},mid)
+                return self.respond(200,{'mensagem':msg,'referencias':referencias.get('referencias',[]),'enviado':False})
             if self.path=='/api/crm-config':
                 chave=d.get('chave');valor=d.get('valor')
                 if chave=='favoritos':
@@ -1893,6 +2034,21 @@ class Handler(SimpleHTTPRequestHandler):
             try:result=meta_resultado(rid,u['login'])
             except ValueError:return self.respond(403,{'erro':'Envio não pertence a este usuário'})
             return self.respond(200,result) if result else self.respond(404,{'erro':'Envio não encontrado'})
+        if parsed.path=='/api/ia/status':
+            return self.respond(200,{'modo':'preparacao','envio_automatico':False,'motor_definido':False,'gestor':u.get('perfil') in ('master','supervisor')})
+        if parsed.path in ('/api/ia/mensagens','/api/ia/base'):
+            args=parse_qs(parsed.query);offset=args.get('offset',['0'])[0]
+            if not offset.isdecimal() or int(offset)>100000:return self.respond(400,{'erro':'Posição inválida'})
+            with TASK_LOCK:
+                with closing(agenda_conn()) as con:
+                    with con:
+                        con.row_factory=sqlite3.Row
+                        if parsed.path=='/api/ia/base':
+                            if u.get('perfil') not in ('master','supervisor'):return self.respond(403,{'erro':'Somente MASTER ou supervisor pode revisar a base'})
+                            rows=[dict(r) for r in con.execute('SELECT id,tipo,pergunta,resposta,aprovado,origem,usuario FROM ia_base ORDER BY id DESC LIMIT 51 OFFSET ?',(int(offset),))];key='exemplos'
+                        else:
+                            rows=[dict(r) for r in con.execute('SELECT id,nome,telefone_final,tipo,texto,recebida_em,cliente_id,triagem,estado,rascunho,revisao,operador FROM ia_mensagens ORDER BY id DESC LIMIT 51 OFFSET ?',(int(offset),))];key='mensagens'
+            return self.respond(200,{key:rows[:50],'proximo_offset':int(offset)+50 if len(rows)>50 else None})
         if parsed.path=='/api/crm-config':
             with TASK_LOCK:
                 with closing(agenda_conn()) as con:

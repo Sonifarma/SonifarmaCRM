@@ -16,7 +16,7 @@ Publique **somente** `/api/whatsapp-meta/webhook` por um proxy ou túnel com dom
 
 Cadastre a URL pública e WHATSAPP_WEBHOOK_VERIFY_TOKEN no aplicativo Meta, assine os eventos de mensagens da WABA e informe o App Secret no `.env`. O GET de verificação exige o token correto. Cada POST exige X-Hub-Signature-256 validado com HMAC-SHA256 sobre o corpo original. O Phone Number ID do evento e o destinatário também precisam corresponder ao envio local.
 
-Esta fase trata status de envio; mensagens recebidas não são exibidas nem armazenadas em uma caixa de entrada. A assinatura válida não é substituída pelo token de verificação.
+Além dos status, mensagens recebidas são guardadas no banco local e aparecem em Atendimento IA. Esta etapa prepara a caixa de entrada e referências revisadas, sem motor de IA e sem resposta automática. A assinatura válida não é substituída pelo token de verificação.
 
 ## Estados e reenvio
 

@@ -217,3 +217,9 @@ O envio manual de aniversário e reativação permite abrir e confirmar mensagen
 Aniversário e reativação permitem reabrir a tentativa manual do mesmo dia que ainda está em WhatsApp aberto, reutilizando o ID quando cliente, campanha, previsão e hash do telefone coincidem. A reabertura é auditada e não confirma envio. Recusas, responsabilidade do atendimento, contatos confirmados recentes, duplicidade mensal e envios pendentes pela API são verificados antes de reutilizar. Outro telefone ou outro status mantém o bloqueio existente.
 
 Após registrar ou reutilizar a tentativa, a janela é direcionada ao WhatsApp antes da atualização auxiliar da ficha. Falha nessa atualização não fecha o WhatsApp. O histórico da janela de aniversário/reativação usa DD/MM/AAAA às HH:mm, preservando o horário local registrado.
+
+## Nome comercial e link de produtos sem EAN
+
+Os botões de WhatsApp da Central, da ficha e da previsão repassam os IDs internos de produto e embalagem. A edição usa a chave EAN existente quando disponível; sem EAN, usa embalagem e, como alternativa, produto. Nome comercial e link continuam salvos apenas na base interna, sem alterar o ERP. Produtos sem qualquer identificador permitem edição para a mensagem atual, com salvamento desabilitado e aviso explícito.
+
+Ao trocar de produto, nome e link são limpos antes de gerar a mensagem. Respostas de consultas antigas são descartadas para não substituir os dados do produto atual. Os campos permanecem visíveis mesmo sem código de barras.
